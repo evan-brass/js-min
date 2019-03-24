@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>ce-calendar tests</title>
+	<script type="module" src="live-data.mjs"></script>
+</head>
+<body>
+	<script type="module">
+		import {html} from './templates.mjs';
+		function listen(event, callback) {
+
+		}
+
+		html`
+<section class="${"a"} mixed with ${"b"} other things">
+	<header ${"Attribute Location"}>
+		<h1>${"Text Location"}</h1>
+	</header>
+</section>
+		`;
+	</script>
+</body>
+</html>
