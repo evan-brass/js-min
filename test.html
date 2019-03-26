@@ -5,20 +5,107 @@
 	<script type="module" src="live-data.mjs"></script>
 </head>
 <body>
-	<script type="module">
-		import {html} from './templates.mjs';
-		function listen(event, callback) {
-
+	<style>
+		.template, .instance {
+			border: black 1px solid;
+			padding: 1em;
+			margin: 1em;
 		}
+		.template {
+			border-color: red;
+		}
+		.instance {
+			border-color: navy;
+		}
+	</style>
+	<script type="module">
+		import Template from './template.mjs';
+		import LiveData from './live-data.mjs';
 
+		function html(strings, ...expressions) {
+			const template = Template.getTemplate(strings);
+			const instance = template.instantiate();
+
+			const templateContainer = document.createElement('div');
+			const instanceContainer = document.createElement('div');
+			templateContainer.classList.add('template');
+			instanceContainer.classList.add('instance');
+			templateContainer.appendChild(document.importNode(template.template.content, true));
+			instanceContainer.appendChild(instance.fragment);
+			document.body.append(templateContainer, instanceContainer);
+			
+			for (let i = 0; i < expressions.length; ++i) {
+				const expression = expressions[i];
+				const part = instance.parts[i];
+				if (expression[Symbol.asyncIterator]) {
+					(async () => {
+						for await(const value of expression) {
+							part.update(value);
+						}
+					})();
+				} else if (expression instanceof Function) {
+					expression(part); // Every expression must be a function
+				}
+			}
+		}
+		function s(value) {
+			return (part) => {
+				if (part.type == "node") {
+					part.el.replaceWith(value);
+				} else if (part.type == "attribute-value") {
+					part.shared[part.index] = value;
+					part.el.setAttribute(part.attrName, part.shared.join(''));
+				} else if (part.type == "attribute") {
+					if (value instanceof String) {
+						part.el.setAttribute(value);
+					} else if (value instanceof Object) {
+						for (const key in value) {
+							part.el.setAttribute(key, value[key]);
+						}
+					}
+				}
+			};
+		}
+		function on(event, callback) {
+			return (part) => {
+				if (part.type == "attribute") {
+					part.el.addEventListener(event, callback);
+				}
+			};
+		}
+		// Simple Test with Comment node
 		html`
-<section class="${"a"} mixed with ${"b"} other things">
-	<header ${"Attribute Location"}>
-		<h1>${"Text Location"}</h1>
-	</header>
-	<!-- } not; JSON' { -->
-</section>
+			<section class="${s("a")} mixed with ${s("b")} other things">
+				<header ${s("Attribute Location")}>
+					<h1>${s("Text Location")}</h1>
+				</header>
+				<!-- Test user comments: } not; JSON' { -->
+			</section>
 		`;
+
+		// Test if the marker get's lost when it's value doesn't match the attribute
+		html`
+			<form action="" method="">
+				<select>
+					<option selected="before ${s('')} after">Guts of an option</option>
+				</select>
+			</form>
+		`;
+
+
+		// Sample with event handlers
+		(function(){
+			const count = new LiveData();
+			count.value = 0;
+			return html`
+				<button ${on('click', () => count.value -= 1)}>-</button>
+				${count}
+				<button ${on('click', () => count.value += 1)}>+</button>
+			`;
+		})();
+
+		// Troubleshooting a bug
+		html`${s('another')} ${s('hello')}`;
 	</script>
 </body>
 </html>

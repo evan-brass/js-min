@@ -90,22 +90,6 @@ function comboLock() {
     `;
 }
 
-let last_touch_y;
-const touchmove_handler = e => {
-	e.preventDefault();
-	e.stopPropagation();
-	const Scaler = .5;
-	const diff = last_touch_y ? e.touches[0].clientY - last_touch_y : 0;
-	last_touch_y = e.touches[0].clientY;
-	dial_degrees += diff * Scaler;
-	update_digit();
-};
-const touchstart_handler = e => {
-	e.preventDefault();
-	e.stopPropagation();
-	last_touch_y = false;
-};
-
 function create_dial() {
 	dial = document.createElement('div');
 	dial.classList.add('dial');
