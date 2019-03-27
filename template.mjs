@@ -4,6 +4,7 @@ export default class Template {
 		// Always start the id with an a so that it is valid everywhere.
 		return 'a' + Math.floor(Math.random() * Date.now()).toString(16);
 	}
+    // TODO: Replace with class property
 	static get templateCache() {
 		if (!this._templateCache) {
 			this._templateCache = new Map();
@@ -91,13 +92,15 @@ export default class Template {
 								index: shared.length,
 								sharedIndex: elementData.shared.length - 1
 							});
+							// I don't think that getting attributes is always in DOM string order
+							elementData.parts.sort((a, b) => a.order - b.order);
 							shared.push(""); // String where this part's value goes
 							[before, order, after] = this.findMarker(value);
 						}
-						if (value != '') {
-							shared.push(value);
-						}
 						if (shared) {
+							if (value != '') {
+								shared.push(value);
+							}
 							node.setAttribute(attrName, shared.join(''));
 						}
 					}

@@ -1,34 +1,83 @@
-const NodePart = {
-	el: null,
-	type: 'node',
-	update(value) {
-		if (!(value instanceof HTMLElement)) {
-			value = new Text(value);
-		}
-		this.el.replaceWith(value);
-		this.el = value;
-	}
-};
-const AttributePart = {
-	// TODO: 
-};
-const AttributeValuePart = {
-	shared: null,
-	index: -1,
-	attrName: null,
-	el: null,
-	update(value) {
-		this.shared[this.index] = value;
-		this.el.setAttribute(this.attrName, this.shared.join(''));
-	}
-};
+import Template from './template.mjs';
+import {createParts, NodePart} from './parts.mjs';
 
-export default class TemplateInstance {
-    constructor(fragment, parts) {
-        this._fragment = fragment;
-        this.parts = parts;
+const PartUser = Symbol("This object must implement the Instance.PartUser interface.");
+export default class Instance {
+    // TODO: Replace with class property
+    static get instancePools() {
+        if (!this._instancePools) {
+            this._instancePools = new Map();
+		}
+		return this._instancePools;
     }
-    get fragment() {
+    static get PartUser() {
+        return PartUser;
+    }
+	static getInstance(strings) {
+        const template = Template.getTemplate(strings);
+        if (!this.instancePools.has(template)) {
+            this.instancePools.set(template, []);
+        }
+        const pool = this.instancePools.get(template);
+        if (pool.length > 0) {
+            return pool.pop();
+        } else {
+            return new Instance(template);
+        }
+	}
+    
+	*getComments(node) {
+		const walker = document.createTreeWalker(node, NodeFilter.SHOW_COMMENT);
+		while(walker.nextNode()) {
+			yield walker.currentNode;
+		}
+	}
+	// MAYBE: Move this into TemplateInstance?
+	parseParts() {
+		this.parts = [];
+		for (const comment of Array.from(this.getComments(this._fragment))) {
+			for (const part of createParts(comment)) {
+                this.parts.push(part);
+            }
+        }
+	}
+    constructor(template) {
+        this.template = template;
+        this._fragment = template.instantiate();
+        this.users = [];
+        this.parseParts();
+    }
+
+    connect(expressions) {
+        if (expressions.length != this.parts.length) {
+            throw new Error("Number of expressions is not the same as the number of available parts.");
+        }
+        for (let i = 0; i < expressions.length; ++i) {
+            const expression = expressions[i];
+            const part = this.parts[i];
+            const user = expression[Instance.PartUser];
+            if (user) {
+                this.users.push(user);
+                if (user.acceptTypes.includes(part.type)) {
+                    user.bind(part);
+                } else {
+                    throw new Error("That user doesn't accept the corrisponding type of part.");
+                }
+            } else {
+                // If the expression doesn't implement the user interface, then just try and update the part.
+                part.update(expression);
+            }
+        }
+    }
+    disconnect() {
+        for (const user of this.users) {
+            user.unbind();
+        }
+        this.users.length = 0;
+    }
+
+    get [NodePart.Returnable]() { return this; }
+    getFragment() {
         const frag = this._fragment;
         if (frag) {
             this._fragment = false;
@@ -37,12 +86,20 @@ export default class TemplateInstance {
             throw new Error("Fragment must be returned (aka. set) before it can be retreived again.");
         }
     }
-    set fragment(newVal) {
-        this._fragment = newVal;
+    returnFragment(frag) {
+        // This is called when whoever had the instance is done with it.  We can clean it up and...
+        this._fragment = frag;
+        this.disconnect();
+        // ...return this instance into the proper pool.
+        Instance.instancePools.get(this.template).push(this);
+    }
+
+    get [PartUser] () { return this; }
+    get acceptTypes() { return  ['node']; }
+    bind(part) {
+        part.update(self);
+    }
+    unbind(part) {
+
     }
 }
-/**
- * One reason to have a template-instance class is because there's cool tricks that can be done with instances that I want
- * to enable.  For example, if two instances are from the same template, and you're trying to swap them out, then you can 
- * trade the parts on them, and update the parts with the new values.  This updates the DOM from the first instance with 
- */

@@ -11,101 +11,151 @@
 			padding: 1em;
 			margin: 1em;
 		}
-		.template {
-			border-color: red;
-		}
 		.instance {
-			border-color: navy;
+			border-color: #eee;
 		}
 	</style>
 	<script type="module">
-		import Template from './template.mjs';
+		import Instance from './instance.mjs';
 		import LiveData from './live-data.mjs';
-
+		
 		function html(strings, ...expressions) {
-			const template = Template.getTemplate(strings);
-			const instance = template.instantiate();
-
-			const templateContainer = document.createElement('div');
-			const instanceContainer = document.createElement('div');
-			templateContainer.classList.add('template');
-			instanceContainer.classList.add('instance');
-			templateContainer.appendChild(document.importNode(template.template.content, true));
-			instanceContainer.appendChild(instance.fragment);
-			document.body.append(templateContainer, instanceContainer);
+			const instance = Instance.getInstance(strings);
 			
+			// Any additional processing on the expressions before connecting
 			for (let i = 0; i < expressions.length; ++i) {
-				const expression = expressions[i];
-				const part = instance.parts[i];
-				if (expression[Symbol.asyncIterator]) {
-					(async () => {
-						for await(const value of expression) {
-							part.update(value);
-						}
-					})();
-				} else if (expression instanceof Function) {
-					expression(part); // Every expression must be a function
-				}
-			}
-		}
-		function s(value) {
-			return (part) => {
-				if (part.type == "node") {
-					part.el.replaceWith(value);
-				} else if (part.type == "attribute-value") {
-					part.shared[part.index] = value;
-					part.el.setAttribute(part.attrName, part.shared.join(''));
-				} else if (part.type == "attribute") {
-					if (value instanceof String) {
-						part.el.setAttribute(value);
-					} else if (value instanceof Object) {
-						for (const key in value) {
-							part.el.setAttribute(key, value[key]);
+				const expr = expressions[i];
+				if (!expr[Instance.NodeUser]) {
+					if (expr[Symbol.asyncIterator]) {
+						let iteration;
+						expressions[i] = {
+							acceptTypes: ["node", "attribute-value", "attribute"],
+							bind(part) {
+								iteration = (async function*(){
+									for await(const value of expr) {
+										part.update(value);
+									}
+								})();
+								iteration.next();
+							},
+							unbind(part) {
+								iteration.return();
+							},
+							get [Instance.PartUser]() { return this; }
 						}
 					}
+				}
+			}
+
+			instance.connect(expressions);
+			return instance;
+		}
+		function s(value) {
+			return {
+				get [Instance.PartUser]() { return this; },
+				acceptTypes: ['node', 'attribute', 'attribute-value'],
+				bind(part) {
+					part.update(value);
+				},
+				unbind(part) {
+
 				}
 			};
 		}
 		function on(event, callback) {
-			return (part) => {
-				if (part.type == "attribute") {
-					part.el.addEventListener(event, callback);
+			let element;
+			return new class {
+				constructor() {
+					this.element = null;
+					this.acceptTypes = ['attribute'];
 				}
-			};
+				bind(part) {
+					this.element = part.element;
+					this.element.addEventListener(event, callback);
+				}
+				unbind(part) {
+					this.element.removeEventListener(event, callback);
+				}
+				get [Instance.PartUser] () {
+					return this;
+				}
+			}();
 		}
-		// Simple Test with Comment node
-		html`
-			<section class="${s("a")} mixed with ${s("b")} other things">
-				<header ${s("Attribute Location")}>
-					<h1>${s("Text Location")}</h1>
-				</header>
-				<!-- Test user comments: } not; JSON' { -->
-			</section>
-		`;
+		const tests = [
+//			/*
+			// Simple Test with Comment node
+			html`
+				<section class="${s("a")} mixed with ${s("b")} other things">
+					<header ${s({class: "purple"})}>
+						<h1>${s("Text Location")}</h1>
+					</header>
+					<!-- Test user comments: } not; JSON' { -->
+				</section>
+			`,
 
-		// Test if the marker get's lost when it's value doesn't match the attribute
-		html`
-			<form action="" method="">
-				<select>
-					<option selected="before ${s('')} after">Guts of an option</option>
-				</select>
-			</form>
-		`;
+			// Test if the marker get's lost when it's value doesn't match the attribute
+			html`
+				<form action="" method="">
+					<select>
+						<option selected="before ${s('')} after">Guts of an option</option>
+					</select>
+				</form>
+			`,
 
 
-		// Sample with event handlers
-		(function(){
-			const count = new LiveData();
-			count.value = 0;
-			return html`
-				<button ${on('click', () => count.value -= 1)}>-</button>
-				${count}
-				<button ${on('click', () => count.value += 1)}>+</button>
-			`;
-		})();
+			// Sample with event handlers
+			(function(){
+				const count = new LiveData();
+				count.value = 10;
+				return html`
+					<button ${on('click', () => count.value -= 1)}>-</button>
+					${count}
+					<button ${on('click', () => count.value += 1)}>+</button>
+				`;
+			})(),
 
-		// Troubleshooting a bug
-		html`${s('another')} ${s('hello')}`;
+			// Troubleshooting a bug
+			html`${s('another')} ${s('hello')}`,
+
+//			*/
+			
+			// Test for using multiple templates swapped by async generator as a state machine
+			html`${(async function*() {
+				const count = new LiveData();
+				count.value = 10;
+				yield html`First: Set the count to 25...<br />
+					<button ${on('click', () => count.value -= 1)}>-</button>
+					${count}
+					<button ${on('click', () => count.value += 1)}>+</button>
+				`;
+				for await(const val of count) {
+					if (val == 25) break;
+				}
+				count.value = 0;
+				yield html`
+					Next: Set the thingy to 5<br />
+					<label>
+						${count}
+						<input type="range" 
+							value="${s(count.value)}" 
+							min="0" max="10" step="1" 
+							${on('change', e => count.value = e.target.valueAsNumber)}
+						/>
+					</label>
+				`;
+				for await(const val of count) {
+					if (val == 5) break;
+				}
+				yield `Good Job 🎉  Thank you for following along`;
+			})()}`
+
+		];
+		for (const test of tests) {
+			const instanceContainer = document.createElement('div');
+			instanceContainer.classList.add('instance');
+			instanceContainer.appendChild(test.getFragment());
+			document.body.append(instanceContainer);
+		}
 	</script>
 </body>
 </html>

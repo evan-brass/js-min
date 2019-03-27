@@ -6,6 +6,7 @@ export default class LiveData {
 	}
 	set value(newValue) {
 		this._value = newValue;
+		// Since LiveData is meant for the UI, only propagate during an animation frame
 		if (!this.animationFrame) {
 			this.animationFrame = requestAnimationFrame(() => {
 				for (const callback of this.waiters) {
