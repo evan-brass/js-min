@@ -64,7 +64,7 @@ export default class Instance {
                     throw new Error("That user doesn't accept the corrisponding type of part.");
                 }
             } else {
-                // If the expression doesn't implement the user interface, then just try and update the part.
+                // If the expression doesn't implement the user interface, then just try and update the part with the expression directly.
                 part.update(expression);
             }
         }
