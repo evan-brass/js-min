@@ -29,7 +29,7 @@ export default class Instance {
         if (pool.length > 0) {
             return pool.pop();
         } else {
-            return new Instance(template);
+            return new Instance(template).configurePooling(pool);
         }
 	}
     
@@ -49,10 +49,16 @@ export default class Instance {
         }
 	}
     constructor(template) {
+        this.autoPool = false;
         this.template = template;
         this._fragment = template.instantiate();
         this.users = [];
         this.parseParts();
+    }
+    configurePooling(pool) {
+        this._pool = pool;
+        this.autoPool = true;
+        return this;
     }
 
     connect(expressions) {
@@ -97,9 +103,11 @@ export default class Instance {
     returnFragment(frag) {
         // This is called when whoever had the instance is done with it.  We can clean it up and...
         this._fragment = frag;
-        this.disconnect();
-        // ...return this instance into the proper pool.
-        Instance.instancePools.get(this.template).push(this);
+        if (this.autoPool) {
+            this.disconnect();
+            // ...return this instance into the proper pool.
+            Instance.instancePools.get(this.template).push(this);
+        }
     }
 
     // Implement the PartUser Interface
