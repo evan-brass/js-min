@@ -1,3 +1,5 @@
+import Trait from "./trait.mjs";
+
 export class Part {
     constructor(type, element) {
         this.type = type;
@@ -7,7 +9,24 @@ export class Part {
         throw new Error("Update should be overriden.");
     }
 }
-const Returnable = Symbol("Object must implement the Part.Returnable interface.");
+export const Returnable = new Trait("Object must implement the Returnable interface: https://github.com/evan-brass/js-min/wiki/Trait:-Returnable", {
+    getFragment() {
+        if (this._fragment) {
+            const frag = this._fragment;
+            this._fragment = null;
+            return frag;
+        } else {
+            throw new Error("Fragment is already on loan.");
+        }
+    },
+    returnFragment(fragment) {
+        if (!this._fragment) {
+            this._fragment = fragment;
+        } else {
+            throw new Error("Fragment is already returned.");
+        }
+    }
+});
 export class NodePart extends Part {
     constructor(element) {
         const text = new Text();
@@ -22,6 +41,7 @@ export class NodePart extends Part {
     static get Returnable() {
         return Returnable;
     }
+    // TODO: Need to use comments for the framing instead of text nodes so that if we render server side then we can pull out the existing contents even though there won't be the hidden text nodes.
     makeFramed() {
         if (this.mode != "framed") {
             this.before = new Text();
@@ -112,14 +132,16 @@ export class AttributeValuePart extends Part {
 export function *createParts(commentNode) {
     let parsed;
     try {
+        // MAYBE: Maybe find a better way of determining if it's JSON or not.
         parsed = JSON.parse(commentNode.data);
     } catch(e) {
         // If the Comment's data isn't JSON parsable, then it's not ours.
         if (e instanceof SyntaxError) return;
-        // Only catch errors indicating that the 
+        // MAYBE: Check the syntax error to make sure that it's due to the contents not being JSON, and not some other SyntaxError.
+        // If it's something other than a Syntax Error then don't catch it.
         else throw e;
     }
-    // TODO: Handle if the comment's contents is JSON but doesn't have parts in it.
+    // TODO: Handle if the comment's contents is JSON but isn't one of our parts
     if (parsed.type == undefined) {
         // Must be an object with Attribute parts
         for (const part of parsed.parts) {

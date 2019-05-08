@@ -1,7 +1,17 @@
 import Template from './template.mjs';
 import {createParts, NodePart} from './parts.mjs';
+import Trait from './trait.mjs';
 
-const PartUser = Symbol("This object must implement the Instance.PartUser interface.");
+export const PartUser = new Trait("Object must implement the PartUser interface as described here: https://github.com/evan-brass/js-min/wiki/Trait:-Part-User", {
+    acceptTypes: ['node'],
+    bind(part) {
+        throw new Error("PartUser: No default implementation for bind.");
+    },
+    unbind(part) {
+        throw new Error("PartUser: No default implementation for unbind.")
+    }
+});
+
 export default class Instance {
     // TODO: Replace with class property
     static get instancePools() {
@@ -9,9 +19,6 @@ export default class Instance {
             this._instancePools = new Map();
 		}
 		return this._instancePools;
-    }
-    static get PartUser() {
-        return PartUser;
     }
 	static getInstance(strings) {
         const template = Template.getTemplate(strings);
@@ -76,6 +83,7 @@ export default class Instance {
         this.users.length = 0;
     }
 
+    // Implement the Returnable Interface
     get [NodePart.Returnable]() { return this; }
     getFragment() {
         const frag = this._fragment;
@@ -94,6 +102,7 @@ export default class Instance {
         Instance.instancePools.get(this.template).push(this);
     }
 
+    // Implement the PartUser Interface
     get [PartUser] () { return this; }
     get acceptTypes() { return  ['node']; }
     bind(part) {
