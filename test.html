@@ -16,72 +16,11 @@
 	</style>
 	<h1>These are tests for my JavaScript Framework</h1>
 	<p>You can find out more about it at <a href="https://github.com/evan-brass/js-framework">https://github.com/evan-brass/js-framework</a> or view the code that generates these examples here: <a href="https://github.com/evan-brass/js-framework/blob/master/test.html">https://github.com/evan-brass/js-framework/blob/master/test.html</a></p>
+	<script type="module" src="./src/tests/template.test.mjs"></script>
 	<script type="module">
-		import Instance from './src/instance.mjs';
 		import LiveData from './src/live-data.mjs';
-		
-		function html(strings, ...expressions) {
-			const instance = Instance.getInstance(strings);
-			
-			// Any additional processing on the expressions before connecting
-			for (let i = 0; i < expressions.length; ++i) {
-				const expr = expressions[i];
-				if (!expr[Instance.NodeUser]) {
-					if (expr[Symbol.asyncIterator]) {
-						let iteration;
-						expressions[i] = {
-							acceptTypes: ["node", "attribute-value", "attribute"],
-							bind(part) {
-								iteration = (async function*(){
-									for await(const value of expr) {
-										part.update(value);
-									}
-								})();
-								iteration.next();
-							},
-							unbind(part) {
-								iteration.return();
-							},
-							get [Instance.PartUser]() { return this; }
-						}
-					}
-				}
-			}
-
-			instance.connect(expressions);
-			return instance;
-		}
-		function s(value) {
-			return {
-				get [Instance.PartUser]() { return this; },
-				acceptTypes: ['node', 'attribute', 'attribute-value'],
-				bind(part) {
-					part.update(value);
-				},
-				unbind(part) {
-
-				}
-			};
-		}
-		function on(event, callback) {
-			let element;
-			return new class {
-				constructor() {
-					this.element = null;
-					this.acceptTypes = ['attribute'];
-				}
-				bind(part) {
-					this.element = part.element;
-					this.element.addEventListener(event, callback);
-				}
-				unbind(part) {
-					this.element.removeEventListener(event, callback);
-				}
-				get [Instance.PartUser] () {
-					return this;
-				}
-			}();
-		}
+		import {s, on} from './src/expressions.mjs';
+		import html from './src/min.mjs';
 		const tests = [
 //			/*
 			// Simple Test with Comment node

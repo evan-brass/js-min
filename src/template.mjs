@@ -1,30 +1,41 @@
-export default class Template {
-	static createId() {
+export const TemplateCache = new Map();
+export function createTemplate(strings) {
+	function createId() {
 		// TODO: Improve ID generation
-		// Always start the id with an a so that it is valid everywhere.
+		// Always start the id with a character so that it is valid everywhere in HTML.
 		return 'a' + Math.floor(Math.random() * Date.now()).toString(16);
 	}
-    // TODO: Replace with class property
-	static get templateCache() {
-		if (!this._templateCache) {
-			this._templateCache = new Map();
+	function joinStrings(strings, markers) {
+		let composed = "";
+		for (let i = 0; i < strings.length - 1; ++i) {
+			const str = strings[i];
+			composed += str + markers.next().value;
 		}
-		return this._templateCache;
+		composed += strings[strings.length - 1];
+		return composed;
 	}
-	static getTemplate(strings) {
-		if (!this.templateCache.has(strings)) {
-			this.templateCache.set(strings, new Template(strings));
-		}
-		return this.templateCache.get(strings);
-	}
-	// TODO: Remove / make static most of these methods.  They shouldn't really be used externally.
-	*markers() {
+	function *markers(id) {
 		for (let order = 0; true; ++order) {
-			yield `${this.id}-${order}`;
+			yield `${id}-${order}`;
 		}
 	}
-	findMarker(string) {
-		const markerFinder = new RegExp(`${this.id}-([0-9]+)`);
+	if (!(strings instanceof Array)) {
+		throw new Error("Argument to createTemplate must be an Array of strings like that produced by a tagged template litteral.");
+	}
+	const id = createId();
+	const template = document.createElement('template');
+	template.id = id;
+	template.innerHTML = joinStrings(strings, markers(id));
+
+	convertMarkers(template, id);
+
+	return template;
+}
+
+// TODO: Move convertMarkers to parts.mjs?
+function convertMarkers(root, id) {
+	function findMarker(id, string) {
+		const markerFinder = new RegExp(`${id}-([0-9]+)`);
 		const exec = markerFinder.exec(string);
 		if (exec) {
 			const [fullMatch, order] = exec;
@@ -35,119 +46,85 @@ export default class Template {
 			return [string, -1, ""];
 		}
 	}
-	joinStrings(strings) {
-		let composed = "";
-		const markers = this.markers();
-		for (let i = 0; i < strings.length - 1; ++i) {
-			const str = strings[i];
-			composed += str + markers.next().value;
-		}
-		composed += strings[strings.length - 1];
-		return composed;
-	}
-	createTemplate(innerHTML) {
-		this.template = document.createElement('template');
-		this.template.innerHTML = innerHTML;
-	}
-	convertMarkers() {
-		this.template.content.normalize(); // Just in case...
-		// Don't call normalize later because it would collapse the Text nodes that hold the location for node type parts
-		const walker = document.createTreeWalker(
-			this.template.content, 
-			NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT
-		);
-		let nextNode = walker.nextNode();
-		while (nextNode) {
-			const node = walker.currentNode;
-			if (node.nodeType == Node.ELEMENT_NODE) {
-				const elementData = {
-					shared: [],
-					parts: []
-				}
-				for (const attrName of node.getAttributeNames()) {
-					const [before, order, after] = this.findMarker(attrName);
-					if (order != -1) {
-						elementData.parts.push({
-							type: "attribute",
-							order
-						});
-						node.removeAttribute(attrName);
-					} else {
-						let value = node.getAttribute(attrName);
-						let [before, order, after] = this.findMarker(value);
-						let shared = false;
-						while (order != -1) {
-							if (!shared) {
-								shared = [];
-								elementData.shared.push(shared);
-							}
-							if (before != "") {
-								shared.push(before);
-							}
-							value = after;
-							elementData.parts.push({
-								type: "attribute-value",
-								order,
-								attrName,
-								index: shared.length,
-								sharedIndex: elementData.shared.length - 1
-							});
-							// I don't think that getting attributes is always in DOM string order
-							elementData.parts.sort((a, b) => a.order - b.order);
-							shared.push(""); // String where this part's value goes
-							[before, order, after] = this.findMarker(value);
-						}
-						if (shared) {
-							if (value != '') {
-								shared.push(value);
-							}
-							node.setAttribute(attrName, shared.join(''));
-						}
-					}
-				}
-				if (elementData.parts.length > 0) {
-					node.parentNode.insertBefore(new Comment(JSON.stringify(elementData)), node);
-				}
-			} else if (node.nodeType == Node.TEXT_NODE) {
-				const [before, order, after] = this.findMarker(node.data);
+	root.content.normalize(); // Just in case...
+	// Don't call normalize later because it would collapse the Text nodes that hold the location for node type parts (Shouldn't be a problem when we later switch away from using Text nodes to frame NodeParts)
+	const walker = document.createTreeWalker(
+		root.content, 
+		NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT
+	);
+	let nextNode = walker.nextNode();
+	while (nextNode) {
+		const node = walker.currentNode;
+		if (node.nodeType == Node.ELEMENT_NODE) {
+			const elementData = {
+				shared: [],
+				parts: []
+			}
+			for (const attrName of node.getAttributeNames()) {
+				const [before, order, after] = findMarker(id, attrName);
 				if (order != -1) {
-					const comment = new Comment(JSON.stringify({
-						type: 'node',
+					elementData.parts.push({
+						type: "attribute",
 						order
-					}));
-					const replaceWith = [];
-					if (before != "") {
-						node.parentNode.insertBefore(new Text(before), node);
+					});
+					node.removeAttribute(attrName);
+				} else {
+					let value = node.getAttribute(attrName);
+					let [before, order, after] = findMarker(id, value);
+					let shared = false;
+					while (order != -1) {
+						if (!shared) {
+							shared = [];
+							elementData.shared.push(shared);
+						}
+						if (before != "") {
+							shared.push(before);
+						}
+						value = after;
+						elementData.parts.push({
+							type: "attribute-value",
+							order,
+							attrName,
+							index: shared.length,
+							sharedIndex: elementData.shared.length - 1
+						});
+						// I don't think that getting attributes is always in DOM string order
+						elementData.parts.sort((a, b) => a.order - b.order);
+						shared.push(""); // String where this part's value goes
+						[before, order, after] = findMarker(id, value);
 					}
-					node.parentNode.insertBefore(comment, node);
-					if (after != "") {
-						node.parentNode.insertBefore(new Text(after), node.nextSibling);
+					if (shared) {
+						if (value != '') {
+							shared.push(value);
+						}
+						node.setAttribute(attrName, shared.join(''));
 					}
-					nextNode = walker.nextNode();
-					node.remove();
-					continue;
 				}
 			}
-			nextNode = walker.nextNode();
+			if (elementData.shared.length == 0) {delete elementData.shared};
+			if (elementData.parts.length > 0) {
+				node.parentNode.insertBefore(new Comment(JSON.stringify(elementData)), node);
+			}
+		} else if (node.nodeType == Node.TEXT_NODE) {
+			const [before, order, after] = findMarker(id, node.data);
+			if (order != -1) {
+				const comment = new Comment(JSON.stringify({
+					type: 'node',
+					order
+				}));
+				const replaceWith = [];
+				if (before != "") {
+					node.parentNode.insertBefore(new Text(before), node);
+				}
+				node.parentNode.insertBefore(comment, node);
+				if (after != "") {
+					node.parentNode.insertBefore(new Text(after), node.nextSibling);
+				}
+				nextNode = walker.nextNode();
+				node.remove();
+				continue;
+			}
 		}
-	}
-	constructor(strings, node) {
-		if (!node) {
-			this.id = this.constructor.createId();
-	
-			const joinedStrings = this.joinStrings(strings);
-	
-			this.createTemplate(joinedStrings);
-	
-			this.convertMarkers();
-		} else {
-			this.template = node;
-		}
-		
-		this.constructor.templateCache.set(strings, this);
-	}
-
-	instantiate() {
-		return document.importNode(this.template.content, true);
+		nextNode = walker.nextNode();
 	}
 }

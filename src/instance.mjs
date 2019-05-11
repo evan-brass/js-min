@@ -1,4 +1,3 @@
-import Template from './template.mjs';
 import {createParts, NodePart} from './parts.mjs';
 import Trait from './trait.mjs';
 
@@ -12,27 +11,7 @@ export const PartUser = new Trait("Object must implement the PartUser interface 
     }
 });
 
-export default class Instance {
-    // TODO: Replace with class property
-    static get instancePools() {
-        if (!this._instancePools) {
-            this._instancePools = new Map();
-		}
-		return this._instancePools;
-    }
-	static getInstance(strings) {
-        const template = Template.getTemplate(strings);
-        if (!this.instancePools.has(template)) {
-            this.instancePools.set(template, []);
-        }
-        const pool = this.instancePools.get(template);
-        if (pool.length > 0) {
-            return pool.pop();
-        } else {
-            return new Instance(template).configurePooling(pool);
-        }
-	}
-    
+export default class Instance {    
 	*getComments(node) {
 		const walker = document.createTreeWalker(node, NodeFilter.SHOW_COMMENT);
 		while(walker.nextNode()) {
@@ -50,8 +29,7 @@ export default class Instance {
 	}
     constructor(template) {
         this.autoPool = false;
-        this.template = template;
-        this._fragment = template.instantiate();
+        this._fragment = document.importNode(template.content, true);
         this.users = [];
         this.parseParts();
     }
@@ -106,7 +84,7 @@ export default class Instance {
         if (this.autoPool) {
             this.disconnect();
             // ...return this instance into the proper pool.
-            Instance.instancePools.get(this.template).push(this);
+            this._pool.push(this);
         }
     }
 
@@ -116,7 +94,21 @@ export default class Instance {
     bind(part) {
         part.update(self);
     }
-    unbind(part) {
+    unbind() {
 
+    }
+}
+
+export const InstancePools = new WeakMap();
+
+export function getInstance(template) {
+    if (!InstancePools.has(template)) {
+        InstancePools.set(template, []);
+    }
+    const pool = InstancePools.get(template);
+    if (pool.length > 0) {
+        return pool.pop();
+    } else {
+        return new Instance(template).configurePooling(pool);
     }
 }
