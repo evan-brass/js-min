@@ -1,4 +1,5 @@
-import {PartUser} from './instance.mjs';
+import { PartUser } from './instance.mjs';
+import { Returnable } from './parts.mjs';
 // This is a standard library of common expressions
 
 export function s(value) { // s is short for static.  This value is not going to change
@@ -12,6 +13,14 @@ export function s(value) { // s is short for static.  This value is not going to
 
         }
     };
+}
+
+export function mount(instance, root = document.body) {
+    if (instance instanceof Returnable) {
+        root.appendChild(Returnable.get(instance).getFragment());
+    } else {
+        throw new Error("Mount expects something that's returnable.");
+    }
 }
 
 export function on(event, callback) {

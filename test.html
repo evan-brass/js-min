@@ -19,7 +19,7 @@
 	<script type="module" src="./src/tests/template.test.mjs"></script>
 	<script type="module">
 		import LiveData from './src/live-data.mjs';
-		import {s, on} from './src/expressions.mjs';
+		import {s, on, mount} from './src/expressions.mjs';
 		import html from './src/min.mjs';
 		import {ArrayInstance} from './src/instance.mjs';
 		const tests = [
@@ -120,7 +120,7 @@
 		for (const test of tests) {
 			const instanceContainer = document.createElement('div');
 			instanceContainer.classList.add('instance');
-			instanceContainer.appendChild(test.getFragment());
+			mount(test, instanceContainer);
 			document.body.append(instanceContainer);
 		}
 	</script>
