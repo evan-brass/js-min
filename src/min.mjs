@@ -1,4 +1,4 @@
-import Instance, {getInstance} from './instance.mjs';
+import {PartUser, getTemplateInstance} from './instance.mjs';
 import {TemplateCache, createTemplate} from './template.mjs';
 
 function stringsToInstance(strings) {
@@ -6,7 +6,7 @@ function stringsToInstance(strings) {
         TemplateCache.set(strings, createTemplate(strings));
     }
     const template = TemplateCache.get(strings);
-    return getInstance(template);
+    return getTemplateInstance(template);
 }
 export default function sample_min_templater(strings, ...expressions) {
     const instance = stringsToInstance(strings);
@@ -14,7 +14,7 @@ export default function sample_min_templater(strings, ...expressions) {
     // Any additional processing on the expressions before connecting
     for (let i = 0; i < expressions.length; ++i) {
         const expr = expressions[i];
-        if (!expr[Instance.NodeUser]) {
+        if (!(expr instanceof PartUser)) {
             if (expr[Symbol.asyncIterator]) {
                 let iteration;
                 expressions[i] = {
@@ -30,7 +30,7 @@ export default function sample_min_templater(strings, ...expressions) {
                     unbind(part) {
                         iteration.return();
                     },
-                    get [Instance.PartUser]() { return this; }
+                    get [PartUser]() { return this; }
                 }
             }
         }

@@ -37,10 +37,6 @@ export class NodePart extends Part {
         this.before = null;
         this.after = null;
     }
-    // TODO: Replace with class property
-    static get Returnable() {
-        return Returnable;
-    }
     // TODO: Need to use comments for the framing instead of text nodes so that if we render server side then we can pull out the existing contents even though there won't be the hidden text nodes.
     makeFramed() {
         if (this.mode != "framed") {
@@ -86,10 +82,10 @@ export class NodePart extends Part {
                 return value;
             }
         }
-        this.cleanFramed();
+        this.cleanFramed(); // TODO: Need swapping here (something like should update).
         let node = convertToNode(newValue);
-        let lender = node[NodePart.Returnable];
-        if (lender) {
+        if (node instanceof Returnable) {
+            const lender = Returnable.get(node);
             node = lender.getFragment();
             this.lender = lender;
         }

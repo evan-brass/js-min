@@ -21,7 +21,34 @@
 		import LiveData from './src/live-data.mjs';
 		import {s, on} from './src/expressions.mjs';
 		import html from './src/min.mjs';
+		import {ArrayInstance} from './src/instance.mjs';
 		const tests = [
+			(function(){
+				const color = new LiveData();
+				color.value = 'black';
+				return html`
+				<h2 class="testing-css">Test Modifying CSS using NodePart</h2>
+				<style>.testing-css{ color: ${color}; }</style>
+				${new ArrayInstance([
+					'Red', 'Cornsilk', 'Black', 'Navy', 'Teal'
+				].map(val => html`<button ${on('click', _ => color.value = val)}>${s(val)}</button>`))}
+				`;
+			})(),
+			(function(){
+				const radius = new LiveData();
+				radius.value = 50;
+				return html`
+				<h2>Test modifying SVG attribute</h2>
+				<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+  					<circle cx="50" cy="50" r="${radius}"/>
+				</svg>
+				<input type="range" 
+					value="${s(radius.value)}" 
+					min="10" max="70" step="1" 
+					${on('change', e => radius.value = e.target.valueAsNumber)}
+				/>
+				`;
+			})(),
 //			/*
 			// Simple Test with Comment node
 			html`
