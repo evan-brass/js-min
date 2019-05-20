@@ -27,13 +27,19 @@ export const Returnable = new Trait("Object must implement the Returnable interf
         }
     }
 });
+// Might need to move swapping higher up the chain.
+export const SelfUpdate = new Trait("Object must implement the SelfUpdate Interface: not specified anywhere yet.", {
+    update(newValue, defaultUpdate) {
+        return defaultUpdate(newValue);
+    }
+});
 export class NodePart extends Part {
     constructor(element) {
         const text = new Text();
         element.replaceWith(text);
         super("node", text);
         this.mode = 'unframed';
-        this.lender = false;
+        this.currentValue = false;
         this.before = null;
         this.after = null;
     }
@@ -62,13 +68,13 @@ export class NodePart extends Part {
             while(this.before.nextSibling != this.after) {
                 returnFrag.appendChild(this.before.nextSibling);
             }
-            if (this.lender) {
-                this.lender.returnFragment(returnFrag);
-                this.lender = false;
+            if (this.currentValue instanceof Returnable) {
+                this.currentValue.returnFragment(returnFrag);
+                this.currentValue = false;
             }
         }
     }
-    update(newValue) {
+    defaultUpdate(newValue) {
         function convertToNode(value) {
             if (['string', 'number', 'boolean'].includes(typeof value)) {
                 return new Text(value);
@@ -96,6 +102,17 @@ export class NodePart extends Part {
             this.makeUnframed();
             this.element.replaceWith(node);
             this.element = node;
+        }
+        return newValue;
+    }
+    update(newValue) {
+        if (this.currentValue instanceof SelfUpdate) {
+            this.currentValue = SelfUpdate.get(this.currentValue).update(newValue, this.defaultUpdate.bind(this));
+        } else {
+            // By default only update if the value is different.
+            if (this.currentValue !== newValue) {
+                this.currentValue = this.defaultUpdate(newValue);
+            }
         }
     }
 }

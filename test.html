@@ -22,7 +22,26 @@
 		import {s, on, mount} from './src/expressions.mjs';
 		import html from './src/min.mjs';
 		import {ArrayInstance} from './src/instance.mjs';
+		import delay from './src/delay.mjs';
 		const tests = [
+			(function() {
+				return html`
+					<h2>Test Swapping</h2>
+					${(async function*() {
+						function shouldSwap(txt) {
+							return html`<b>Should Swap:</b>${s(txt)}`;
+						}
+						while(1) {
+							yield shouldSwap('1');
+							await delay(1000);
+							yield shouldSwap('2');
+							await delay(1000);
+							yield html`<i>Shouldn't Swap</i>`;
+							await delay(1000);
+						}
+					})()}
+				`;
+			})(),
 			(function(){
 				const color = new LiveData();
 				color.value = 'black';

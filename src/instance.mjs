@@ -1,5 +1,6 @@
 import {createParts, NodePart, Returnable} from './parts.mjs';
 import Trait from './trait.mjs';
+import { SelfUpdate } from './parts.mjs';
 
 export const PartUser = new Trait("Object must implement the PartUser interface as described here: https://github.com/evan-brass/js-min/wiki/Trait:-Part-User", {
     acceptTypes: ['node'],
@@ -68,14 +69,40 @@ export class TemplateInstance extends Instance {
         this.autoPool = false;
         this._fragment = document.importNode(template.content, true);
         this.parseParts();
+        this.template = template; // Used for swapping later on.
+        this.isBound = false;
     }
     configurePooling(pool) {
         this._pool = pool;
         this.autoPool = true;
         return this;
     }
+    bind(part) {
+        if (!this.isBound) {
+            this.bindUsers();
+        }
+        part.update(this);
+    }
 
-    connect(expressions) {
+    bindUsers() {
+        // Binding is differed to an animation frame largely because I want to not bind then unbind if we set the expressions and then end up swapping with another instance that's already in place.
+        if (!this._bindAF) {
+            this._bindAF = requestAnimationFrame(() => {
+                for (let i = 0; i < this.parts.length; ++i) {
+                    const user = this.users[i];
+                    const part = this.parts[i];
+                    if (this.isBound) {
+                        user.unbind();
+                    }
+                    user.bind(part);
+                }
+                this.isBound = true;
+                this._bindAF = false;
+            });
+        }
+    }
+    verifyExpressions(expressions) {
+        const newUsers = [];
         if (expressions.length != this.parts.length) {
             throw new Error("Number of expressions is not the same as the number of available parts.");
         }
@@ -84,23 +111,51 @@ export class TemplateInstance extends Instance {
             const part = this.parts[i];
             if (expression instanceof PartUser) {
                 const user = PartUser.get(expression);
-                this.users.push(user);
-                if (user.acceptTypes.includes(part.type)) {
-                    user.bind(part);
-                } else {
+                newUsers.push(user);
+                if (!user.acceptTypes.includes(part.type)) {
                     throw new Error("That user doesn't accept the corrisponding type of part.");
                 }
             } else {
-                // If the expression doesn't implement the user interface, then just try and update the part with the expression directly.
-                part.update(expression);
+                throw new Error("Must be a PartUser to be bound to a part.");
             }
         }
+        this.users = newUsers; // Don't mess with users until we know that all parts are good
+    }
+    connect(expressions) {
+        this.verifyExpressions(expressions);
+        this.bindUsers();
     }
     disconnect() {
         for (const user of this.users) {
             user.unbind();
         }
         this.users.length = 0;
+    }    
+
+    swap(newParts) {
+        const oldParts = this.parts;
+        this.parts = newParts;
+        this.bindUsers(); // Need to bind users to the instance that we're replacing.
+        return oldParts;
+    }
+
+    // Implement the Self Update functionality to catch swapping an instance with an instance derived from the same template
+    get [SelfUpdate]() {return this; }
+    update(newValue, defaultUpdate) {
+        if (newValue instanceof Instance && newValue.template == this.template) {
+            // If we're already bound (most likely the case) then unbind our parts before handing them over to the other person.
+            if (this.isBound) {
+                for (const user of this.users) {
+                    user.unbind();
+                }
+            }
+            // Perform the swap:
+            this.parts = newValue.swap(this.parts);
+            console.log('Performed a swap.')
+            return newValue;
+        } else {
+            return defaultUpdate(newValue);
+        }
     }
 }
 export class ArrayInstance extends Instance {
