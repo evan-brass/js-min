@@ -143,5 +143,54 @@
 			document.body.append(instanceContainer);
 		}
 	</script>
+	<script type="module">
+		import ObservableArray from './src/observable-array.mjs';
+
+		const {wait, changes, proxy} = ObservableArray();
+		function clear (){
+			console.log(proxy.toString());
+			console.log(`${changes.added.size} Added; ${changes.removed.size} Removed; ${changes.moved.size} Moved`);
+			changes.added.clear();
+			changes.removed.clear();
+			changes.moved.clear();
+		}
+
+		proxy.push(3);
+		proxy.push(2);
+		proxy.push(1);
+
+		console.log('3 pushes'); clear();
+
+		proxy.pop();
+
+		console.log('1 pop'); clear();
+
+		proxy.splice(1, 0, 17, 12, 34, 9, 5);
+
+		console.log('splice'); clear();
+
+		proxy.sort();
+
+		console.log('sort'); clear();
+		/*
+		const arr = new Proxy([1,2,3,4,5,6,7,8,9,10], {
+			get(target, name) {
+				console.log('get', name);
+				return target[name];
+			},
+			set(target, name, value) {
+				console.log('set', name, value);
+				return target[name] = value;
+			}
+		});
+		console.group('reverse');
+		Array.prototype.reverse.call(arr);
+		console.groupEnd();
+		
+		console.group('sort');
+		Array.prototype.sort.call(arr, (a, b) => a - b);
+		console.groupEnd();
+		*/
+	</script>
 </body>
 </html>
