@@ -1,6 +1,72 @@
 # js-min
-This is my attempt at my own JavaScript "framework".  In reality, I want to find coding patterns which solve the following problems and put those patterns into a library that makes programming simple, clear, and performant:
+This is my attempt at my own JavaScript "framework".  In reality, I want to find coding patterns which solve the following problems and put those patterns into a library that makes programming simple, clear, and performant.
 
+## Examples:
+The current tests can be found here: [https://evan-brass.github.io/js-min/test.html] 
+The code that produces those examples can be found here: [https://github.com/evan-brass/js-min/blob/master/test.html]
+All examples share these imports:
+```Javascript
+import LiveData from './src/live-data.mjs';
+import {s, on, mount} from './src/expressions.mjs';
+import html from './src/min.mjs';
+import {ArrayInstance} from './src/instance.mjs';
+```
+### Simple Counter:
+```JavaScript
+const count = new LiveData();
+count.value = 10;
+mount(html`
+    <button ${on('click', () => count.value -= 1)}>-</button>
+    ${count}
+    <button ${on('click', () => count.value += 1)}>+</button>
+`, document.body);
+```
+### State Machine:
+```JavaScript
+mount(html`${(async function*() {
+    const count = new LiveData();
+    count.value = 10;
+    yield html`First: Set the count to 25...<br />
+        <button ${on('click', () => count.value -= 1)}>-</button>
+        ${count}
+        <button ${on('click', () => count.value += 1)}>+</button>
+    `;
+    for await(const val of count) {
+        if (val == 25) break;
+    }
+    count.value = 0;
+    yield html`
+        Next: Set the thingy to 5<br />
+        <label>
+            ${count}
+            <input type="range" 
+                value="${s(count.value)}" 
+                min="0" max="10" step="1" 
+                ${on('change', e => count.value = e.target.valueAsNumber)}
+            />
+        </label>
+    `;
+    for await(const val of count) {
+        if (val == 5) break;
+    }
+    yield `Good Job 🎉  Thank you for following along`;
+})()}`, document.body);
+```
+### Change CSS:
+```JavaScript
+const color = new LiveData();
+color.value = 'black';
+mount(html`
+<h2 class="testing-css">Test Modifying CSS using NodePart</h2>
+<style>.testing-css{ color: ${color}; }</style>
+${new ArrayInstance([
+    'Red', 'Cornsilk', 'Black', 'Navy', 'Teal'
+].map(val => html`<button ${on('click', _ => color.value = val)}>${s(val)}</button>`))}
+`, document.body);
+```
+
+
+## Ideas:
 * Make as much computation frontload-able: template parsing, SSR, etc.
   * But have a gradiented path from "easy but slow" to "hard but fast".  In js-min, the template literal gets turned into a template element which get's instantiated (which requires parsing the comment nodes) into an instance which is then pooled automatically.  There should be a path for someone to precompute the template-literal -> template element conversion so that they can prime that cache with template elements in the SSR document or just from an innerHTML instead of the template literal.  I think that's pretty much how I would want to operate if I were writing that code by hand.
 * Single, clear, template for both server-side and client-side rendering
@@ -25,9 +91,6 @@ This is my attempt at my own JavaScript "framework".  In reality, I want to find
   * Always prefer using the platform instead of creating a new one.  *Cough *cough - I hate VDOM - cough cough.
 * Respect the end user's computing and memory resources while providing a good developer experience
   * Use zero cost abstractions and make a system that - though it might not do it at first (might need transpilation or more complex coding) - utilizes the functionality in the browser like the pre-fetch family of meta tags or service worker or CSP or anything else.  Everything should be designed in a way that would fit well with the existing APIs.
-
-The current tests can be found here: [https://evan-brass.github.io/js-min/test.html] 
-The code that produces those examples can be found here: [https://github.com/evan-brass/js-min/blob/master/test.html]
 
 ### Things I think you should note about the framework:
 1. Notice how the templating works:
