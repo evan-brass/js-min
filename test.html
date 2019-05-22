@@ -49,8 +49,8 @@
 				<h2 class="testing-css">Test Modifying CSS using NodePart</h2>
 				<style>.testing-css{ color: ${color}; }</style>
 				${new ArrayInstance([
-					'Red', 'Cornsilk', 'Black', 'Navy', 'Teal'
-				].map(val => html`<button ${on('click', _ => color.value = val)}>${s(val)}</button>`))}
+					'Red', 'Cornsilk', 'Black', 'Navy', 'Teal', 'RebeccaPurple'
+				].map(val => html`<button ${on('click', _ => color.value = val.toLowerCase())}>${s(val)}</button>`))}
 				`;
 			})(),
 			(function(){

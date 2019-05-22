@@ -7,7 +7,7 @@ export const PartUser = new Trait("Object must implement the PartUser interface 
     bind(part) {
         throw new Error("PartUser: No default implementation for bind.");
     },
-    unbind(part) {
+    unbind() {
         throw new Error("PartUser: No default implementation for unbind.")
     }
 });
@@ -44,9 +44,7 @@ export default class Instance {
     bind(part) {
         part.update(this);
     }
-    unbind() {
-
-    }
+    unbind() {}
 }
 
 export class TemplateInstance extends Instance {
@@ -56,7 +54,7 @@ export class TemplateInstance extends Instance {
 			yield walker.currentNode;
 		}
 	}
-	// MAYBE: Move this into TemplateInstance?
+	// MAYBE: Move this into parts somehow?
 	parseParts() {
 		for (const comment of Array.from(this.getComments(this._fragment))) {
 			for (const part of createParts(comment)) {

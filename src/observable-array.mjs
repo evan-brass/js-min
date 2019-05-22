@@ -1,3 +1,5 @@
+import range from './range.mjs';
+
 export default function ObservableArray() {
     let removed = new Map();
     let added = new Map();
@@ -12,12 +14,6 @@ export default function ObservableArray() {
             for (let func = this.callbacks.pop(); func; func = this.callbacks.pop()) {
                 func(val);
             }
-        }
-    }
-
-    function* range(start, end, step = 1) {
-        for (let i = start; i < end; i += step) {
-            yield i;
         }
     }
 

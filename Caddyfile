@@ -1,4 +1,6 @@
-localhost:8080
+localhost:443
+
+tls self_signed
 
 mime .js Application/JavaScript
 mime .mjs Application/ECMAScript

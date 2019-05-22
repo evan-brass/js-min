@@ -9,7 +9,7 @@ export function s(value) { // s is short for static.  This value is not going to
         bind(part) {
             part.update(value);
         },
-        unbind(part) {
+        unbind() {
 
         }
     };
@@ -34,7 +34,7 @@ export function on(event, callback) {
             element = part.element;
             element.addEventListener(event, callback);
         },
-        unbind(part) {
+        unbind() {
             element.removeEventListener(event, callback);
         }
     };

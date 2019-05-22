@@ -76,7 +76,9 @@ export class NodePart extends Part {
     }
     defaultUpdate(newValue) {
         function convertToNode(value) {
-            if (['string', 'number', 'boolean'].includes(typeof value)) {
+            if (value === undefined) {
+                return new Text();
+            } else if (['string', 'number', 'boolean'].includes(typeof value)) {
                 return new Text(value);
             } else if (value[Symbol.iterator]) {
                 const fragment = document.createDocumentFragment();
