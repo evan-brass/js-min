@@ -23,7 +23,9 @@
 		import html from './src/min.mjs';
 		import {ArrayInstance} from './src/instance.mjs';
 		import delay from './src/delay.mjs';
+		import dial from './src/tests/dial.mjs';
 		const tests = [
+			dial(),
 			(function() {
 				return html`
 					<h2>Test Swapping</h2>
