@@ -186,13 +186,14 @@
 	<script type="module">
 		import ObservableArray from './src/observable-array.mjs';
 
-		const {wait, changes, proxy} = ObservableArray();
+		const arr = new ObservableArray();
+		const {wait, added, removed, moved, proxy} = arr;
 		function clear (){
 			console.log(proxy.toString());
-			console.log(`${changes.added.size} Added; ${changes.removed.size} Removed; ${changes.moved.size} Moved`);
-			changes.added.clear();
-			changes.removed.clear();
-			changes.moved.clear();
+			console.log(`${added.size} Added; ${removed.size} Removed; ${moved.size} Moved`);
+			added.clear();
+			removed.clear();
+			moved.clear();
 		}
 
 		proxy.push(3);
