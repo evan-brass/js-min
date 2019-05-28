@@ -7,7 +7,7 @@ export default class Trait {
         return this.symbol;
     }
     [Symbol.hasInstance](target) {
-        return target[this.symbol] !== undefined;
+        return typeof target == "object" && target[this.symbol] !== undefined;
     }
     get(target) {
         if (!(target instanceof this)) {
