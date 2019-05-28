@@ -149,10 +149,11 @@
 				const count = new LiveData();
 				count.value = 10;
 				yield html`First: Set the count to 25...<br />
+					${s(html`
 					<button ${on('click', () => count.value -= 1)}>-</button>
 					${count}
 					<button ${on('click', () => count.value += 1)}>+</button>
-				`;
+				`)}`;
 				for await(const val of count) {
 					if (val == 25) break;
 				}

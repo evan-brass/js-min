@@ -1,9 +1,9 @@
-import {TemplateCache, createTemplate} from '../template.mjs';
+import {getTemplate} from '../template.mjs';
 const assert = console.assert;
 
 // Test 1: Empty Template
 function test1(strings) {
-    const template = createTemplate(strings);
+    const template = getTemplate(strings);
     assert(template instanceof HTMLTemplateElement, "should return a template element");
     assert(template.innerHTML == ``, 'template should be empty');
     assert(template.id[0] == 'a', "first character of the id should be an 'a'");
@@ -13,7 +13,7 @@ test1``;
 // Test various templates:
 function basicTester(result) {
     return function(strings, ...args) {
-        const template = createTemplate(strings);
+        const template = getTemplate(strings);
         assert(template.innerHTML == result, 'createTemplate had unexpected innerHTML', template.innerHTML, result);
     }
 }

@@ -1,12 +1,8 @@
 import {PartUser, getTemplateInstance} from './instance.mjs';
-import {TemplateCache, createTemplate} from './template.mjs';
+import {getTemplate} from './template.mjs';
 
 function stringsToInstance(strings) {
-    if (!TemplateCache.has(strings)) {
-        TemplateCache.set(strings, createTemplate(strings));
-    }
-    const template = TemplateCache.get(strings);
-    return getTemplateInstance(template);
+    return getTemplateInstance(getTemplate(strings));
 }
 export default function sample_min_templater(strings, ...expressions) {
     const instance = stringsToInstance(strings);

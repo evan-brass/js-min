@@ -1,9 +1,11 @@
-export const TemplateCache = new Map();
-export function createTemplate(strings) {
-	function createId() {
-		// TODO: Improve ID generation
+import hashString from "./string-hash.mjs";
+
+const TemplateCache = new Map();
+
+export function getTemplate(strings) {
+	function createId(strings) {
 		// Always start the id with a character so that it is valid everywhere in HTML.
-		return 'a' + Math.floor(Math.random() * Date.now()).toString(16);
+		return 'a' + Math.abs(hashString(strings.join('{{}}'))).toString(16);
 	}
 	function joinStrings(strings, markers) {
 		let composed = "";
@@ -22,14 +24,20 @@ export function createTemplate(strings) {
 	if (!(strings instanceof Array)) {
 		throw new Error("Argument to createTemplate must be an Array of strings like that produced by a tagged template litteral.");
 	}
-	const id = createId();
-	const template = document.createElement('template');
-	template.id = id;
-	template.innerHTML = joinStrings(strings, markers(id));
+	const id = createId(strings);
+	if (TemplateCache.has(id)) {
+		return TemplateCache.get(id);
+	} else {
+		const template = document.createElement('template');
+		template.id = id;
+		template.innerHTML = joinStrings(strings, markers(id));
+	
+		convertMarkers(template, id);
 
-	convertMarkers(template, id);
-
-	return template;
+		TemplateCache.set(id, template);
+	
+		return template;
+	}
 }
 
 // TODO: Move convertMarkers to parts.mjs?
