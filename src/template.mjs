@@ -2,6 +2,10 @@ import hashString from "./string-hash.mjs";
 
 const TemplateCache = new Map();
 
+const appendTemplates = document.createElement('template');
+appendTemplates.id = "generated-templates";
+document.body.appendChild(appendTemplates);
+
 export function getTemplate(strings) {
 	function createId(strings) {
 		// Always start the id with a character so that it is valid everywhere in HTML.
@@ -29,6 +33,9 @@ export function getTemplate(strings) {
 		return TemplateCache.get(id);
 	} else {
 		const template = document.createElement('template');
+		if (appendTemplates) {
+			appendTemplates.appendChild(template);
+		}
 		template.id = id;
 		template.innerHTML = joinStrings(strings, markers(id));
 	
