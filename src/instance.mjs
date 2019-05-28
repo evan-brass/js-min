@@ -1,6 +1,8 @@
 import {createParts, NodePart, Returnable} from './parts.mjs';
 import Trait from './trait.mjs';
 import { SelfUpdate } from './parts.mjs';
+import ObservableArray from './observable-array.mjs';
+import doInFrameOnce from './do-in-frame-once.mjs';
 
 export const PartUser = new Trait("Object must implement the PartUser interface as described here: https://github.com/evan-brass/js-min/wiki/Trait:-Part-User", {
     acceptTypes: ['node'],
@@ -171,55 +173,12 @@ export class ArrayInstance extends Instance {
                 part.update(expr);
             }
         }
-        
-        this.removed = {};
-        this.added = {};
-        this.moved = {};
-        this.animationFrame = false;
-        function* range(start, end, step = 1) {
-            for (let i = start; i < end; i += step) {
-                yield i;
-            }
-        }
-        this.arr = new Proxy(this.users, {
-            set: (target, key, newValue) => {
-                console.log('setting', key, 'to', newValue);
-                if (!this.animationFrame) {
-                    this.animationFrame = requestAnimationFrame(() => {
-                        this.animationFrame = false;
-                        console.log('Added: ', this.added);
-                        console.log('Removed: ', this.removed);
-                        console.log('Moved: ', this.moved);
-                        this.added = {};
-                        this.removed = {};
-                        this.moved = {};
-                    })
-                }
-                if (key == 'length') {
-                    for (const i of range(newValue, target[key] + 1)) {
-                        this.removed[i] = target[i];
-                    }
-                } else {
-                    const index = target.indexOf(newValue);
-                    if (index != -1) {
-                        // Check if we're moving an item that is already in the list.
-                        this.moved[index] = {val: newValue, newIndex: key};
-                    }
-                    if (newValue == undefined) {
-                        // Check if we're removing an item
-                        this.removed[key] = this.users[key];
-                    }
-                    if (target[key] === undefined) {
-                        // Check if we're adding a value
-                        this.added[key] = newValue;
-                    }
-                }
-
-                return target[key] = newValue;
-            }
+        const observableArray = new ObservableArray();
+        observableArray.callback = doInFrameOnce.bind(this, () => {
+            // TODO: Update the dom with the changes made to the array
         });
+        this.arr = observableArray.proxy;
     }
-    // TODO: Wrappers + animations, implement enough to allow the normal map functions to be called on it (reverse, sort, etc)
 }
 
 export const InstancePools = new WeakMap();
