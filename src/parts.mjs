@@ -90,7 +90,7 @@ export class NodePart extends Part {
                 return value;
             }
         }
-        this.cleanFramed(); // TODO: Need swapping here (something like should update).
+        this.cleanFramed();
         let node = convertToNode(newValue);
         if (node instanceof Returnable) {
             const lender = Returnable.get(node);
