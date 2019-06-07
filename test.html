@@ -19,11 +19,11 @@
 	<p>You can find out more about it at <a href="https://github.com/evan-brass/js-framework">https://github.com/evan-brass/js-framework</a> or view the code that generates these examples here: <a href="https://github.com/evan-brass/js-framework/blob/master/test.html">https://github.com/evan-brass/js-framework/blob/master/test.html</a></p>
 	<script type="module" src="./src/tests/template.test.mjs"></script>
 	<script type="module">
-		import LiveData from './src/live-data.mjs';
+		import LiveData from './src/lib/live-data.mjs';
 		import {s, on, mount} from './src/expressions.mjs';
 		import html from './src/min.mjs';
 		import {ArrayInstance} from './src/instance.mjs';
-		import delay from './src/delay.mjs';
+		import delay from './src/lib/delay.mjs';
 		import dial from './src/tests/dial.mjs';
 		const tests = [
 			dial(),
@@ -185,7 +185,7 @@
 		}
 	</script>
 	<script type="module">
-		import ObservableArray from './src/observable-array.mjs';
+		import ObservableArray from './src/lib/observable-array.mjs';
 
 		const arr = new ObservableArray();
 		const {wait, added, removed, moved, proxy} = arr;

@@ -1,4 +1,4 @@
-import Trait from "../trait.mjs";
+import Trait from "../lib/trait.mjs";
 import Part from "./part.mjs";
 
 export const Returnable = new Trait("Object must implement the Returnable interface: https://github.com/evan-brass/js-min/wiki/Trait:-Returnable", {

@@ -41,6 +41,7 @@ export default class ObservableArray {
                             this.removed.delete(newValue);
                         } else if (this.moved.has(newValue)) {
                             // Moved and then moved: moved
+                            // TODO: Catcht he case of it being moved back to it's original spot
                             this.moved.get(newValue).to = key;
                         } else {
                             // Just added: added

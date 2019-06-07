@@ -1,4 +1,4 @@
-import hashString from "./string-hash.mjs";
+import hashString from "./lib/string-hash.mjs";
 
 const TemplateCache = new Map();
 

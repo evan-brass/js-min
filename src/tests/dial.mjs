@@ -1,10 +1,10 @@
 import {s, on} from '../expressions.mjs';
 import html from '../min.mjs';
-import range from '../range.mjs';
+import range from '../lib/range.mjs';
 import { ArrayInstance } from '../instance.mjs';
-import LiveData from '../live-data.mjs';
-import Subject from '../subject.mjs';
-import delay from '../delay.mjs';
+import LiveData from '../lib/live-data.mjs';
+import Subject from '../lib/subject.mjs';
+import delay from '../lib/delay.mjs';
 
 export default function dial(
     title = "Some Clue", 
