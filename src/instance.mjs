@@ -1,6 +1,5 @@
-import {createParts, NodePart, Returnable} from './parts.mjs';
+import {createParts, NodePart, Returnable, SelfUpdate } from './parts/index.mjs';
 import Trait from './trait.mjs';
-import { SelfUpdate } from './parts.mjs';
 import ObservableArray from './observable-array.mjs';
 import doInFrameOnce from './do-in-frame-once.mjs';
 
