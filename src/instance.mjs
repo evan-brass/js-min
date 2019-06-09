@@ -1,7 +1,7 @@
 import {createParts, NodePart, Returnable, SelfUpdate } from './parts/index.mjs';
-import Trait from './trait.mjs';
-import ObservableArray from './observable-array.mjs';
-import doInFrameOnce from './do-in-frame-once.mjs';
+import Trait from './lib/trait.mjs';
+import ObservableArray from './lib/observable-array.mjs';
+import doInFrameOnce from './lib/do-in-frame-once.mjs';
 
 export const PartUser = new Trait("Object must implement the PartUser interface as described here: https://github.com/evan-brass/js-min/wiki/Trait:-Part-User", {
     acceptTypes: ['node'],
