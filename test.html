@@ -81,6 +81,7 @@
 					Block ID in Cache: ${ag_map(address, a => Math.floor(a / 128) % 32)}
 				`;
 			})(),
+			/* No Longer works... I either need a stylesheet part (could be simple text replacement) or something else.  Due to the stylesheet constructor, anything I would do without the stylesheet constructor would be poor design later on so I'd rather wait.  If I did a syle part then I'd want to make it so that added and removed it's stylesheet from .getRootNode().adoptedStylesheets
 			(function(){
 				const color = new LiveData();
 				color.value = 'black';
@@ -92,6 +93,7 @@
 				].map(val => html`<button ${on('click', _ => color.value = val.toLowerCase())}>${s(val)}</button>`))}
 				`;
 			})(),
+			*/
 			(function(){
 				const radius = new LiveData();
 				radius.value = 50;
@@ -176,12 +178,16 @@
 			})()}`
 
 		];
+		performance.mark('start-test-rendering');
 		for (const test of tests) {
 			const instanceContainer = document.createElement('div');
 			instanceContainer.classList.add('instance');
 			mount(test, instanceContainer);
 			document.body.append(instanceContainer);
 		}
+		performance.measure('render-time');
+		const [renderEntry] = performance.getEntriesByName('render-time')
+		console.log(renderEntry.duration);
 	</script>
 </body>
 </html>
