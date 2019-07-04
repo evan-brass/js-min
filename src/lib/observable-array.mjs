@@ -1,14 +1,14 @@
 import range from './range.mjs';
 
 export default class ObservableArray {
-    constructor() {
+    constructor(initial = []) {
         this.removed = new Map();
         this.added = new Map();
         this.moved = new Map();
 
         this.callback = () => {}; // Default callback
     
-        this.proxy = new Proxy([], {
+        this.proxy = new Proxy(initial, {
             set: (target, key, newValue) => {
                 // There has got to be a better way of keeping track of this... As much as I hate diffing, it might be more efficient in some circumstances.  Really, diffing is only useful when you're doing lot's of changes that can overlap.  I learned however, that chrome sorts the array and then performs all of the sets and it even sets values that haven't changed so there's some overlap.
                 // TODO: Make data driven decisions about this whole array thing.
@@ -41,7 +41,7 @@ export default class ObservableArray {
                             this.removed.delete(newValue);
                         } else if (this.moved.has(newValue)) {
                             // Moved and then moved: moved
-                            // TODO: Catcht he case of it being moved back to it's original spot
+                            // TODO: Catch the case of it being moved back to it's original spot
                             this.moved.get(newValue).to = key;
                         } else {
                             // Just added: added
