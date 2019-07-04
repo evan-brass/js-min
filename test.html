@@ -17,7 +17,6 @@
 	</style>
 	<h1>These are tests for my JavaScript Framework</h1>
 	<p>You can find out more about it at <a href="https://github.com/evan-brass/js-framework">https://github.com/evan-brass/js-framework</a> or view the code that generates these examples here: <a href="https://github.com/evan-brass/js-framework/blob/master/test.html">https://github.com/evan-brass/js-framework/blob/master/test.html</a></p>
-	<script type="module" src="./src/tests/template.test.mjs"></script>
 	<script type="module">
 		import LiveData from './src/lib/live-data.mjs';
 		import {s, on, mount} from './src/expressions.mjs';
@@ -183,56 +182,6 @@
 			mount(test, instanceContainer);
 			document.body.append(instanceContainer);
 		}
-	</script>
-	<script type="module">
-		import ObservableArray from './src/lib/observable-array.mjs';
-
-		const arr = new ObservableArray();
-		const {wait, added, removed, moved, proxy} = arr;
-		function clear (){
-			console.log(proxy.toString());
-			console.log(`${added.size} Added; ${removed.size} Removed; ${moved.size} Moved`);
-			added.clear();
-			removed.clear();
-			moved.clear();
-		}
-
-		proxy.push(3);
-		proxy.push(2);
-		proxy.push(1);
-
-		console.log('3 pushes'); clear();
-
-		proxy.pop();
-
-		console.log('1 pop'); clear();
-
-		proxy.splice(1, 0, 17, 12, 34, 9, 5);
-
-		console.log('splice'); clear();
-
-		proxy.sort();
-
-		console.log('sort'); clear();
-		/*
-		const arr = new Proxy([1,2,3,4,5,6,7,8,9,10], {
-			get(target, name) {
-				console.log('get', name);
-				return target[name];
-			},
-			set(target, name, value) {
-				console.log('set', name, value);
-				return target[name] = value;
-			}
-		});
-		console.group('reverse');
-		Array.prototype.reverse.call(arr);
-		console.groupEnd();
-		
-		console.group('sort');
-		Array.prototype.sort.call(arr, (a, b) => a - b);
-		console.groupEnd();
-		*/
 	</script>
 </body>
 </html>
