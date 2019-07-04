@@ -2,20 +2,13 @@
 export default class LiveData {
 	constructor() {
 		this.waiters = [];
-		this.animationFrame = false;
 	}
 	set value(newValue) {
 		this._value = newValue;
-		// Since LiveData is meant for the UI, only propagate during an animation frame
-		if (!this.animationFrame) {
-			this.animationFrame = requestAnimationFrame(() => {
-				for (const callback of this.waiters) {
-					callback(newValue);
-				}
-				this.waiters.length = 0;
-				this.animationFrame = false;
-			});
+		for (const callback of this.waiters) {
+			callback(newValue);
 		}
+		this.waiters.length = 0;
 	}
 	get value() {
 		return this._value;
