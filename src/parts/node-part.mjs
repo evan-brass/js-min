@@ -75,7 +75,7 @@ export default class NodePart extends Part {
         function convertToNode(value) {
             if (value === undefined) {
                 return new Text();
-            } else if (['string', 'number', 'boolean'].includes(typeof value)) {
+            } else if (['string', 'boolean'].includes(typeof value) || !isNaN(value)) {
                 return new Text(value);
             } else if (value[Symbol.iterator]) {
                 const fragment = document.createDocumentFragment();
