@@ -105,7 +105,7 @@
 				<input type="range" 
 					value="${s(radius.value)}" 
 					min="10" max="70" step="1" 
-					${on('change', e => radius.value = e.target.valueAsNumber)}
+					${on('input', e => radius.value = e.target.valueAsNumber)}
 				/>
 				`;
 			})(),
@@ -167,7 +167,7 @@
 						<input type="range" 
 							value="${s(count.value)}" 
 							min="0" max="10" step="1" 
-							${on('change', e => count.value = e.target.valueAsNumber)}
+							${on('input', e => count.value = e.target.valueAsNumber)}
 						/>
 					</label>
 				`;
