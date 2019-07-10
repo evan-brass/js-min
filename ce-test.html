@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Custom Element based Tests</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+	<ce-test1></ce-test1>
+	<script type="application/ECMAScript">
+		const el = document.querySelector('ce-test1');
+		el.count = 35;
+	</script>
+	<script type="module">
+		import props from './src/props.mjs';
+		import behavior from './src/behavior.mjs';
+		import html from './src/min.mjs';
+		import {on} from './src/expressions.mjs';
+
+		class CETest1 extends behavior(
+			async function*() {
+				yield html`First: Set the count to 25...<br />
+					<button ${on('click', () => this._data.count.value -= 1)}>-</button>
+					${this._data.count}
+					<button ${on('click', () => this._data.count.value += 1)}>+</button>
+				`;
+				for await(const val of this._data.count) {
+					if (val == 25) break;
+				}
+				this._data.count.value = 3;
+				yield html`
+					Next: Set the thingy to 5<br />
+					<label>
+						${this._data.count}
+						<input type="range" 
+							value="${this._data.count.value}" 
+							min="0" max="10" step="1" 
+							${on('input', e => this._data.count.value = e.target.valueAsNumber)}
+						/>
+					</label>
+				`;
+				for await(const val of this._data.count) {
+					if (val == 5) break;
+				}
+				yield `Good Job 🎉  Thank you for following along`;
+			},
+		props(
+			{
+				count: {
+					type: Number,
+					default: 10
+				}
+			}
+		)) {}
+
+		customElements.define('ce-test1', CETest1, {
+
+		});
+	</script>
+</body>
+</html>
