@@ -1,0 +1,26 @@
+import User from './user.mjs';
+import constant from './constant.mjs';
+import sinkReplace from './sink-replace.mjs';
+
+// TODO: Probably split these into two files with better names
+
+// Create a User from some common expressions
+export function expression2user(expression) {
+    if (!(expression instanceof User)) {
+		if (expression && expression[Symbol.asyncIterator]) {
+			// Sink any streams
+			// Default Sink simply replaces the value with each item.  Alternate uses of the items (like appending) would need to be specified manually.  Replace is just the default.
+            return sinkReplace(expression);
+		} else {
+			return constant(expression);
+		}
+    } else {
+        return User.get(expression);
+    }
+}
+
+export function verifyUser(user, part) {
+	if (!user.acceptTypes.includes(part.type)) {
+		throw new Error(`This user acepts types: ${user.acceptTypes.join(', ')} and cannot be bound to a part of type: ${part.type}`);
+	}
+}

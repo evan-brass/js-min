@@ -75,16 +75,10 @@ export default class NodePart extends Part {
         function convertToNode(value) {
             if (value === undefined) {
                 return new Text();
-            } else if (['string', 'boolean'].includes(typeof value) || !isNaN(value)) {
-                return new Text(value);
-            } else if (value[Symbol.iterator]) {
-                const fragment = document.createDocumentFragment();
-                for (const item of value) {
-                    fragment.appendChild(convertToNode(item));
-                }
-                return fragment;
-            } else {
+            } else if (value instanceof Returnable) {
                 return value;
+            } else {
+                return new Text(value);
             }
         }
         this.cleanFramed();
@@ -113,5 +107,9 @@ export default class NodePart extends Part {
                 this.currentValue = this.defaultUpdate(newValue);
             }
         }
+    }
+    clear() {
+        this.cleanFramed();
+        this.currentValue = undefined;
     }
 }

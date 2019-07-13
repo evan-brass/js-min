@@ -1,5 +1,5 @@
 import NodePart from './parts/node-part.mjs';
-import {normalizeExpression} from './min.mjs';
+import {expression2user} from './users/common.mjs';
 
 // TODO: As with this whole thing: need clearer lifecycle guarantees.  Will the last user be unbound if disconnectCallback is called and the instance is .return()'d ?  I don't know.  That's one of the open questions I have about async generators.
 
@@ -21,12 +21,11 @@ export default function behavior(gen, inherit = HTMLElement) {
 			
             (async () => {
 				let user;
-				for await(const value of this._instance) {
-					if (user) user.unbind();
-					user = normalizeExpression(value);
+				for await(const expr of this._instance) {
+					if (user) user.unbind(part);
+					user = expression2user(expr);
 					user.bind(part);
 				}
-				if (user) user.unbind();
 			})();
         }
         disconnectedCallback() {

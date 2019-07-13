@@ -1,7 +1,7 @@
-import {s, on} from '../expressions.mjs';
-import html from '../min.mjs';
+import on from '../users/on.mjs';
+import html from '../html.mjs';
 import range from '../lib/range.mjs';
-import { ArrayInstance } from '../instance.mjs';
+import ArrayInstance from '../users/array-instance.mjs';
 import LiveData from '../lib/live-data.mjs';
 import Subject from '../lib/subject.mjs';
 import delay from '../lib/delay.mjs';
@@ -44,7 +44,7 @@ export default function dial(
             e.preventDefault();
         })}
     >
-        <h1>${s(title)}</h1>
+        <h1>${title}</h1>
         <div class="marker">^</div>
         ${(async function*() {
             const degrees = new LiveData();
@@ -56,7 +56,7 @@ export default function dial(
             yield html`
             <div class="dial" style="transform: rotate(-${degrees}deg)">
                 ${new ArrayInstance(symbols.map((sym, i) => 
-                    html`<span style="transform: translateX(-50%) rotateZ(${s((i)*360/symbols.length)}deg);">${s(sym)}</span>`
+                    html`<span style="transform: translateX(-50%) rotateZ(${(i)*360/symbols.length}deg);">${sym}</span>`
                 ))}
             </div>
             <div class="digits ${digit_status}">${new ArrayInstance(digits.map(num => 

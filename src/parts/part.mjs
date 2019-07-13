@@ -3,7 +3,10 @@ export default class Part {
         this.type = type;
         this.element = element;
     }
-    update() {
+    update(_value) {
         throw new Error("Update should be overriden.");
+    }
+    clear() {
+        throw new Error("Clear should be overriden.");
     }
 }

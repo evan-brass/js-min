@@ -24,7 +24,7 @@ export function createTemplate(id, strings) {
 	}
 	const template = document.createElement('template');
 	if (appendTemplates) {
-		appendTemplates.appendChild(template);
+		appendTemplates.content.appendChild(template);
 	}
 	template.id = id;
 	template.innerHTML = joinStrings(strings, markers(id));

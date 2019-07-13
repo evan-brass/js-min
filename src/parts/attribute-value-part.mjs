@@ -11,4 +11,7 @@ export default class AttributeValuePart extends Part {
         this.shared[this.sharedIndex] = newValue;
         this.element.setAttribute(this.attributeName, this.shared.join(''));
     }
+    clear() {
+        this.update('');
+    }
 }

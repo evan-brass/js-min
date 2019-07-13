@@ -230,7 +230,7 @@ You could place template elements that already have the markers parsed in the do
 
 3. Notice how the html function template-tag creates a new Instance every time it's called.
 
-One of the previous attempts I had at building this made the html function return an async generator that polled all of it's expressions.  How does that compare to the Instance.PartUser interface?  Do your use cases work well or not with that interface?
+One of the previous attempts I had at building this made the html function return an async generator that polled all of it's expressions.  How does that compare to the Instance.User interface?  Do your use cases work well or not with that interface?
 
 The Instance class keeps a pool (well, I haven't tested that yet) of instances because of this problem.  Can you think of a way which wouldn't need to constantly create new instances?
 
@@ -238,15 +238,15 @@ If you were writing the html template tag how would you write it?  Please let me
 
 4. Notice how the interfaces are defined using symbols.
 
-Just like the well known symbols Symbol.iterator or Symbol.asyncIterator define interfaces, the PartUser and Returnable interfaces are implemented.  I've become really fond of this style.  When it comes to implementing an interface for an object you have the freedom of the getter to potentially return an entirely different object.  This conjures for me pictures of Rust's very pretty type system and the way that they do iteration.
+Just like the well known symbols Symbol.iterator or Symbol.asyncIterator define interfaces, the User and Returnable interfaces are implemented.  I've become really fond of this style.  When it comes to implementing an interface for an object you have the freedom of the getter to potentially return an entirely different object.  This conjures for me pictures of Rust's very pretty type system and the way that they do iteration.
 
 5. Think about how you would supply data to feed into the parts.
 
 Would you use the LiveData class (which is modelled almost exactly like the live data class on Android)?  What about using a directed acyclic graph (DAG) of dependencies to propagate updates?  What about global store reducers?  What about using state machines?
 
-6. What kinds of PartUsers would you need for you project.
+6. What kinds of Users would you need for you project.
 
-Like the "on" function which puts event listeners on attribute parts, what kinds of PartUsers would you need?  Do you need Two way data binding?  What about one way?  How easy or hard would it be to implement those using the existing framework?
+Like the "on" function which puts event listeners on attribute parts, what kinds of Users would you need?  Do you need Two way data binding?  What about one way?  How easy or hard would it be to implement those using the existing framework?
 
 What about functions that take an array of elements and put them into a part?  What about a generator of elements?  What about an async generator of parts that maybe shows a loading bar at the bottom until the whole thing is loaded?
 
