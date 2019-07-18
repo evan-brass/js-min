@@ -1,9 +1,10 @@
 import User from './user.mjs';
+import ALLTYPES from '../parts/all-types.mjs';
 
 export default function constant(value) {
     return {
         get [User]() { return this; },
-        acceptTypes: ['node', 'attribute', 'attribute-value'],
+        acceptTypes: ALLTYPES,
         bind(part) {
             part.update(value);
         },

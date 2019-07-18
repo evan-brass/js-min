@@ -1,10 +1,11 @@
 import User from './user.mjs';
 import {expression2user, verifyUser} from './common.mjs';
+import ALLTYPES from '../parts/all-types.mjs';
 
 export default function sinkReplace(stream) {
 	let iteration;
 	return {
-		acceptTypes: ["node", "attribute-value", "attribute"],
+		acceptTypes: ALLTYPES,
 		bind(part) {
 			iteration = (async function*(){
 				let lastUser;

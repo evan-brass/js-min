@@ -1,19 +1,24 @@
 import User from './user.mjs';
 import constant from './constant.mjs';
 import sinkReplace from './sink-replace.mjs';
+import awaitReplace from './await-replace.mjs';
 
 // TODO: Probably split these into two files with better names
 
 // Create a User from some common expressions
 export function expression2user(expression) {
     if (!(expression instanceof User)) {
-		if (expression && expression[Symbol.asyncIterator]) {
-			// Sink any streams
-			// Default Sink simply replaces the value with each item.  Alternate uses of the items (like appending) would need to be specified manually.  Replace is just the default.
-            return sinkReplace(expression);
-		} else {
-			return constant(expression);
+		if (expression) {
+			if (expression[Symbol.asyncIterator]) {
+				// Sink any streams
+				// Default Sink simply replaces the value with each item.  Alternate uses of the items (like appending) would need to be specified manually.  Replace is just the default.
+				return sinkReplace(expression);
+			} else if (expression.then) {
+				// Use replacement for any promises
+				return awaitReplace(expression);
+			}
 		}
+		return constant(expression);
     } else {
         return User.get(expression);
     }

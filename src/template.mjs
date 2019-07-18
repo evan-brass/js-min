@@ -7,6 +7,14 @@ const appendTemplates = document.createElement('template');
 appendTemplates.id = "generated-templates";
 document.body.appendChild(appendTemplates);
 
+// Load any pregenerated templates
+const pregeneratedHolder = document.getElementById('pregenerated-templates');
+if (pregeneratedHolder) {
+	for (const template of pregeneratedHolder.content.children) {
+		registerTemplate(template.id, template);
+	}
+}
+
 export function createTemplate(id, strings) {
 	function joinStrings(strings, markers) {
 		let composed = "";

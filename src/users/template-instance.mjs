@@ -53,6 +53,7 @@ export default class TemplateInstance {
         for (let i = 0; i < this.parts.length; ++i) {
             const user = this.users[i];
             const part = this.parts[i];
+            verifyUser(user, part);
             user.bind(part);
         }
     }
