@@ -14,39 +14,8 @@ export function Base_extend(inherit = HTMLElement) {
 			// Construct the shadow DOM
 			this.attachShadow({mode: 'open'});
 		}
-		get staticStyles() {
-			return '';
-		}
-		async *dynamicStyles() {
-			return;
-		}
 		async *run() {} // Empty state machine
 		connectedCallback() {
-			// Handle static styles
-			if (!stylesheetMap.has(this.constructor)) {
-				const stylesheet = new CSSStyleSheet({});
-				stylesheet.replace(this.staticStyles);
-				stylesheetMap.set(this.constructor, stylesheet);
-			}
-			const static_stylesheet = stylesheetMap.get(this.constructor);
-
-			// Handle dynamic styles
-			const dynamic_stylesheet = new CSSStyleSheet({});
-			const style_stream = this.dynamicStyles();
-			this._style_instance = (async function update_styles() {
-				try {
-					for await (const str of style_stream) {
-						await dynamic_stylesheet.replace(str);
-					}
-				} finally {
-					// this.shadowRoot.adoptedStyleSheets = [];
-				}
-			})();
-
-			// Set them both on the shadowroot
-			this.shadowRoot.adoptedStyleSheets = [static_stylesheet, dynamic_stylesheet];
-
-
 			// Setup and run the state machine
 			const stream = this.run();
 
