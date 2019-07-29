@@ -22,6 +22,7 @@
 		import on from './src/users/on.mjs';
 		import ref from './src/users/ref.mjs';
 		import constant from './src/users/constant.mjs';
+		import css from './src/users/css.mjs';
 		import mount from './src/mount.mjs';
 		import html from './src/html.mjs';
 		import ArrayInstance from './src/users/array-instance.mjs';
@@ -84,19 +85,24 @@
 					Block ID in Cache: ${ag_map(address, a => Math.floor(a / 128) % 32)}
 				`;
 			})(),
-			/* No Longer works... I either need a stylesheet part (could be simple text replacement) or something else.  Due to the stylesheet constructor, anything I would do without the stylesheet constructor would be poor design later on so I'd rather wait.  If I did a syle part then I'd want to make it so that added and removed it's stylesheet from .getRootNode().adoptedStylesheets
 			(function(){
 				const color = new LiveData();
 				color.value = 'black';
 				return html`
-				<h2 class="testing-css">Test Modifying CSS using NodePart</h2>
-				<style>.testing-css{ color: ${color}; }</style>
+				<h2 class="testing-css">Test Modifying CSS using the css tag</h2>
+				${css`h2.testing-css { 
+					color: ${color};
+				}`}
 				${new ArrayInstance([
-					'Red', 'Cornsilk', 'Black', 'Navy', 'Teal', 'RebeccaPurple'
-				].map(val => html`<button ${on('click', _ => color.value = val.toLowerCase())}>${val)}</button>`))}
+						'Red', 'Cornsilk', 'Black', 'Navy', 'Teal', 'RebeccaPurple'
+					].map(val => html`
+						<button ${on('click', _ => color.value = val.toLowerCase())}>
+							${val}
+						</button>`
+					)
+				)}
 				`;
 			})(),
-			*/
 			(function(){
 				const radius = new LiveData();
 				radius.value = 50;
@@ -185,8 +191,9 @@
 		for (const test of tests) {
 			const instanceContainer = document.createElement('div');
 			instanceContainer.classList.add('instance');
-			mount(test, instanceContainer);
+			// So... I would normally try and build the dom and then append it but to have style parts work correctly, I have to append and then bind which will mean that some changes will happen after the element has been placed into the dom.  Honestly, I've always done it because I assumed it would have better performance but I've never tried it so it would be worth a performance test.
 			document.body.append(instanceContainer);
+			mount(test, instanceContainer);
 		}
 		performance.measure('render-time');
 		const [renderEntry] = performance.getEntriesByName('render-time')

@@ -2,13 +2,13 @@ import Part from './part.mjs';
 
 export default class StylePart extends Part {
 	constructor(element, stylesheet, shared, index) {
-		super('style-part', element);
+		super('style', element);
 		this.stylesheet = stylesheet;
-		this.sharedIndex = shared;
+		this.shared = shared;
 		this.index = index;
 	}
     update(newValue) {
-        this.shared[this.sharedIndex] = newValue;
+        this.shared[this.index] = newValue;
         this.stylesheet.replace(this.shared.join(''));
     }
     clear() {

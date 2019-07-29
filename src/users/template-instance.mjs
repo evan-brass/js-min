@@ -86,10 +86,11 @@ export default class TemplateInstance {
     get [User] () { return this; }
     get acceptTypes() { return  ['node']; }
     bind(part) {
-        this.isBound = true;
-        if (this.isConnected) this.bindUsers();
-            
+		this.isBound = true;
+		// I had to move update before the user binding because css users need to get their root node which before we update our part is a document fragment... which doesn't have an adoptedStylesheets property.  I could do some funkery with doInFrameOnce but I don't like that so I'm just going to switch it here.
         part.update(this);
+		
+        if (this.isConnected) this.bindUsers();
     }
     unbind(part) {
         this.isBound = false;
