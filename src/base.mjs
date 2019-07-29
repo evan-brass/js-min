@@ -14,19 +14,19 @@ export function Base_extend(inherit = HTMLElement) {
 			// Construct the shadow DOM
 			this.attachShadow({mode: 'open'});
 		}
+		// TODO: Switch to something completely cancellable like a pure generator or something.
 		async *run() {} // Empty state machine
 		connectedCallback() {
 			// Setup and run the state machine
-			const stream = this.run();
 
 			const temp = new Comment();
 			this.shadowRoot.appendChild(temp);
 			const part = new NodePart(temp);
 			
-			this._instance = (async function update() {
+			this._instance = (async function* update() {
 				let user;
 				try {
-					for await(const expr of stream) {
+					for await(const expr of this.run()) {
 						if (user) user.unbind(part);
 						user = expression2user(expr);
 						verifyUser(user, part);
@@ -36,10 +36,10 @@ export function Base_extend(inherit = HTMLElement) {
 					if (user) user.unbind(part);
 				}
 			})();
+			this._instance.next();
 		}
 		disconnectedCallback() {
 			this._instance.return();
-			this._style_instance.return();
 		}
 	};
 }
