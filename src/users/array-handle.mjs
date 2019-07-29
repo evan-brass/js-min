@@ -19,10 +19,26 @@ function joinHandle(expressions, part) {
 	}
 	return {
 		unbind(part) { part.clear(); }
+	};
+}
+
+function shareHandle(expressions, part) {
+	const users = Array.from(expressions).map(expression2user);
+	for (const user of users) {
+		verifyUser(user, part);
+		user.bind(part);
 	}
+	return {
+		unbind(part) {
+			for (const user of users) {
+				user.unbind(part);
+			}
+		}
+	};
 }
 
 export default function arrayHandle(expression) {
+	// The problem is that we won't know what type of part we're going to be bound to until we're bound.
 	return {
 		get [User]() { return this; },
 		acceptTypes: ALLTYPES,
@@ -32,10 +48,12 @@ export default function arrayHandle(expression) {
 					// Should probably use insertRule and deleteRule instead of array joining, but...
 				case 'attribute-value':
 					this.internal = joinHandle(expression, part);
+					break;
+				case 'attribute':
+					this.internal = shareHandle(expressions, part);
+					break;
 				case 'node':
 					// TODO: Use something like Array-Instance
-				case 'attribute':
-					// TODO: Probably bind all the items in the array to the same attribute part.
 				default:
 					throw new Error("A default array user hasn't been defined for that type of part");
 			}
