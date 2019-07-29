@@ -17,7 +17,7 @@
 	</style>
 	<h1>These are tests for my JavaScript Framework</h1>
 	<p>You can find out more about it at <a href="https://github.com/evan-brass/js-framework">https://github.com/evan-brass/js-framework</a> or view the code that generates these examples here: <a href="https://github.com/evan-brass/js-framework/blob/master/test.html">https://github.com/evan-brass/js-framework/blob/master/test.html</a></p>
-	<script type="module">
+	<script type="_module">
 		import LiveData from './src/lib/live-data.mjs';
 		import on from './src/users/on.mjs';
 		import constant from './src/users/constant.mjs';
@@ -190,6 +190,73 @@
 		performance.measure('render-time');
 		const [renderEntry] = performance.getEntriesByName('render-time')
 		console.log(renderEntry.duration);
+	</script>
+	<script type="application/ECMAScript" async defer>
+		function delay(ms) {
+			return new Promise(resolve => setTimeout(resolve, ms));
+		}
+		function* testHelper() {
+			console.log('Entering Helper');
+			yield delay(1000); // State H-1
+			console.log('Helper: Transition 1');
+			yield delay(1000); // State H-2
+			console.log('Helper: Transition 2');
+			return 5;
+		}
+		function* test() {
+			try {
+				console.log('About to call testHelper');
+				const value = yield* testHelper();
+				console.log(`Got ${value} from testHelper`);
+			} finally {
+				console.log('starting the finally');
+				yield delay(1000);
+				console.log('finishing the finally');
+			}
+			return 'success';
+		}
+		const a = cancelable(test());
+		a.then(result => console.log('cancelable resolved with', result));
+
+
+function cancelable(instance) {
+	const result = (async () => {
+		let step = instance.next();
+		while(1) {
+			const {value, done} = step;
+			if (done) {
+				return value;
+			} else {
+				try {
+					const result = await value;
+					step = instance.next(result);
+				} catch(err) {
+					step = instance.throw(err);
+				}
+			}
+		}
+	})();
+	result.cancel = () => instance.return();
+	return result;
+}
+	</script>
+	<script type="application/ECMAScript" async defer>
+		function* some() {
+			try {
+				yield 1;
+				yield 2;
+				yield 3;
+			} finally {
+				yield 4;
+				return 5;
+			}
+		}
+		function* another() {
+			yield 'First';
+			const getFromOther = yield* some();
+			yield `Got ${getFromOther} from some`;
+			return 'finally';
+		}
 	</script>
 </body>
 </html>
