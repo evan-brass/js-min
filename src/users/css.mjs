@@ -41,9 +41,7 @@ export default function css(strings, ...expressions) {
 					user.bind(part);
 				}
 			}
-			const newStyleSheets = Array.from(this.root.adoptedStyleSheets);
-			newStyleSheets.push(this.stylesheet);
-			this.root.adoptedStyleSheets = newStyleSheets;
+			this.root.adoptedStyleSheets = [this.stylesheet, ...this.root.adoptedStyleSheets];
 		},
 		unbind(_part) {
 			const newStyleSheets = Array.from(this.root.adoptedStyleSheets);
