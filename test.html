@@ -70,7 +70,7 @@
 				const index = split(ag_map(binary, b => b.slice(21, 26)), '0'.repeat(5));
 				const offset = split(ag_map(binary, b => b.slice(26)));
 				return html`
-					<input type="number" ${on('change', e => address.value = e.target.valueAsNumber)}><br>
+					<input type="number" ${on('input', e => address.value = e.target.valueAsNumber || 0)}><br>
 					Binary: 
 						<span style="color: red;">${tag}(${ag_map(tag, n => Number.parseInt(n, 2))})</span>
 						<span style="color: green;">${index}(${ag_map(index, n => Number.parseInt(n, 2))})</span>
