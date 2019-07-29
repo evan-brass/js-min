@@ -5,15 +5,8 @@ export default class AttributePart extends Part {
     constructor(element) {
         super("attribute", element);
     }
-    update(newValue) {
-		// TODO: Remove the whole object of properties thing.  I've only ever used attribute parts as a way of accessing an element (for event listeners and things).  That would make this the first part which doesn't really make sence to have an update function on.  Does this have implications else where?
-        if (newValue instanceof Object) {
-            for (const attrName in newValue) {
-                this.element.setAttribute(attrName, newValue[attrName]);
-            }
-        } else {
-            throw new Error("Currently, AttributeParts only know how to assign an object of properties.");
-        }
+    update(_newValue) {
+		throw new Error("Attribute parts aren't intended to be updated.  They are intended to be used as a way of accessing a specific element.  It's used by on, ref, and other users.");
     }
     clear() {}
 }

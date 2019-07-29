@@ -17,9 +17,10 @@
 	</style>
 	<h1>These are tests for my JavaScript Framework</h1>
 	<p>You can find out more about it at <a href="https://github.com/evan-brass/js-framework">https://github.com/evan-brass/js-framework</a> or view the code that generates these examples here: <a href="https://github.com/evan-brass/js-framework/blob/master/test.html">https://github.com/evan-brass/js-framework/blob/master/test.html</a></p>
-	<script type="_module">
+	<script type="module">
 		import LiveData from './src/lib/live-data.mjs';
 		import on from './src/users/on.mjs';
+		import ref from './src/users/ref.mjs';
 		import constant from './src/users/constant.mjs';
 		import mount from './src/mount.mjs';
 		import html from './src/html.mjs';
@@ -115,7 +116,7 @@
 			// Simple Test with Comment node
 			html`
 				<section class="${"a"} mixed with ${"b"} other things">
-					<header ${{class: "purple"}}>
+					<header ${ref(el => el)}>
 						<h1>${"Text Location"}</h1>
 					</header>
 					<!-- Test user comments: } not; JSON' { -->
