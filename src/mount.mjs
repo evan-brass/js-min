@@ -7,5 +7,8 @@ export default function mount(expression, root = document.body) {
     const part = new NodePart(temp);
     const user = expression2user(expression);
     verifyUser(user, part);
-    user.bind(part);
+	user.bind(part);
+	return function unmount() {
+		user.unbind(part);
+	};
 }
