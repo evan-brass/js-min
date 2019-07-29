@@ -2,6 +2,7 @@ import User from './user.mjs';
 import constant from './constant.mjs';
 import sinkReplace from './sink-replace.mjs';
 import awaitReplace from './await-replace.mjs';
+import arrayHandle from './array-handle.mjs';
 
 // TODO: Probably split these into two files with better names
 
@@ -16,6 +17,8 @@ export function expression2user(expression) {
 			} else if (expression.then) {
 				// Use replacement for any promises
 				return awaitReplace(expression);
+			} else if (expression instanceof Array) {
+				return arrayHandle(expression);
 			}
 		}
 		return constant(expression);
