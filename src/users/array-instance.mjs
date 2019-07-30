@@ -48,7 +48,7 @@ export default class ArrayInstance {
 
     // Implement the User Interface
     get [User] () { return this; }
-    get acceptTypes() { return  ['node']; }
+    get acceptTypes() { return  new Set(['node']); }
     bind(part) {
         part.update(this);
     }

@@ -7,7 +7,7 @@ const styleSheetCache = new Map(); // Could be a weakmap
 export default function css(strings, ...expressions) {
 	return {
 		get [User]() {return this;},
-		acceptTypes: ['node'],
+		acceptTypes: new Set(['node']),
 		bind(part) {
 			this.root = part.element.getRootNode();
 			this.parts = [];

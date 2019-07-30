@@ -2,7 +2,7 @@ import User from './user.mjs';
 
 export default function resizeObserve(observer) {
 	return {
-		acceptTypes: ["attribute"],
+		acceptTypes: new Set(["attribute"]),
 		bind(part) {
 			observer.observe(part.element);
 		},

@@ -2,7 +2,7 @@ import User from './user.mjs';
 
 export default function ref(callback) {
     return {
-        acceptTypes: ['attribute'],
+        acceptTypes: new Set(['attribute']),
         get [User] () {
             return this;
         },

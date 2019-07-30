@@ -4,7 +4,7 @@ import User from './user.mjs';
 export default function on(event, callback) {
     let element;
     return {
-        acceptTypes: ['attribute'],
+        acceptTypes: new Set(['attribute']),
         get [User] () {
             return this;
         },

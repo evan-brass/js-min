@@ -28,7 +28,7 @@ export function expression2user(expression) {
 }
 
 export function verifyUser(user, part) {
-	if (!user.acceptTypes.includes(part.type)) {
-		throw new Error(`This user acepts types: ${user.acceptTypes.join(', ')} and cannot be bound to a part of type: ${part.type}`);
+	if (!user.acceptTypes.has(part.type)) {
+		throw new Error(`This user acepts types: ${Array.from(user.acceptTypes.values()).join(', ')} and cannot be bound to a part of type: ${part.type}`);
 	}
 }
