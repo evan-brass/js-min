@@ -36,22 +36,41 @@
 					// return `${contents}\n`;
 				}
 				const listItems = new NodeArray(
-					['test 1', 'test 2', 'test 3'].map(makeLi)
+					['2 test', '1 test', '3 test'].map(makeLi)
 				);
 				return html`
-					<h2>Node Array Tests</h2>
-					<input ${ref(el => inputEl = el)} placeholder=">Enter what you want to add to the array here<" type="text"><br>
-					${['unshift', 'shift', 'push', 'pop'].map(op => 
-						html`<button ${on('click', _ => {
-								console.groupCollapsed(op);
-								listItems.array[op](
-									makeLi(inputEl.value)
-								);
-								console.groupEnd();
-							})}>
-								${op}
-							</button>`
-					)}<pre><ul>${listItems}</ul></pre>
+				<h2>Node Array Tests</h2>
+				<input ${ref(el => inputEl = el)} value="6 new" type="text"><br>
+				${['unshift', 'shift', 'push', 'pop'].map(op => 
+				html`<button ${on('click', _ => {
+					listItems.array[op](
+						makeLi(inputEl.value)
+						);
+					})}>
+					${op}
+					</button>`
+					)}<br>
+					${(function() {
+						let start;
+						let remove;
+						let addCount
+						function* repeat(times = 1) {
+							for (let i = 0; i < times; ++i) {
+								yield makeLi(inputEl.value);
+							}
+						}
+						return html`
+							<label>Start:<input type="number" step="1" value="2" ${ref(el => start = el)}></label><br>
+							<label>Delete Count:<input type="number" step="1" value="2" ${ref(el => remove = el)}></label><br>
+							<label>Add Count:<input type="number" step="1" value="2" ${ref(el => addCount = el)}></label><br>
+							<button ${on('click', _ => {
+								listItems.array.splice(start.valueAsNumber, remove.valueAsNumber, ...repeat(addCount.valueAsNumber))
+							})}>Splice</button>
+						`;
+					})()}
+					<ul>
+						${listItems}
+					</ul>
 				`
 			})(),
 			dial(),
@@ -142,7 +161,6 @@
 				/>
 				`;
 			})(),
-//			/*
 			// Simple Test with Comment node
 			html`
 				<section class="${"a"} mixed with ${"b"} other things">
@@ -176,8 +194,6 @@
 
 			// Troubleshooting a bug
 			html`${'another'} ${'hello'}`,
-
-//			*/
 			
 			// Test for using multiple templates swapped by async generator as a state machine
 			html`${(async function*() {
@@ -209,7 +225,6 @@
 				}
 				yield `Good Job 🎉  Thank you for following along`;
 			})()}`
-
 		];
 		performance.mark('start-test-rendering');
 		for (const test of tests) {

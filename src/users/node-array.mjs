@@ -22,6 +22,7 @@ export default class NodeArray {
 		this._fragment.appendChild(this.last);
 
 		const arrFuncs = {
+			// The goal here is to optimize some of the common array functions.  When we're using our proxy bellow we might not know what's going on as well and might have to redo work.
 			/*
 			push() {
 				// TODO: implement
@@ -40,93 +41,93 @@ export default class NodeArray {
 			}
 			*/
 		};
-		const insertPartAt = (parts, index) => {
-			const temp = new Text();
+		const insertNodeAt = (index, node = new Text()) => {
 			// Find the next part and insert before it
-			for (const i of range(index + 1, parts.length, 1)) {
-				const refPart = parts[i];
+			for (const i of range(index + 1, this.parts.length, 1)) {
+				const refPart = this.parts[i];
 				if (refPart) {
-					refPart.insertBefore(temp);
-					const newPart = new NodePart(temp);
-					this.parts[index] = newPart;
-					return newPart;
+					refPart.insertBefore(node);
+					return node;
 				}
 			}
 			// I'm pretty sure I never need to worry about using insert before because I have this.last now
 			// No next parts so just insert it last
-			this.last.parentNode.insertBefore(temp, this.last);
-			const newPart = new NodePart(temp);
-			this.parts.push(newPart);
-			return newPart;
+			this.last.parentNode.insertBefore(node, this.last);
+			return node;
 		}
 		this.array = new Proxy(this.expressions, {
 			get: (_, key) => {
-				console.log('Getting key: ', key);
 				if (this.expressions.hasOwnProperty(key)) { // Numeric indexes and length hopefully.
 					return this.expressions[key];
 				} else if (key in arrFuncs) {
-					return arrFunc[key];
+					return arrFuncs[key];
 				} else if (this.expressions[key] instanceof Function) {
 					return this.expressions[key].bind(this.array);
 				} else {
 					throw new Error('Error getting key: ', key);
 				}
 			},
-			set: (_, key, newExpression) => {
-				console.group('Setting ', key, ' to ', newExpression);
+			set: (_, key, newValue) => {
+				// My old method was to unbind the user and rebind it elsewhere but this doesn't hold true to the lifecycle that the template instance expects.  It therefore unbind's it's users and then clears it's expression array. What this means is that I have to move the parts around.  Or, I could add a move method to users so that they can be moved between parts without an unbind then bind.
 				const num = Number.parseInt(key);
 				if (!isNaN(num) && num >= 0) {
-					// const oldExpression = this.expressions[key];
-					const oldUser = this.users[key];
-					const part = this.parts[key] || insertPartAt(this.parts, num);
-					if (oldUser) {
-						oldUser.unbind(part);
+					// I'm not really sure whether or not I could just use num everywhere instead of using key.
+					const existingUser = this.users[key];
+					let existingPart = this.parts[key];
+					
+					if (existingUser) {
+						existingUser.unbind(existingPart);
 					}
 					
-					if (newExpression !== undefined) {
-						const newUser = expression2user(newExpression);
-						verifyUser(newUser, part);
+					if (newValue !== undefined) {
+						const newUser = expression2user(newValue);
 						// So, it can happen that we get the same user set in two spots and if we try to bind before we've unbound from the previous is a bit sad.  Honestly, I'm not sure if it would be better to move the part around or to do the unbind from the former part and a bind to the new part.  I'm going to implement it as unbind and rebind but it means that everything becomes algorithmically waaayyy more complex.  *Cringe*
 						// MAYBE: add a boundPart property for users and have verifyUser unbind the old part.  That way you can move a user around without having to unbind it.  This would also mean checking if the user is bound to the part you were intending to unbind it from.)
+						// TODO: See if we can't make it constant instead of linear for any change.
 						const oldIndex = this.users.indexOf(newUser);
 						if (oldIndex != -1) {
-							// Unbind the user from any previous locations:
-							console.log("Unbinding the user from it's old location of: ", oldIndex);
-							this.users[oldIndex].unbind(this.parts[oldIndex]);
+							const actualPart = this.parts[oldIndex];
+							this.parts[oldIndex] = false;
+							this.parts[key] = actualPart;
+							
+							let clear = true;
+							for (const i of range(oldIndex, num)) {
+								if (this.parts[i]) {
+									clear = false;
+									break;
+								}
+							}
+							if (!clear) {
+								const frag = actualPart.packageForMove();
+								insertNodeAt(num, frag);
+							}
+
+							this.users[key] = this.users[oldIndex];
 							this.users[oldIndex] = false;
+						} else {
+							if (!existingPart) {
+								existingPart = this.parts[key] = new NodePart(insertNodeAt(num));
+							}
+							verifyUser(newUser, existingPart);
+							newUser.bind(existingPart);
 						}
 						this.users[key] = newUser;
-						this.expressions[key] = newExpression;
-						newUser.bind(part);
 					} else {
+						// TODO: Cleanup parts? or maybe bellow
 						this.users[key] = undefined;
-						this.expressions[key] = undefined;
 					}
 					
 				} else if (key == 'length') {
 					// Clear the expressions past the new length (or prefill the new length if the length is greater than the old I suppose)
-					for (const i of range(this.expressions.length, newExpression)) {
+					for (const i of range(this.expressions.length, newValue)) {
 						this.array[i - 1] = undefined;
 					}
-					this.users.length = newExpression;
-					this.expressions.length = newExpression;
+					this.users.length = newValue;
+					// TODO: Cleanup parts? or maybe above
 				} else {
-					throw new Error('Error setting key: ', key, ' with value ', newExpression);
+					throw new Error('Error setting key: ', key, ' with value ', newValue);
 				}
-				console.log('parts', this.parts);
-				console.log('users', this.users);
-				console.log('expressions', this.expressions);
-				const multipleMap = new Map();
-				this.expressions.forEach((expression, i) => {
-					const arr = multipleMap.get(expression);
-					if (arr) {
-						arr.push(i);
-					} else {
-						multipleMap.set(expression, [i]);
-					}
-				});
-				console.log(multipleMap);
-				console.groupEnd();
+				this.expressions[key] = newValue;
 				return true;
 			}
 		});

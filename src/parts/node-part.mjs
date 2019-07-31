@@ -58,16 +58,31 @@ export default class NodePart extends Part {
             this.after = null;
             this.mode = "unframed";
         }
-    }
+	}
+	packageForMove() {
+		const frag = new DocumentFragment();
+		if (this.mode == "framed") {
+            while(this.before.nextSibling != this.after) {
+                frag.appendChild(this.before.nextSibling);
+			}
+			frag.insertBefore(this.before, frag.firstChild);
+			frag.appendChild(this.after);
+		} else if (this.mode == "unframed") {
+			frag.appendChild(this.element);
+		} else {
+			throw new Error("Don't know how to package a node part of mode:", this.mode);
+		}
+		return frag;
+	}
     cleanFramed() {
         if (this.mode == "framed") {
             const returnFrag = document.createDocumentFragment();
             while(this.before.nextSibling != this.after) {
                 returnFrag.appendChild(this.before.nextSibling);
             }
-            if (this.currentValue instanceof Returnable) {
-                this.currentValue.returnFragment(returnFrag);
-                this.currentValue = false;
+            if (this.lender) {
+                this.lender.returnFragment(returnFrag);
+                this.lender = false;
             }
         }
     }
@@ -75,40 +90,44 @@ export default class NodePart extends Part {
         function convertToNode(value) {
             if (value === undefined) {
                 return new Text();
-            } else if (value instanceof Returnable) {
+            } else if (
+				value instanceof Returnable || 
+				value instanceof DocumentFragment || 
+				value instanceof HTMLElement
+			) {
                 return value;
             } else {
                 return new Text(value);
             }
         }
-        this.cleanFramed();
-        let node = convertToNode(newValue);
-        if (node instanceof Returnable) {
-            const lender = Returnable.get(node);
-            node = lender.getFragment();
-            this.lender = lender;
-        }
-        if (node instanceof DocumentFragment) {
-            this.makeFramed();
-            this.after.parentNode.insertBefore(node, this.after);
-        } else {
-            this.makeUnframed();
-            this.element.replaceWith(node);
-            this.element = node;
-        }
-        return newValue;
+		// By default only update if the value is different.
+		if (this.currentValue !== newValue) {
+			this.cleanFramed();
+			let node = convertToNode(newValue);
+			if (node instanceof Returnable) {
+				this.lender = Returnable.get(node);
+				node = this.lender.getFragment();
+			}
+			if (node instanceof DocumentFragment) {
+				this.makeFramed();
+				this.after.parentNode.insertBefore(node, this.after);
+			} else {
+				this.makeUnframed();
+				this.element.replaceWith(node);
+				this.element = node;
+			}
+			return newValue;
+		}
     }
     update(newValue) {
         if (this.currentValue instanceof SelfUpdate) {
             this.currentValue = SelfUpdate.get(this.currentValue).update(newValue, this.defaultUpdate.bind(this));
         } else {
-            // By default only update if the value is different.
-            if (this.currentValue !== newValue) {
-                this.currentValue = this.defaultUpdate(newValue);
-            }
+			this.currentValue = this.defaultUpdate(newValue);
         }
     }
     clear() {
+		// TODO: Fix swapping
         this.update("");
 	}
 	// Helper for manipulating nodeParts and making new ones relative to one
