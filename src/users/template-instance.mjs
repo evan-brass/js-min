@@ -169,6 +169,7 @@ export default class TemplateInstance {
     }
 }
 
+// I just watched a video about the Chrome garbage collector which said that short lived objects are actually cheaper than long lived objects.  Pooling the instances was all about reusing objects and making them last longer.  Is that actually a good thing? (https://v8.dev/blog/trash-talk) TODO: Perf testing!
 export const InstancePools = new WeakMap();
 
 export function getTemplateInstance(template) {

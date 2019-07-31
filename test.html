@@ -25,10 +25,35 @@
 		import css from './src/users/css.mjs';
 		import mount from './src/mount.mjs';
 		import html from './src/html.mjs';
-		import ArrayInstance from './src/users/array-instance.mjs';
 		import delay from './src/lib/delay.mjs';
 		import dial from './src/tests/dial.mjs';
+		import NodeArray from './src/users/node-array.mjs';
 		const tests = [
+			(function() {
+				let inputEl;
+				function makeLi(contents) {
+					return html`<li>${contents}</li>`;
+					// return `${contents}\n`;
+				}
+				const listItems = new NodeArray(
+					['test 1', 'test 2', 'test 3'].map(makeLi)
+				);
+				return html`
+					<h2>Node Array Tests</h2>
+					<input ${ref(el => inputEl = el)} placeholder=">Enter what you want to add to the array here<" type="text"><br>
+					${['unshift', 'shift', 'push', 'pop'].map(op => 
+						html`<button ${on('click', _ => {
+								console.groupCollapsed(op);
+								listItems.array[op](
+									makeLi(inputEl.value)
+								);
+								console.groupEnd();
+							})}>
+								${op}
+							</button>`
+					)}<pre><ul>${listItems}</ul></pre>
+				`
+			})(),
 			dial(),
 			(function() {
 				return html`
@@ -93,13 +118,12 @@
 				${css`h2.testing-css { 
 					color: ${color};
 				}`}
-				${new ArrayInstance([
-						'Red', 'Cornsilk', 'Black', 'Navy', 'Teal', 'RebeccaPurple'
-					].map(val => html`
-						<button ${on('click', _ => color.value = val.toLowerCase())}>
-							${val}
-						</button>`
-					)
+				${[
+					'Red', 'Cornsilk', 'Black', 'Navy', 'Teal', 'RebeccaPurple'
+				].map(val => html`
+					<button ${on('click', _ => color.value = val.toLowerCase())}>
+						${val}
+					</button>`
 				)}
 				`;
 			})(),
@@ -199,7 +223,7 @@
 		const [renderEntry] = performance.getEntriesByName('render-time')
 		console.log(renderEntry.duration);
 	</script>
-	<script type="application/ECMAScript" async defer>
+	<script type="_application/ECMAScript" async defer>
 		function delay(ms) {
 			return new Promise(resolve => setTimeout(resolve, ms));
 		}
@@ -248,7 +272,7 @@ function cancelable(instance) {
 	return result;
 }
 	</script>
-	<script type="application/ECMAScript" async defer>
+	<script type="_application/ECMAScript" async defer>
 		function* some() {
 			try {
 				yield 1;
@@ -265,6 +289,34 @@ function cancelable(instance) {
 			yield `Got ${getFromOther} from some`;
 			return 'finally';
 		}
+	</script>
+	<script type="_application/ECMAScript" async defer>
+		const i1 = {num: 1};
+		const i2 = {num: 2};
+		const i3 = {num: 3};
+		const i4 = {num: 4};
+		const i5 = {num: 5};
+		const i6 = {num: 6};
+		const arr = [i1, i2, i3, i4];
+		arr.unshift(i5);
+		console.log(arr); // Expecting: [i5, i1, i2, i3, i4]
+		const proxy = new Proxy(arr, {
+			set(target, key, newValue) {
+				console.log('Setting ', key, ' from ', target[key], ' to ', newValue);
+				const num = Number.parseInt(key);
+				if (!isNaN(num) && num >= 0) {
+					const oldIndex = target.indexOf(newValue);
+					if (oldIndex !== -1) {
+						target[oldIndex] = undefined;
+					}
+					return target[key] = newValue;
+				} else {
+					return target[key] = newValue;
+				}
+			}
+		});
+		Array.prototype.unshift.call(proxy, i6);
+		console.log(arr); // Expecting: [i6, i5, i1, i2, i3, i4]
 	</script>
 </body>
 </html>

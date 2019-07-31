@@ -1,6 +1,7 @@
 import User from './user.mjs';
 import { expression2user, verifyUser } from './common.mjs';
 import ALLTYPES from '../parts/all-types.mjs';
+import NodeArray from './node-array.mjs';
 
 function joinHandle(expressions, part) {
 	const shared = new Array(users.length).fill('');
@@ -59,7 +60,11 @@ export default function arrayHandle(expression) {
 					this.unbind = shareHandle(expression, part);
 					break;
 				case 'node':
-					// TODO: Use something like Array-Instance
+					const nodeArray = new NodeArray(expression);
+					verifyUser(nodeArray, part); // Probably not needed but just in case there's more stuff in verifyUser later
+					nodeArray.bind(part);
+					this.unbind = nodeArray.unbind.bind(nodeArray);
+					break;
 				default:
 					throw new Error("A default array user hasn't been defined for that type of part");
 			}

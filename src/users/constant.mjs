@@ -8,9 +8,8 @@ export default function constant(value) {
         bind(part) {
             part.update(value);
         },
-        unbind(_part) {
-			// So, too often, parts are being double updated, once with the old value and once with the new.
-			// part.clear();
+        unbind(part) {
+			part.clear();
 		}
     };
 }

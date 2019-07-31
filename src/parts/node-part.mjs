@@ -109,7 +109,25 @@ export default class NodePart extends Part {
         }
     }
     clear() {
-        this.cleanFramed();
-        this.currentValue = undefined;
-    }
+        this.update("");
+	}
+	// Helper for manipulating nodeParts and making new ones relative to one
+	insertBefore(node) {
+		if (this.mode == "framed") {
+			this.before.parentNode.insertBefore(node, this.before);
+		} else if (this.mode == "unframed") {
+			this.element.parentNode.insertBefore(node, this.element);
+		} else {
+			throw new Error("Unknown mode: ", this.mode);
+		}
+	}
+	insertAfter(node) {
+		if (this.mode == "framed") {
+			this.before.parentNode.insertBefore(node, this.after.nextSibling);
+		} else if (this.mode == "unframed") {
+			this.element.parentNode.insertBefore(node, this.element.nextSibling);
+		} else {
+			throw new Error("Unknown mode: ", this.mode);
+		}
+	}
 }

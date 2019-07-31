@@ -1,7 +1,6 @@
 import on from '../users/on.mjs';
 import html from '../html.mjs';
 import range from '../lib/range.mjs';
-import ArrayInstance from '../users/array-instance.mjs';
 import LiveData from '../lib/live-data.mjs';
 import Subject from '../lib/subject.mjs';
 import delay from '../lib/delay.mjs';
@@ -55,13 +54,13 @@ export default function dial(
             
             yield html`
             <div class="dial" style="transform: rotate(-${degrees}deg)">
-                ${new ArrayInstance(symbols.map((sym, i) => 
+                ${symbols.map((sym, i) => 
                     html`<span style="transform: translateX(-50%) rotateZ(${(i)*360/symbols.length}deg);">${sym}</span>`
-                ))}
+                )}
             </div>
-            <div class="digits ${digit_status}">${new ArrayInstance(digits.map(num => 
+            <div class="digits ${digit_status}">${digits.map(num => 
                 html`<span>${num}</span>`
-            ))}</div>
+            )}</div>
             <div>
                 ${secret_container}
             </div>
