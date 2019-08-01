@@ -1,9 +1,9 @@
-import on from '../users/on.mjs';
-import html from '../html.mjs';
-import range from '../lib/range.mjs';
-import LiveData from '../lib/live-data.mjs';
-import Subject from '../lib/subject.mjs';
-import delay from '../lib/delay.mjs';
+import on from '../../users/on.mjs';
+import html from '../../html.mjs';
+import range from '../../lib/range.mjs';
+import LiveData from '../../lib/live-data.mjs';
+import Subject from '../../lib/subject.mjs';
+import delay from '../../lib/delay.mjs';
 
 export default function dial(
     title = "Some Clue", 
@@ -111,7 +111,7 @@ export default function dial(
             // Display the secret message
             secret_container.value = secretMessage;
         })()}
-        <link rel="stylesheet" href="./src/tests/dial.css"></style>
+        <link rel="stylesheet" href="./src/tests/manual/dial.css"></style>
     </section>
     `;
 }

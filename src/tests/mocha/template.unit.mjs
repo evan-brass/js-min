@@ -1,4 +1,4 @@
-import {getTemplate} from '../template.mjs';
+import {getTemplate} from '../../template.mjs';
 const assert = chai.assert;
 
 describe('Template', function() {

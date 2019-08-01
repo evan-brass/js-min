@@ -1,5 +1,5 @@
-import ObservableArray from '../lib/observable-array.mjs';
-import range from '../lib/range.mjs';
+import ObservableArray from '../../lib/observable-array.mjs';
+import range from '../../lib/range.mjs';
 
 const assert = chai.assert;
 

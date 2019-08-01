@@ -58,11 +58,17 @@ export function getTemplate_id(id) {
 	}
 }
 
+const idCache = new WeakMap();
+
 export function getTemplate(strings) {
 	if (!(strings instanceof Array)) {
 		throw new Error("Argument to createTemplate must be an Array of strings like that produced by a tagged template litteral.");
 	}
-	const id = createId(strings);
+	let id = idCache.get(strings);
+	if (!id) {
+		id = createId(strings);
+		idCache.set(strings, id);
+	}
 	if (TemplateCache.has(id)) {
 		return TemplateCache.get(id);
 	} else {

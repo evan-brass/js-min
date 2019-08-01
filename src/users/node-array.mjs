@@ -5,6 +5,40 @@ import range from '../lib/range.mjs';
 
 
 export default class NodeArray {
+	// The goal here is to optimize some of the common array functions.  When we're using our proxy bellow we might not know what's going on as well and might have to redo work.
+	push(...newItems) {
+		// ASSUME: None of the newItems can already be in the list.
+		for (let i = 0; i < newItems.length; ++i) {
+			const expr = newItems[i];
+			const user = expression2user(expr);
+			let part;
+			const length = this.expressions.length + i;
+			if (length == this.parts.length) {
+				const temp = new Text();
+				this.last.parentNode.insertBefore(temp, this.last);
+				part = new NodePart(temp);
+				this.parts.push(part);
+			} else {
+				part = this.parts[length]
+			}
+			verifyUser(user, part);
+			this.users.push(user);
+			user.bind(part);
+		}
+		return this.expressions.push(...newItems);
+	}
+	pop() {
+		
+	}
+	splice(start, deleteCount, ...newItems) {
+		
+	}
+	shift() {
+		
+	}
+	unshift(...newItems) {
+		// TODO: implement
+	}
 	constructor(expressions) {
 		this.expressions = Array.from(expressions);
 		this.users = this.expressions.map(expression2user);
@@ -21,26 +55,6 @@ export default class NodeArray {
 		this.last = new Text();
 		this._fragment.appendChild(this.last);
 
-		const arrFuncs = {
-			// The goal here is to optimize some of the common array functions.  When we're using our proxy bellow we might not know what's going on as well and might have to redo work.
-			/*
-			push() {
-				// TODO: implement
-			},
-			pop() {
-				// TODO: implement
-			},
-			splice() {
-				// TODO: implement
-			},
-			shift() {
-				// TODO: implement
-			},
-			unshift() {
-				// TODO: implement
-			}
-			*/
-		};
 		const insertNodeAt = (index, node = new Text()) => {
 			// Find the next part and insert before it
 			for (const i of range(index + 1, this.parts.length, 1)) {
@@ -59,8 +73,8 @@ export default class NodeArray {
 			get: (_, key) => {
 				if (this.expressions.hasOwnProperty(key)) { // Numeric indexes and length hopefully.
 					return this.expressions[key];
-				} else if (key in arrFuncs) {
-					return arrFuncs[key];
+				} else if (key in this && this[key] instanceof Function) {
+					return this[key].bind(this);
 				} else if (this.expressions[key] instanceof Function) {
 					return this.expressions[key].bind(this.array);
 				} else {
