@@ -3,6 +3,8 @@ import constant from './constant.mjs';
 import sinkReplace from './sink-replace.mjs';
 import awaitReplace from './await-replace.mjs';
 import arrayHandle from './array-handle.mjs';
+import futureUser from './future-user.mjs';
+import Future from '../future.mjs';
 
 // TODO: Probably split these into two files with better names
 
@@ -14,6 +16,8 @@ export function expression2user(expression) {
 				// Sink any streams
 				// Default Sink simply replaces the value with each item.  Alternate uses of the items (like appending) would need to be specified manually.  Replace is just the default.
 				return sinkReplace(expression);
+			} else if (expression instanceof Future) {
+				return futureUser(expression);
 			} else if (expression.then) {
 				// Use replacement for any promises
 				return awaitReplace(expression);

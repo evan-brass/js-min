@@ -15,10 +15,12 @@
 		import delay from '../lib/delay.mjs';
 		import range from '../lib/range.mjs';
 		import css from '../users/css.mjs';
+		import mount from '../mount.mjs';
+		import NEVER from '../lib/never.mjs';
 
 		class Test1 extends Base {
-			async *run() {
-				yield html`
+			*run() {
+				const unmount = mount(html`
 					${(async function*() {
 						while (1) {
 							yield css`:host {
@@ -39,8 +41,13 @@
 							}
 						}
 					})()}
-				`;
-				await new Promise(_ => true);
+				`,
+				this.shadowRoot)
+				try {
+					yield NEVER;
+				} finally {
+					unmount();
+				}
 			}
 		}
 		customElements.define('test-1', Test1);
