@@ -28,13 +28,13 @@ export default class NodeArray {
 		return this.expressions.push(...newItems);
 	}
 	pop() {
-		
+
 	}
 	splice(start, deleteCount, ...newItems) {
-		
+
 	}
 	shift() {
-		
+
 	}
 	unshift(...newItems) {
 		// TODO: implement
@@ -88,19 +88,20 @@ export default class NodeArray {
 					// I'm not really sure whether or not I could just use num everywhere instead of using key.
 					const existingUser = this.users[key];
 					let existingPart = this.parts[key];
-					
+
+					// TODO: Where do I put swapping in here?  Heck, where is the existing User unbind for when the new value isn't undefined?
+
 					if (newValue !== undefined) {
 						const newUser = expression2user(newValue);
-						// So, it can happen that we get the same user set in two spots and if we try to bind before we've unbound from the previous is a bit sad.  Honestly, I'm not sure if it would be better to move the part around or to do the unbind from the former part and a bind to the new part.  I'm going to implement it as unbind and rebind but it means that everything becomes algorithmically waaayyy more complex.  *Cringe*
-						// MAYBE: add a boundPart property for users and have verifyUser unbind the old part.  That way you can move a user around without having to unbind it.  This would also mean checking if the user is bound to the part you were intending to unbind it from.)
+						// So, it can happen that we get the same user set in two spots and if we try to bind before we've unbound from the previous everything gets a bit sad.  OK.  I don't understand this code anymore.  I think it moves the parts around using the package for move method.  But... Where is the existing part unbind?
 						// TODO: See if we can't make it constant instead of linear for any change.
-						// TODO: Use a map instead of prop and then use get instead of indexof then it would be ~constant instead of linear
+						// TODO: Use a map and then use get instead of indexof.  Then it would be ~constant instead of linear
 						const oldIndex = this.users.indexOf(newUser);
 						if (oldIndex != -1) {
 							const actualPart = this.parts[oldIndex];
 							this.parts[oldIndex] = false;
 							this.parts[key] = actualPart;
-							
+
 							let clear = true;
 							for (const i of range(oldIndex, num)) {
 								if (this.parts[i]) {
@@ -130,7 +131,7 @@ export default class NodeArray {
 						// TODO: Cleanup parts? or maybe bellow
 						this.users[key] = undefined;
 					}
-					
+
 				} else if (key == 'length') {
 					// Clear the expressions past the new length (or prefill the new length if the length is greater than the old I suppose)
 					for (const i of range(this.expressions.length, newValue)) {
