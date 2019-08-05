@@ -16,7 +16,7 @@ export default function sinkReplace(stream) {
 						verifyUser(user, part);
 						if (lastUser) {
 							if (lastUser instanceof Swappable && lastUser.canSwap(user)) {
-								lastUser.doSwap(user);
+								lastUser = lastUser.doSwap(user);
 								continue;
 							}
 							lastUser.unbind(part);
