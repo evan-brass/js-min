@@ -1,7 +1,8 @@
-import {Returnable, SelfUpdate } from '../parts/node-part.mjs';
+import {Returnable} from '../parts/node-part.mjs';
 import createParts from '../parts/create-parts.mjs';
 import User from './user.mjs';
 import {expression2user, verifyUser} from './common.mjs';
+import Swappable from './swappable.mjs';
 
 export default class TemplateInstance {
     constructor(template) {
@@ -112,11 +113,10 @@ export default class TemplateInstance {
             const oldParts = this.parts;
             if (this.isConnected) {
                 this.unbindUsers();
-            }
-            this.parts = theirParts;
-            if (this.isConnected) {
-                this.bindUsers();
-            }
+			}
+			
+			this.parts = theirParts;
+			
             this.isBound = false;
             
             this.mayPool();
@@ -134,18 +134,17 @@ export default class TemplateInstance {
         if (this.isConnected) this.bindUsers();
     }
 
-    // Implement the Self Update functionality to catch swapping an instance with an instance derived from the same template
-    get [SelfUpdate]() {return this; }
-    update(newValue, defaultUpdate) {
-        if (newValue instanceof TemplateInstance && newValue.template == this.template) {
-            // Perform the swap:
-            newValue.swap_in(this.swap_out(this.parts));
-            console.log('Performed a swap.')
-            return newValue;
-        } else {
-            return defaultUpdate(newValue);
-        }
-    }
+    // Implement the Swappable interface to catch swapping an instance with an instance derived from the same template
+    get [Swappable]() { return true; }
+    canSwap(newUser) {
+		return newUser instanceof TemplateInstance && newUser.template == this.template;
+	}
+	doSwap(newUser) {
+		// Perform the swap:
+		newUser.swap_in(this.swap_out(newUser.parts));
+		console.log('Performed a swap.');
+		return newUser;
+	}
     
     // Implement the Returnable Interface
     get [Returnable]() { return this; }

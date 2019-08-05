@@ -1,4 +1,5 @@
 import User from './user.mjs';
+import Swappable from './swappable.mjs';
 import {expression2user, verifyUser} from './common.mjs';
 import ALLTYPES from '../parts/all-types.mjs';
 
@@ -13,7 +14,13 @@ export default function sinkReplace(stream) {
 					for await(const expression of stream) {
 						const user = expression2user(expression);
 						verifyUser(user, part);
-						if (lastUser) lastUser.unbind(part);
+						if (lastUser) {
+							if (lastUser instanceof Swappable && lastUser.canSwap(user)) {
+								lastUser.doSwap(user);
+								continue;
+							}
+							lastUser.unbind(part);
+						}
 						user.bind(part);
 						lastUser = user;
 					}

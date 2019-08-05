@@ -16,6 +16,7 @@ export default class Subject {
 	async *[Symbol.asyncIterator]() {
 		while (true) {
 			const {type, val} = await this.differed;
+			this.differed = new Differed();
 			switch(type) {
 				case 'yield':
 					yield val;

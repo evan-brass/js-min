@@ -24,6 +24,7 @@ export default function props(definitions, inherit = HTMLElement) {
 			this._data = {};
 			// Setup the live data objects
 			for (const key in definitions) {
+				const def = definitions[key];
 				this._data[key] = new LiveData();
 
 				// For when someone sets the properties of our element before we've been upgraded.

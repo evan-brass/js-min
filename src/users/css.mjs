@@ -5,13 +5,20 @@ import { expression2user, verifyUser } from './common.mjs';
 const styleSheetCache = new Map(); // Could be a weakmap
 
 export default function css(strings, ...expressions) {
+	// Check for CSSStyleSheet constructor
+	let supportsStyleSheets = true;
+	try {
+		const _ = new CSSStyleSheet();
+	} catch(_) {
+		supportsStyleSheets = false;
+	}
 	return {
 		get [User]() {return this;},
 		acceptTypes: new Set(['node']),
 		bind(part) {
 			this.root = part.element.getRootNode();
 			this.parts = [];
-			if (strings.length == 1) {
+			if (strings.length == 1 && supportsStyleSheets) {
 				if (!styleSheetCache.has(strings)) {
 					this.stylesheet = new CSSStyleSheet({});
 					this.stylesheet.replace(Array.prototype.join.call(strings, ''));
@@ -20,7 +27,11 @@ export default function css(strings, ...expressions) {
 					this.stylesheet = styleSheetCache.get(strings);
 				}
 			} else {
-				this.stylesheet = new CSSStyleSheet({});
+				if (supportsStyleSheets) {
+					this.stylesheet = new CSSStyleSheet({});
+				} else {
+					this.stylesheet = document.createElement('style');
+				}
 				this.users = expressions.map(expression2user);
 				const shared = [];
 				let strings_i;
@@ -33,7 +44,11 @@ export default function css(strings, ...expressions) {
 				if (this.parts.length !== this.users.length) {
 					throw new Error("There aren't the proper number of expressions for this literal.");
 				}
-				this.stylesheet.replace(shared.join(''));
+				if (supportsStyleSheets) {
+					this.stylesheet.replace(shared.join(''));
+				} else {
+					this.stylesheet.innerText = shared.join('');
+				}
 				for (let i = 0; i < this.parts.length; ++i) {
 					const part = this.parts[i];
 					const user = this.users[i];
@@ -41,12 +56,20 @@ export default function css(strings, ...expressions) {
 					user.bind(part);
 				}
 			}
-			this.root.adoptedStyleSheets = [this.stylesheet, ...this.root.adoptedStyleSheets];
+			if (supportsStyleSheets) {
+				this.root.adoptedStyleSheets = [this.stylesheet, ...this.root.adoptedStyleSheets];
+			} else {
+				part.update(this.stylesheet);
+			}
 		},
-		unbind(_part) {
-			const newStyleSheets = Array.from(this.root.adoptedStyleSheets);
-			newStyleSheets.splice(newStyleSheets.indexOf(this.stylesheet), 1);
-			this.root.adoptedStyleSheets = newStyleSheets;
+		unbind(part) {
+			if (supportsStyleSheets) {
+				const newStyleSheets = Array.from(this.root.adoptedStyleSheets);
+				newStyleSheets.splice(newStyleSheets.indexOf(this.stylesheet), 1);
+				this.root.adoptedStyleSheets = newStyleSheets;
+			} else {
+				part.clear();
+			}
 			for (let i = 0; i < this.parts.length; ++i) {
 				const part = this.parts[i];
 				const user = this.users[i];
@@ -54,10 +77,11 @@ export default function css(strings, ...expressions) {
 			}
 		},
 		get disabled() {
+			// TODO: Fix disabled for style tags
 			return this.stylesheet && this.stylesheet.disabled;
 		},
 		set disabled(newValue) {
-			if (this.stylesheet) {
+			if (this.stylesheet && this.stylesheet instanceof CSSStyleSheet) {
 				this.stylesheet.disabled = newValue;
 				return true;
 			} else {

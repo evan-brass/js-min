@@ -1,7 +1,7 @@
 import Trait from "../lib/trait.mjs";
 import Part from "./part.mjs";
 
-export const Returnable = new Trait("Object must implement the Returnable interface: https://github.com/evan-brass/js-min/wiki/Trait:-Returnable", {
+export const Returnable = new Trait("Returnable", {
     getFragment() {
         if (this._fragment) {
             const frag = this._fragment;
@@ -17,12 +17,6 @@ export const Returnable = new Trait("Object must implement the Returnable interf
         } else {
             throw new Error("Fragment is already returned.");
         }
-    }
-});
-// Might need to move swapping higher up the chain.
-export const SelfUpdate = new Trait("Object must implement the SelfUpdate Interface: not specified anywhere yet.", {
-    update(newValue, defaultUpdate) {
-        return defaultUpdate(newValue);
     }
 });
 export default class NodePart extends Part {
@@ -86,8 +80,8 @@ export default class NodePart extends Part {
             }
         }
     }
-    defaultUpdate(newValue) {
-        function convertToNode(value) {
+    update(newValue) {
+		function convertToNode(value) {
             if (value === undefined) {
                 return new Text();
             } else if (
@@ -116,15 +110,8 @@ export default class NodePart extends Part {
 				this.element.replaceWith(node);
 				this.element = node;
 			}
-			return newValue;
+			this.currentValue = newValue;
 		}
-    }
-    update(newValue) {
-        if (this.currentValue instanceof SelfUpdate) {
-            this.currentValue = SelfUpdate.get(this.currentValue).update(newValue, this.defaultUpdate.bind(this));
-        } else {
-			this.currentValue = this.defaultUpdate(newValue);
-        }
     }
     clear() {
 		// TODO: Fix swapping

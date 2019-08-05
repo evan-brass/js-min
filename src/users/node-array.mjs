@@ -89,15 +89,12 @@ export default class NodeArray {
 					const existingUser = this.users[key];
 					let existingPart = this.parts[key];
 					
-					if (existingUser) {
-						existingUser.unbind(existingPart);
-					}
-					
 					if (newValue !== undefined) {
 						const newUser = expression2user(newValue);
 						// So, it can happen that we get the same user set in two spots and if we try to bind before we've unbound from the previous is a bit sad.  Honestly, I'm not sure if it would be better to move the part around or to do the unbind from the former part and a bind to the new part.  I'm going to implement it as unbind and rebind but it means that everything becomes algorithmically waaayyy more complex.  *Cringe*
 						// MAYBE: add a boundPart property for users and have verifyUser unbind the old part.  That way you can move a user around without having to unbind it.  This would also mean checking if the user is bound to the part you were intending to unbind it from.)
 						// TODO: See if we can't make it constant instead of linear for any change.
+						// TODO: Use a map instead of prop and then use get instead of indexof then it would be ~constant instead of linear
 						const oldIndex = this.users.indexOf(newUser);
 						if (oldIndex != -1) {
 							const actualPart = this.parts[oldIndex];
@@ -127,6 +124,9 @@ export default class NodeArray {
 						}
 						this.users[key] = newUser;
 					} else {
+						if (existingUser) {
+							existingUser.unbind(existingPart);
+						}
 						// TODO: Cleanup parts? or maybe bellow
 						this.users[key] = undefined;
 					}
