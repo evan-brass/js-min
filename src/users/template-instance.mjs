@@ -113,6 +113,7 @@ export default class TemplateInstance {
             const oldParts = this.parts;
             if (this.isConnected) {
                 this.unbindUsers();
+				this.isConnected = false;
 			}
 			
 			this.parts = theirParts;
