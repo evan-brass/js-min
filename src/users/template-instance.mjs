@@ -16,6 +16,14 @@ export default class TemplateInstance {
         this.isBound = false;
         this.isConnected = false;
     }
+	get isConnected() {
+		return this._isConnected;
+	}
+	set isConnected(newValue) {
+		console.log('setting isConnected');
+		this._isConnected = newValue;
+		return true;
+	}
 	// MAYBE: Move this into parts somehow?
 	*getComments(node) {
 		const walker = document.createTreeWalker(node, NodeFilter.SHOW_COMMENT);
@@ -74,7 +82,7 @@ export default class TemplateInstance {
             throw new Error("Different number of users then this instance has parts.");
         }
         // Make sure that all the users are appropriate for the parts
-        this.users.every((user, i) => verifyUser(user, this.parts[i]));
+        this.users.forEach((user, i) => verifyUser(user, this.parts[i]));
 
         this.isConnected = true;
         
