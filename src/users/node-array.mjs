@@ -27,18 +27,20 @@ export default class NodeArray {
 		}
 		return this.expressions.push(...newItems);
 	}
+	/*
 	pop() {
-
+		// TODO: implement
 	}
 	splice(start, deleteCount, ...newItems) {
-
+		// TODO: implement
 	}
 	shift() {
-
+		// TODO: implement
 	}
 	unshift(...newItems) {
 		// TODO: implement
 	}
+	*/
 	constructor(expressions) {
 		this.expressions = Array.from(expressions);
 		this.users = this.expressions.map(expression2user);
@@ -90,18 +92,30 @@ export default class NodeArray {
 					let existingPart = this.parts[key];
 
 					// TODO: Where do I put swapping in here?  Heck, where is the existing User unbind for when the new value isn't undefined?
+					if (existingUser) {
+						existingUser.unbind(existingPart);
+						this.users[key] = false;
+					}
 
 					if (newValue !== undefined) {
 						const newUser = expression2user(newValue);
-						// So, it can happen that we get the same user set in two spots and if we try to bind before we've unbound from the previous everything gets a bit sad.  OK.  I don't understand this code anymore.  I think it moves the parts around using the package for move method.  But... Where is the existing part unbind?
+						// So, it can happen that we get the same user set in two spots and if we try to bind before we've unbound from the previous part then everything gets a bit sad.  OK.  I don't understand this code anymore.  I think it moves the parts around using the package for move method.  But... Where is the existing part unbind?
 						// TODO: See if we can't make it constant instead of linear for any change.
 						// TODO: Use a map and then use get instead of indexof.  Then it would be ~constant instead of linear
-						const oldIndex = this.users.indexOf(newUser);
+						let oldIndex;
+						if (newValue instanceof HTMLElement) {
+							// So... If we're dealing with elements then we'll accidentally create a fresh constant user and then move the existing user which causes it to not be unbound and then when it is unbound or the existing part is used a reference, then the part's element has been moved out from under it.  This breaks things.
+							// MAYBE: Throw an error when elements are used as expressions?  There may be a way of fixing this when I get around to making it linear.  The map will likely be either expression -> index or user -> index.  Also, we'll only want to worry about keeping the index if it's an object because that's the only thing that we can be sure will be unique.  Everything else we'll treat as if we don't have one in the array already.  If you wan't to have the same object in multiple places (like a string or something) then you might need to wrap it with a const user or something.  Which makes me think that it might need to be user -> index...  I don't know!
+							oldIndex = this.expressions.indexOf(newValue);
+						} else {
+							oldIndex = this.users.indexOf(newValue);
+						}
 						if (oldIndex != -1) {
 							const actualPart = this.parts[oldIndex];
 							this.parts[oldIndex] = false;
 							this.parts[key] = actualPart;
 
+							// Check if there are any existing parts between us and our new destination so that if there aren't any then we don't have to package and move the part.  Instead, we can just say that it's in the new spot.
 							let clear = true;
 							for (const i of range(oldIndex, num)) {
 								if (this.parts[i]) {
@@ -125,9 +139,6 @@ export default class NodeArray {
 						}
 						this.users[key] = newUser;
 					} else {
-						if (existingUser) {
-							existingUser.unbind(existingPart);
-						}
 						// TODO: Cleanup parts? or maybe bellow
 						this.users[key] = undefined;
 					}

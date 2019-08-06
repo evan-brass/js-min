@@ -4,9 +4,12 @@ import on from '../../users/on.mjs';
 import ref from '../../users/ref.mjs';
 
 function makeLi(contents) {
+	
 	const li = document.createElement('li');
 	li.innerText = contents;
 	return li;
+	
+	//return html`<li>${contents}</li>`;
 }
 
 function arrayOps(handler) {
