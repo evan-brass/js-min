@@ -1,10 +1,12 @@
 
 export default class LiveData {
+	// TODO: switch to a differed.
 	constructor() {
 		this.waiters = [];
 	}
 	set value(newValue) {
 		this._value = newValue;
+		console.log(`LiveData: Setting to new value: ${newValue}`);
 		for (const callback of this.waiters) {
 			callback(newValue);
 		}
@@ -17,10 +19,11 @@ export default class LiveData {
 		this.waiters.push(callback);
 	}
 	async *[Symbol.asyncIterator]() {
+		if (this._value === undefined) await this;
 		while (true) {
 			const lastIssued = this._value;
 			yield lastIssued;
-			if (this._value == lastIssued) {
+			if (this._value === lastIssued) {
 				// If we're caught up then wait for an update
 				await this;
 			}

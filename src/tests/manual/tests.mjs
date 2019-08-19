@@ -8,9 +8,10 @@ import cssTest from './css.mjs';
 import svgTest from './svg.mjs';
 import basicTests from './basic.mjs';
 import asyncGenTest from './async-generator.mjs';
+import computedTest from './computed.mjs';
 
 const tests = [
-	nodeArrayTest(),
+	computedTest(),
 	dial(),
 	swappingTest(),
 	homework(),
