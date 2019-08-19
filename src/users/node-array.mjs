@@ -2,6 +2,7 @@ import User from './user.mjs';
 import NodePart, {Returnable} from '../parts/node-part.mjs';
 import { expression2user, verifyUser } from './common.mjs';
 import range from '../lib/range.mjs';
+import Swappable from './swappable.mjs';
 
 
 export default class NodeArray {
@@ -84,6 +85,7 @@ export default class NodeArray {
 				}
 			},
 			set: (_, key, newValue) => {
+				// TODO: Need to split this up and clarify the logic
 				// My old method was to unbind the user and rebind it elsewhere but this doesn't hold true to the lifecycle that the template instance expects.  It therefore unbind's it's users and then clears it's expression array. What this means is that I have to move the parts around.  Or, I could add a move method to users so that they can be moved between parts without an unbind then bind.
 				const num = Number.parseInt(key);
 				if (!isNaN(num) && num >= 0) {
@@ -91,23 +93,18 @@ export default class NodeArray {
 					const existingUser = this.users[key];
 					let existingPart = this.parts[key];
 
-					// TODO: Where do I put swapping in here?  Heck, where is the existing User unbind for when the new value isn't undefined?
-					if (existingUser) {
-						existingUser.unbind(existingPart);
-						this.users[key] = false;
-					}
-
 					if (newValue !== undefined) {
 						const newUser = expression2user(newValue);
 						// So, it can happen that we get the same user set in two spots and if we try to bind before we've unbound from the previous part then everything gets a bit sad.  OK.  I don't understand this code anymore.  I think it moves the parts around using the package for move method.  But... Where is the existing part unbind?
 						// TODO: See if we can't make it constant instead of linear for any change.
 						// TODO: Use a map and then use get instead of indexof.  Then it would be ~constant instead of linear
 						let oldIndex;
-						if (newValue instanceof HTMLElement) {
+						if (newValue instanceof Object) {
 							// So... If we're dealing with elements then we'll accidentally create a fresh constant user and then move the existing user which causes it to not be unbound and then when it is unbound or the existing part is used a reference, then the part's element has been moved out from under it.  This breaks things.
 							// MAYBE: Throw an error when elements are used as expressions?  There may be a way of fixing this when I get around to making it linear.  The map will likely be either expression -> index or user -> index.  Also, we'll only want to worry about keeping the index if it's an object because that's the only thing that we can be sure will be unique.  Everything else we'll treat as if we don't have one in the array already.  If you wan't to have the same object in multiple places (like a string or something) then you might need to wrap it with a const user or something.  Which makes me think that it might need to be user -> index...  I don't know!
 							oldIndex = this.expressions.indexOf(newValue);
 						} else {
+							// This should be primitive values, but do we really care about moving them anyway?
 							oldIndex = this.users.indexOf(newValue);
 						}
 						if (oldIndex != -1) {
@@ -131,15 +128,30 @@ export default class NodeArray {
 							this.users[key] = this.users[oldIndex];
 							this.users[oldIndex] = false;
 						} else {
+							// TODO: Refactor these conditionals to make it cleaner
 							if (!existingPart) {
 								existingPart = this.parts[key] = new NodePart(insertNodeAt(num));
 							}
 							verifyUser(newUser, existingPart);
-							newUser.bind(existingPart);
+							// Handle swapping
+							if (existingUser) {
+								if (existingUser instanceof Swappable) {
+									const swapper = Swappable.get(existingUser);
+									if (swapper.canSwap(newUser)) swapper.doSwap(newUser);
+									else existingUser.unbind(existingPart);
+								} else {
+									existingUser.unbind(existingPart);
+								}
+							} else {
+								newUser.bind(existingPart);
+							}
 						}
 						this.users[key] = newUser;
 					} else {
 						// TODO: Cleanup parts? or maybe bellow
+						if (existingUser) {
+							existingUser.unbind(existingPart);
+						}
 						this.users[key] = undefined;
 					}
 

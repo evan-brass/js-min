@@ -7,6 +7,7 @@ import Swappable from './swappable.mjs';
 const lenderBase = {
 	getFragment() {
 		if (!this.owningInstance.isBound) {
+			// TODO: Would be nice to not need the owningInstance
 			throw new Error("Should be bound before we are asked for our fragment.");
 		}
 		const frag = this.fragment;
@@ -171,7 +172,7 @@ export default class TemplateInstance {
 	}
 
     // Implement the Swappable interface to catch swapping an instance with an instance derived from the same template
-    get [Swappable]() { return true; }
+    get [Swappable]() { return this; }
     canSwap(newUser) {
 		return newUser instanceof TemplateInstance && newUser.template == this.template;
 	}

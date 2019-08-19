@@ -15,8 +15,8 @@ export default function sinkReplace(stream) {
 						const user = expression2user(expression);
 						verifyUser(user, part);
 						if (lastUser) {
-							if (lastUser instanceof Swappable && lastUser.canSwap(user)) {
-								lastUser = lastUser.doSwap(user);
+							if (lastUser instanceof Swappable && Swappable.get(lastUser).canSwap(user)) {
+								lastUser = Swappable.get(lastUser).doSwap(user);
 								continue;
 							}
 							lastUser.unbind(part);
