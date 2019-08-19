@@ -1,6 +1,5 @@
-import Differed from './lib/differed.mjs';
-import NEVER from './lib/never.mjs';
-import range from './lib/range.mjs';
+import NEVER from '../lib/never.mjs';
+import range from '../lib/range.mjs';
 
 export default class ComputedValue {
 	constructor(evaluate, ...sources) {

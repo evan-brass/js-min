@@ -1,6 +1,6 @@
 import html from '../../html.mjs';
-import LiveData from '../../lib/live-data.mjs';
-import Computed from '../../computed.mjs';
+import LiveData from '../../reactivity/live-data.mjs';
+import Computed from '../../reactivity/computed.mjs';
 import on from '../../users/on.mjs';
 
 export default function homework(){

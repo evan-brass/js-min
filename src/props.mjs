@@ -14,7 +14,7 @@
 }
 */
 // TODO: Probably need a camel to kebbab case thing but it's ok for now.
-import LiveData from './lib/live-data.mjs';
+import LiveData from './reactivity/live-data.mjs';
 
 export default function props(definitions, inherit = HTMLElement) {
 	// Build class

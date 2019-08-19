@@ -1,6 +1,6 @@
 import html from '../../html.mjs';
 import on from '../../users/on.mjs';
-import LiveData from '../../lib/live-data.mjs';
+import LiveData from '../../reactivity/live-data.mjs';
 import css from '../../users/css.mjs';
 
 export default function cssTest(){

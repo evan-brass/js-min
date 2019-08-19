@@ -1,7 +1,7 @@
 import on from '../../users/on.mjs';
 import html from '../../html.mjs';
 import range from '../../lib/range.mjs';
-import LiveData from '../../lib/live-data.mjs';
+import LiveData from '../../reactivity/live-data.mjs';
 import Subject from '../../lib/subject.mjs';
 import delay from '../../lib/delay.mjs';
 

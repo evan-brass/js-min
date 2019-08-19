@@ -1,7 +1,7 @@
 import html from '../../html.mjs';
-import LiveData from '../../lib/live-data.mjs';
+import LiveData from '../../reactivity/live-data.mjs';
 import on from '../../users/on.mjs';
-import Computed from '../../computed.mjs';
+import Computed from '../../reactivity/computed.mjs';
 
 export default function computedTest() {
 	const a = new LiveData();

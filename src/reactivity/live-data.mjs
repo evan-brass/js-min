@@ -1,4 +1,3 @@
-
 export default class LiveData {
 	// TODO: switch to a differed.
 	constructor() {

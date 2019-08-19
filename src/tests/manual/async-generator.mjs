@@ -1,6 +1,6 @@
 
 import html from '../../html.mjs';
-import LiveData from '../../lib/live-data.mjs';
+import LiveData from '../../reactivity/live-data.mjs';
 import on from '../../users/on.mjs';
 
 // Test for using multiple templates swapped by async generator as a state machine
