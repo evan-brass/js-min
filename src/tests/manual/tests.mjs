@@ -12,6 +12,7 @@ import computedTest from './computed.mjs';
 
 const tests = [
 	computedTest(),
+	nodeArrayTest(),
 	dial(),
 	swappingTest(),
 	homework(),
@@ -20,7 +21,6 @@ const tests = [
 	basicTests,
 	asyncGenTest()
 ];
-performance.mark('start-test-rendering');
 for (const test of tests) {
 	const instanceContainer = document.createElement('div');
 	instanceContainer.classList.add('instance');
@@ -28,6 +28,3 @@ for (const test of tests) {
 	document.body.append(instanceContainer);
 	mount(test, instanceContainer);
 }
-performance.measure('render-time');
-const [renderEntry] = performance.getEntriesByName('render-time')
-console.log(renderEntry.duration);
