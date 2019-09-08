@@ -17,6 +17,7 @@ export default function awaitReplace(promise) {
 			});
 		},
 		unbind(part) {
+			promise.cancel && promise.cancel();
 			unbound = true;
 			part.clear();
 			if (user) user.unbind(part);
