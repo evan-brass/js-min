@@ -1,29 +1,47 @@
 import NEVER from '../lib/never.mjs';
 import range from '../lib/range.mjs';
+import Reactor from './reactor.mjs';
+import syncDepth from './sync-depth.mjs';
 
 export default class ComputedValue {
 	constructor(evaluate, ...sources) {
 		this.evaluate = evaluate;
 		// Make sure we have async iterables:
-		this.sources = sources.flat().map(obj => obj.next ? obj : obj[Symbol.asyncIterator]());
+		this.dependencies = [];
+		this.iterations = [];
+		this.depth = 0;
+		for (const source of sources.flat()) {
+			// The dependency is the reactor instance for the source
+			if (source instanceof Reactor) {
+				const dependency = Reactor.get(source);
+				this.dependencies.push(dependency);
+				this.depth = Math.max(this.depth, dependency.depth + 1);
+			} else {
+				this.dependencies.push(false); // TODO: Do something else
+			}
+			// The iteration is the actual async iterator that we will pull new values from
+			this.iterations.push(
+				source.next ? source : source[Symbol.asyncIterator]()
+			);
+		}
 		// Everything starts invalid:
-		this.invalid = [...range(0, this.sources.length)];
+		this.invalid = Array.from(range(0, this.iterations.length));
 		// No initial values:
 		this.values = [];
-		// No values until first revalidation:
-		this.promises = [];
+		// The promises will be filled in later when the computed is first evaluated
+		this.promises = [NEVER];
 		this.inst = false;
 	}
+	get [Reactor]() { return this; }
 	then(...args) {
 		if (!this.inst) this.inst = this.getNextValue();
 		this.inst.then(...args);
 	}
 	async getNextValue() {
-		// MAYBE: I'm concerned about double updates.  If one computed is dependent on another computed and they are both dependent on a value, would the first one be updated twice?  I'm not sure how the microtasks would work out there, especially since there's no dependency DAG height information...
 		// This updates the value with a result from an async iterator
 		const changeHandler = async i => {
-			const source = this.sources[i];
-			const {value, done} = await source.next();
+			const source = this.iterations[i];
+			const {value, done} = await source.next(this.depth);
 			// Note the value:
 			this.values[i] = value;
 			if (!done) {
@@ -42,7 +60,7 @@ export default class ComputedValue {
 			}
 			this.invalid.length = 0;
 		}
-		if (this.values.length != this.sources.length) {
+		if (this.values.length != this.iterations.length) {
 			// If this is the first time and we don't have any existing values then we need to await all the promises
 			await Promise.all(this.promises);
 		} else {
@@ -51,16 +69,18 @@ export default class ComputedValue {
 		}
 		// Calculate the new value:
 		this._value = this.evaluate(...this.values);
-		console.log(`Computed: Setting to new value: ${this._value}`);
+		// console.log(`Computed: Setting to new value: ${this._value}`);
 		this.inst = false;
 		return this._value;
 	}
 	// TODO: Switch to futures
 	async *[Symbol.asyncIterator]() {
 		if (this._value === undefined) await this; // Don't issue a value until we've run evaluate at least once.
+		let listenerDepth = false;
 		while (true) {
+			if (listenerDepth) await syncDepth(listenerDepth, this.depth);
 			const lastIssued = this._value;
-			yield lastIssued;
+			listenerDepth = yield lastIssued;
 			if (this._value === lastIssued) {
 				// If we're caught up then wait for an update
 				await this;

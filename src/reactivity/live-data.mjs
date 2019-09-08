@@ -1,3 +1,6 @@
+import Reactor from './reactor.mjs';
+import syncDepth from './sync-depth.mjs';
+
 export default class LiveData {
 	// TODO: switch to a differed.
 	constructor() {
@@ -5,7 +8,7 @@ export default class LiveData {
 	}
 	set value(newValue) {
 		this._value = newValue;
-		console.log(`LiveData: Setting to new value: ${newValue}`);
+		// console.log(`LiveData: Setting to new value: ${newValue}`);
 		for (const callback of this.waiters) {
 			callback(newValue);
 		}
@@ -19,13 +22,22 @@ export default class LiveData {
 	}
 	async *[Symbol.asyncIterator]() {
 		if (this._value === undefined) await this;
+		let listenerDepth = false;
 		while (true) {
+			if (listenerDepth) await syncDepth(listenerDepth, this.depth);
 			const lastIssued = this._value;
-			yield lastIssued;
+			listenerDepth = yield lastIssued;
 			if (this._value === lastIssued) {
 				// If we're caught up then wait for an update
 				await this;
 			}
 		}
+	}
+
+	// Implement the reactor interface:
+	get [Reactor]() { return this; }
+	get depth() {
+		// Live Data objects have no dependencies so their depth is always 0
+		return 0;
 	}
 }
