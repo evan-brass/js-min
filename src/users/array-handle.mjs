@@ -4,8 +4,8 @@ import ALLTYPES from '../parts/all-types.mjs';
 import NodeArray from './node-array.mjs';
 
 function joinHandle(expressions, part) {
-	const shared = new Array(users.length).fill('');
 	const users = Array.from(expressions).map(expression2user);
+	const shared = new Array(users.length).fill('');
 	const fakeParts = [];
 	for (let i = 0; i < users.length; ++i) {
 		const fakePart = {

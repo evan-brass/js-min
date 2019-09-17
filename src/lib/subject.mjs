@@ -19,7 +19,11 @@ export default class Subject {
 			this.differed = new Differed();
 			switch(type) {
 				case 'yield':
-					yield val;
+					try {
+						this.lastNext = yield val;
+					} catch(err) {
+						this.lastError = err;
+					}
 					break;
 				case 'return':
 					return val;
