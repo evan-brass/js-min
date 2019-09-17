@@ -21,7 +21,7 @@
 		import NEVER from '../lib/never.mjs';
 
 		class Test1 extends Base {
-			*run() {
+			async run(abortSignal) {
 				const unmount = mount(html`
 					${(async function*() {
 						while (1) {
@@ -44,12 +44,8 @@
 						}
 					})()}
 				`,
-				this.shadowRoot)
-				try {
-					yield NEVER;
-				} finally {
-					unmount();
-				}
+				this.shadowRoot);
+				abortSignal.addEventListener('abort', unmount);
 			}
 		}
 		customElements.define('test-1', Test1);

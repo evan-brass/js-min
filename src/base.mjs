@@ -1,22 +1,22 @@
-import Future from './future.mjs';
-
-export default Base_extend();
-
 export function Base_extend(inherit = HTMLElement) {
 	return class Base extends inherit {
+		abortController = new AbortController()
+		
 		constructor() {
 			super();
-
+			
 			// Construct the shadow DOM
 			this.attachShadow({mode: 'open'});
 		}
 		*run() {} // Empty state machine
 		connectedCallback() {
 			// Setup and run the state machine
-			this._future = new Future(this.run());
+			this.run(this.abortController.signal);
 		}
 		disconnectedCallback() {
-			this._future.cancel();
+			this.abortController.abort();
 		}
 	};
 }
+
+export default Base_extend();
