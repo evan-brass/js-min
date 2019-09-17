@@ -9,8 +9,10 @@ import svgTest from './svg.mjs';
 import basicTests from './basic.mjs';
 import asyncGenTest from './async-generator.mjs';
 import computedTest from './computed.mjs';
+import calendarTest from './calendar.mjs';
 
 const tests = [
+	calendarTest(),
 	computedTest(),
 	nodeArrayTest(),
 	dial(),
