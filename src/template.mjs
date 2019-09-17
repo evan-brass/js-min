@@ -1,5 +1,13 @@
 import hashString from "./lib/string-hash.mjs";
 import convertMarkers from "./parts/convert-markers.mjs";
+import MetaRoot from './introspection.mjs';
+
+const Meta = {
+	pregeneratedTemplateCount: 0,
+	generatedTemplateCount: 0,
+	submitTemplateCount: 0
+};
+MetaRoot.template = Meta;
 
 const TemplateCache = new Map();
 
@@ -11,7 +19,7 @@ document.body.appendChild(appendTemplates);
 const pregeneratedHolder = document.getElementById('pregenerated-templates');
 if (pregeneratedHolder) {
 	for (const template of pregeneratedHolder.content.children) {
-		registerTemplate(template.id, template);
+		registerTemplate(template.id, template, true);
 	}
 }
 
@@ -39,10 +47,15 @@ export function createTemplate(id, strings) {
 
 	convertMarkers(template, id);
 
+	// Increment the generated meta counter
+	++Meta.generatedTemplateCount;
+
 	return template;
 }
-export function registerTemplate(id, template) {
+export function registerTemplate(id, template, pregenerated = false) {
 	TemplateCache.set(id, template);
+	// Increment the proper meta counter:
+	++(Meta[pregenerated ? 'pregeneratedTemplateCount' : 'submitTemplateCount']);
 }
 
 export function createId(strings) {

@@ -1,4 +1,12 @@
-import {getTemplate} from '../../template.mjs';
+import {
+	getTemplate, 
+	createTemplate, 
+	registerTemplate,
+	createId,
+	getTemplate_id
+} from '../../template.mjs';
+import MetaRoot from '../../introspection.mjs';
+
 const assert = chai.assert;
 
 describe('Template', function() {
@@ -57,6 +65,9 @@ describe('Template', function() {
                     assert.equal(template.innerHTML, innerHTML);
                 });
             }
-        });
+		});
+		describe('Template Cache Usage', function() {
+
+		});
     });
 });

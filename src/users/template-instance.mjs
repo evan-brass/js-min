@@ -4,6 +4,13 @@ import User from './user.mjs';
 import {expression2user, verifyUser} from './common.mjs';
 import Swappable from './swappable.mjs';
 
+import MetaRoot from '../introspection.mjs';
+
+const Meta = {
+	swapCount: 0
+};
+MetaRoot.templateInstance = Meta;
+
 const lenderBase = {
 	getFragment() {
 		if (!this.owningInstance.isBound) {
@@ -131,6 +138,10 @@ export default class TemplateInstance {
     }
 	static swapInstances(existingInstance, replacingInstance) {
 		// Swapping means giving the new instance your parts and unbinding your users from them so that the new person can bind their users to it.  We then pool ourselves because we are no longer in use.  The new instance controls the old dom that we controlled and we control the dom that they controlled.  We want them to take control because they are the one who has been connected with the value that the programmer wants to be displayed. All future control to that dom is going to go through that new instance.  This also means switching the fragment lenders because your fragment is now their fragment and vice versa.
+
+		// Increment the swapping meta counter:
+		++Meta.swapCount;
+
 		if (!existingInstance.isBound) {
             throw new Error("Existing instance must be bound in order to swap.");
         }
