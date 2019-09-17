@@ -1,22 +1,23 @@
 import Reactor from './reactor.mjs';
 import syncDepth from './sync-depth.mjs';
+import {Reactive, addDependents} from './reactive.mjs';
 
-export default class LiveData {
-	// TODO: switch to a differed.
-	constructor() {
-		this.waiters = [];
-	}
+export default class LiveData extends Reactive.implementation {
+
 	set value(newValue) {
 		this._value = newValue;
-		// console.log(`LiveData: Setting to new value: ${newValue}`);
-		for (const callback of this.waiters) {
-			callback(newValue);
-		}
-		this.waiters.length = 0;
+		this.propagate();
+	}
+	// Implement the Reactive Trait:
+	get depth() {
+		// Live Data objects have no dependencies so their depth is always 0
+		return 0;
 	}
 	get value() {
 		return this._value;
 	}
+
+	// <BEGIN OLD>
 	then(callback) {
 		this.waiters.push(callback);
 	}
@@ -36,8 +37,4 @@ export default class LiveData {
 
 	// Implement the reactor interface:
 	get [Reactor]() { return this; }
-	get depth() {
-		// Live Data objects have no dependencies so their depth is always 0
-		return 0;
-	}
 }
