@@ -1,12 +1,11 @@
-import Differed from './differed.mjs';
-import { CancellationError } from './cancellable.mjs';
-
-export default function delay(ms) {
-	const diff = new Differed();
-	let handle = setTimeout(_ => diff.resolve(true), ms);
-	diff.cancel = _ => {
-		clearTimeout(handle);
-		diff.reject(new CancellationError());
-	};
-	return diff;
+export default function delay(ms, abortSignal = false) {
+	return new Promise((resolve, reject) => {
+		const handle = setTimeout(resolve, ms);
+		if (abortSignal) {
+			abortSignal.addEventListener('abort', _ => {
+				clearTimeout(handle);
+				reject(new DOMException('Signal Aborted.', 'AbortError'));
+			});
+		}
+	});
 }
