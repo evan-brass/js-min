@@ -3,6 +3,8 @@ import constant from './constant.mjs';
 import sinkReplace from './sink-replace.mjs';
 import awaitReplace from './await-replace.mjs';
 import arrayHandle from './array-handle.mjs';
+import { Reactive } from '../reactivity/reactive.mjs';
+import reactiveUser from './reactive-user.mjs';
 
 // TODO: Probably split these into two files with better names
 
@@ -10,7 +12,9 @@ import arrayHandle from './array-handle.mjs';
 export function expression2user(expression) {
     if (!(expression instanceof User)) {
 		if (expression ) {
-			if (expression[Symbol.asyncIterator]) {
+			if (expression instanceof Reactive) {
+				return reactiveUser(expression);
+			} else if (expression[Symbol.asyncIterator]) {
 				// Sink any streams
 				// Default Sink simply replaces the value with each item.  Alternate uses of the items (like appending) would need to be specified manually.  Replace is just the default.
 				return sinkReplace(expression);
