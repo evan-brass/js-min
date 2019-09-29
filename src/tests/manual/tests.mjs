@@ -10,8 +10,10 @@ import basicTests from './basic.mjs';
 import asyncGenTest from './async-generator.mjs';
 import computedTest from './computed.mjs';
 import calendarTest from './calendar.mjs';
+import languageTesting from './language-testing.mjs';
 
 const tests = [
+//	languageTesting(),
 	calendarTest(),
 	computedTest(),
 	nodeArrayTest(),
