@@ -8,7 +8,7 @@ export function Base_extend(inherit = HTMLElement) {
 			// Construct the shadow DOM
 			this.attachShadow({mode: 'open'});
 		}
-		*run() {} // Empty state machine
+		async run(_signal) {} // Empty state machine
 		connectedCallback() {
 			// Setup and run the state machine
 			this.run(this.abortController.signal);

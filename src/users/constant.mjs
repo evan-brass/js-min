@@ -9,7 +9,7 @@ const Base = {
 		part.update(this.value);
 	},
 	unbind(part) {
-		part.clear();
+		// part.clear();
 	}
 }
 

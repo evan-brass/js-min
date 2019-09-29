@@ -1,29 +1,29 @@
 import Trait from '../lib/trait.mjs';
 
 const propagation = new Map();
-const waiting = Symbol('This means that no propagation is in progress.');
 let propagationEnd = 0;
-let currentDepth = waiting;
+let currentDepth = -1;
 
 function startPropagation() {
 	// Start running through the propagation map in a microtask so that any changes get grouped together.
 	currentDepth = 0;
 	Promise.resolve().then(_ => {
-		for (; currentDepth < propagationEnd; ++currentDepth) {
+		for (; currentDepth <= propagationEnd; ++currentDepth) {
 			for (const node of propagation.get(currentDepth) || []) {
 				node.update();
 			}
+			propagation.delete(currentDepth);
 		}
 		// Reset everything for the next propagation:
 		propagationEnd = 0;
-		currentDepth = waiting;
+		currentDepth = -1;
 	});
 }
 export function addDependents(dependents) {
 	for (const dependent of dependents) {
 		// Throw an error if someone is misreporting their depth
-		if (dependent.depth < currentDepth) {
-			throw new Error(`Attempted to add dependencies with a depth we've already propagated.`);
+		if (dependent.depth <= currentDepth) {
+			console.warn(new Error(`Attempted to add dependencies with a depth we've already propagated.`));
 		}
 
 		// Correct propagationEnd while adding dependents
@@ -33,13 +33,13 @@ export function addDependents(dependents) {
 		
 		// Add the dependents.
 		if (!propagation.has(dependent.depth)) {
-			propagation.set(depth, new Set());
+			propagation.set(dependent.depth, new Set());
 		}
-		propagation.get(depth).add(dependent);
+		propagation.get(dependent.depth).add(dependent);
 	}
 
 	// If we haven't already started propagating then start a propagation in a microtask.
-	if (currentDepth == waiting) {
+	if (currentDepth == -1) {
 		startPropagation();
 	}
 }
@@ -67,6 +67,7 @@ Reactive.implementation = class {
 	// Nodes that aren't depth 0 need the following methods:
 	
 	// Update depth is so that if a node adds and removes dependencies then people who depend on it can have the most up to date depth
+	// Actually, I've been thinking that it might make more sense to not have an update depth, if you have variable dependencies then maybe you should just be outside the normal graph and receive updates.
 	updateDepth(_changedDependency) {
 		throw new Error('No default implementation for the depth change handler.');
 	}

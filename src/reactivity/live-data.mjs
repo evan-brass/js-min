@@ -1,8 +1,10 @@
-import Reactor from './reactor.mjs';
-import syncDepth from './sync-depth.mjs';
-import {Reactive, addDependents} from './reactive.mjs';
+import { Reactive } from './reactive.mjs';
 
 export default class LiveData extends Reactive.implementation {
+	constructor(initialValue) {
+		super();
+		this._value = initialValue;
+	}
 
 	set value(newValue) {
 		this._value = newValue;
@@ -17,24 +19,42 @@ export default class LiveData extends Reactive.implementation {
 		return this._value;
 	}
 
-	// <BEGIN OLD>
-	then(callback) {
-		this.waiters.push(callback);
-	}
-	async *[Symbol.asyncIterator]() {
-		if (this._value === undefined) await this;
-		let listenerDepth = false;
-		while (true) {
-			if (listenerDepth) await syncDepth(listenerDepth, this.depth);
-			const lastIssued = this._value;
-			listenerDepth = yield lastIssued;
-			if (this._value === lastIssued) {
-				// If we're caught up then wait for an update
-				await this;
+	[Symbol.asyncIterator]() {
+		const CaughtUp = Symbol('This symbol indicates that the async iterator is caught up with the live data object');
+		let toIssue = this.value;
+		let resolve = [];
+		const self = this;
+		const ReactiveUser = {
+			get depth() {
+				return self.depth + 1;
+			},
+			update() {
+				if (resolve.length) {
+					resolve.shift()({value: self.value, done: false});
+				} else {
+					toIssue = self.value;
+				}
+			},
+			get [Reactive]() { return this; }
+		};
+		this.depend(ReactiveUser);
+		return {
+			next() {
+				if (toIssue !== CaughtUp) {
+					const temp = toIssue;
+					toIssue = CaughtUp;
+					return Promise.resolve({value: temp, done: false});
+				} else {
+					return new Promise(res => resolve.push(res));
+				}
+			},
+			return() {
+				self.undepend(ReactiveUser);
+				return Promise.resolve({done: true});
+			},
+			[Symbol.asyncIterator]() {
+				return this;
 			}
-		}
+		};
 	}
-
-	// Implement the reactor interface:
-	get [Reactor]() { return this; }
 }
