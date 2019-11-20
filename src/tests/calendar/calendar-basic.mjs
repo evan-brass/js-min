@@ -21,6 +21,8 @@ export default class CalendarBasic extends Base {
 		this.shadowRoot.host.setAttribute('dir', 'auto');
 	}
 
+
+	// TODO: Replace thise styles thing with CSS modules
 	get styles() {
 		return css`:host {
 			direction: auto;
@@ -29,8 +31,10 @@ export default class CalendarBasic extends Base {
 			grid-template-rows: auto auto repeat(6, auto minmax(1em, auto) minmax(1em, auto) minmax(1em, auto) minmax(1em, auto) minmax(1em, auto));
 			border: 1px solid #aaa;
 			border-bottom: 0;
-			overflow-y: auto;
-			overflow-x: hidden;
+			/*
+				overflow-y: auto;
+				overflow-x: hidden;
+			*/
 		}
 		header {
 			display: flex;
@@ -53,6 +57,8 @@ export default class CalendarBasic extends Base {
 			flex-grow: 1;
 		}
 		.weekdays {
+			/* Prevent languages with multi word weekday names (like hebrew) from wrapping before attempting to use a smaller weekday name format: */
+			white-space: nowrap;
 			display: contents;
 			text-align: center;
 		}
@@ -86,6 +92,7 @@ export default class CalendarBasic extends Base {
 		}
 		`;
 	}
+	// I would like to convert this whole LiveData + getter + setter + (attributeChangedCallback?) into a decorator setup once somebody starts supporting them. These also need to delete any attributes that have already been added by a framework before the element was upgraded + call the setter with the value they set.
 	_basis = new LiveData(DateTime.local())
 	_month = new Computed(basis => Interval.fromDateTimes(
 		basis.startOf('month'),
@@ -108,6 +115,7 @@ export default class CalendarBasic extends Base {
 			const day = new Computed(visible => visible.start.plus({days: i}), this._visible);
 			return html`<div 
 					${on('keydown', e => {
+						// Arrow key navigation that takes the language direction into consideration when using the left and right arrow keys.
 						const {target, keyCode} = e;
 						const LEFT = 37;
 						const RIGHT = 39;
@@ -123,8 +131,10 @@ export default class CalendarBasic extends Base {
 						} else if (keyCode == RIGHT) {	
 							this.basis = day.value.plus({days: langDir == 'ltr' ? 1 : -1});
 						} else {
+							// If the keycode isn't any of the arrow keys then don't prevent default.
 							return;
 						}
+						// I don't want the page to scroll if the up and down arrow keys are pressed.
 						e.preventDefault();
 					})}
 					tabIndex="${new Computed((basis, day) => 
@@ -168,7 +178,9 @@ export default class CalendarBasic extends Base {
 			}
 			if (decrease) {
 				++(index.value);
-			} else if ([...canIncrease.values()].every(val => val)) {
+			} 
+			// TODO: Fix the bellow condition...
+			else if ([...canIncrease.values()].every(val => val)) {
 				--(index.value);
 			}
 		});
@@ -186,7 +198,7 @@ export default class CalendarBasic extends Base {
 		const unmount = mount(html`
 			${this.styles}
 			<header>
-				<!-- So... I'm putting displayed-month before the title and then using flex order to switch it to title then displayed month.  This is to make sure that the dir="auto" on the main element first encounters the text of the displayed month rather than the title.  That way the direction is coherent with the language that the dates are displayed in rather than the title of the calendar.  I'm going to treat the titles, descriptions, etc as user input and wrap them in bdi tags (For support, it looks like I should do dir="auto" as well: https://caniuse.com/#search=bdi) -->
+				${/* <!-- So... I'm putting displayed-month before the title and then using flex order to switch it to title then displayed month.  This is to make sure that the dir="auto" on the main element first encounters the text of the displayed month rather than the title.  That way the direction is coherent with the language that the dates are displayed in rather than the title of the calendar.  I'm going to treat the titles, descriptions, etc as user input and wrap them in bdi tags (For support, it looks like I should do dir="auto" as well: https://caniuse.com/#search=bdi) -->*/ ""}
 				<h2 class="displayed-month">
 					${new Computed(basis => basis.toLocaleString({month: 'long', year: 'numeric'}), this._basis)}
 				</h2>
