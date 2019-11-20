@@ -11,19 +11,21 @@ import asyncGenTest from './async-generator.mjs';
 import computedTest from './computed.mjs';
 import calendarTest from './calendar.mjs';
 import languageTesting from './language-testing.mjs';
+import arrayPerformanceTest from './array-performance.mjs';
 
 const tests = [
-//	languageTesting(),
-	calendarTest(),
-	computedTest(),
-	nodeArrayTest(),
-	dial(),
-	swappingTest(),
-	homework(),
-	cssTest(),
-	svgTest(),
-	basicTests,
-	asyncGenTest()
+	// languageTesting(),
+	// calendarTest(),
+	arrayPerformanceTest(),
+	// computedTest(),
+	// nodeArrayTest(),
+	// dial(),
+	// swappingTest(),
+	// homework(),
+	// cssTest(),
+	// svgTest(),
+	// basicTests,
+	// asyncGenTest()
 ];
 for (const test of tests) {
 	const instanceContainer = document.createElement('div');

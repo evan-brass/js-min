@@ -157,8 +157,10 @@ export default class NodeArray {
 
 				} else if (key == 'length') {
 					// Clear the expressions past the new length (or prefill the new length if the length is greater than the old I suppose)
-					for (const i of range(this.expressions.length, newValue)) {
+					const oldLength = this.expressions.length;
+					for (const i of range(oldLength, newValue)) {
 						this.array[i - 1] = undefined;
+						if (i >= newValue) this.parts[i - 1].clear();
 					}
 					this.users.length = newValue;
 					// TODO: Cleanup parts? or maybe above
