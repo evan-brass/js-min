@@ -42,6 +42,9 @@ export default class NodeArray {
 		// TODO: implement
 	}
 	*/
+	prune() {
+		this.parts.splice(this.users.length);
+	}
 	constructor(expressions) {
 		this.expressions = Array.from(expressions);
 		this.users = this.expressions.map(expression2user);
