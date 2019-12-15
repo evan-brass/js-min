@@ -1,4 +1,5 @@
-import on from '../../users/on.mjs';
+// import on from '../../users/on.mjs';
+import on_mult from '../../users/on-mult.mjs';
 import html from '../../html.mjs';
 import range from '../../lib/range.mjs';
 import LiveData from '../../reactivity/live-data.mjs';
@@ -16,32 +17,34 @@ export default function dial(
     return html`
     <section class="dial-container"
         ${ // These events are used to turn the dial:
-        on('wheel', e => {
-            const Scaler = .5;
-            scrollDiffs.yield(e.deltaY * Scaler);
-            e.preventDefault();
-        })}
-        ${on('touchstart', e => {
-            for (const touch of e.changedTouches) {
-                last_location.set(touch.identifier, touch.clientY);
-            }
-            e.preventDefault();
-        })}
-        ${on('touchmove', e => {
-            let diff = 0;
-            for (let touch of e.changedTouches) {
-                diff += touch.clientY - last_location.get(touch.identifier);
-                last_location.set(touch.identifier, touch.clientY);
-            }
-            scrollDiffs.yield(diff);
-            e.preventDefault();
-        })}
-        ${on('touchend', e => {
-            for (const touch of e.changedTouches) {
-                last_location.delete(touch.identifier);
-            }
-            e.preventDefault();
-        })}
+        on_mult({
+			'wheel': e => {
+				const Scaler = .5;
+				scrollDiffs.yield(e.deltaY * Scaler);
+				e.preventDefault();
+			},
+			'touchstart': e => {
+				for (const touch of e.changedTouches) {
+					last_location.set(touch.identifier, touch.clientY);
+				}
+				e.preventDefault();
+			},
+			'touchmove': e => {
+				let diff = 0;
+				for (let touch of e.changedTouches) {
+					diff += touch.clientY - last_location.get(touch.identifier);
+					last_location.set(touch.identifier, touch.clientY);
+				}
+				scrollDiffs.yield(diff);
+				e.preventDefault();
+			},
+			'touchend': e => {
+				for (const touch of e.changedTouches) {
+					last_location.delete(touch.identifier);
+				}
+				e.preventDefault();
+			}
+		})}
     >
         <h1>${title}</h1>
         <div class="marker">^</div>
@@ -79,6 +82,7 @@ export default function dial(
             // Attempt to enter the password
             passcode_enter:
             while (1) {
+				// TODO: This logic is not completely correct / doesn't behave exactly the way that I want.  Specifically when changing directions.
                 for (const digit of digits) {
                     // For every difference from the scroll wheel or touches:
                     for await(const diff of scrollDiffs) {
