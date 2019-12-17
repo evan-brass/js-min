@@ -12,11 +12,13 @@ import computedTest from './computed.mjs';
 import calendarTest from './calendar.mjs';
 import languageTesting from './language-testing.mjs';
 import arrayPerformanceTest from './array-performance.mjs';
+import sudoku from './sudoku.mjs';
 
 const tests = [
+	sudoku(),
 	// languageTesting(),
 	// calendarTest(),
-	arrayPerformanceTest(),
+	// arrayPerformanceTest(),
 	// computedTest(),
 	// nodeArrayTest(),
 	// dial(),
