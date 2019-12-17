@@ -31,6 +31,35 @@ const lenderBase = {
 	}
 };
 
+// The debug wrapper is a div that wraps the actual template instance and displays some debug information
+const ShowDebugWrapper = false;
+class DebugWrapper {
+	constructor(target) {
+		target.style = `
+			position: absolute;
+			transform: translatey(-100%);
+			border: 1px solid #27474e;
+			background-color: #ffffff11;
+			transition: background-color .5s;
+		`;
+		this.target = target;
+		this.pooledCount = 0;
+		this.swappedCount = 0;
+		this.update();
+	}
+	pooled() {
+		++this.pooledCount;
+		this.update();
+	}
+	swapped() {
+		++this.swappedCount;
+		this.update();
+	}
+	update() {
+		this.target.innerText = `Pooled ${this.pooledCount} times; swapped ${this.swappedCount} times`;
+	}
+}
+
 export default class TemplateInstance {
     constructor(template) {
         this.users = [];
@@ -39,7 +68,13 @@ export default class TemplateInstance {
         this.autoPool = false;
 
 		this.lender = Object.create(lenderBase);
-		this.lender.fragment = document.importNode(template.content, true);
+		let fragment = document.importNode(template.content, true);
+		if (ShowDebugWrapper) {
+			const wrapper = document.createElement('div');
+			fragment.insertBefore(wrapper, fragment.firstChild);
+			this.debugWrapper = new DebugWrapper(wrapper);
+		}
+		this.lender.fragment = fragment;
 		this.lender.owningInstance = this;
 
         this.parseParts();
@@ -77,7 +112,8 @@ export default class TemplateInstance {
         } else if (this.isConnected) {
             throw new Error("Shouldn't return to the pool unless the instance has disconnected (unbound) it's users.");
         } else if (this.autoPool) {
-            this._pool.push(this);
+			this._pool.push(this);
+			if (this.debugWrapper) this.debugWrapper.pooled();
         }
     }
 
@@ -175,6 +211,12 @@ export default class TemplateInstance {
 		replacingInstance.lender = tempLender;
 		replacingInstance.lender.owningInstance = replacingInstance;
 
+		// Switch the debugWrappers:
+		const tempWrapper = existingInstance.debugWrapper;
+		existingInstance.debugWrapper = replacingInstance.debugWrapper;
+		replacingInstance.debugWrapper = tempWrapper;
+		if (replacingInstance.debugWrapper) replacingInstance.debugWrapper.swapped();
+
 		// If the existing instance had pooling enabled then it may be pooled now
 		existingInstance.mayPool();
 
@@ -198,7 +240,8 @@ export default class TemplateInstance {
 }
 
 // I just watched a video about the Chrome garbage collector which said that short lived objects are actually cheaper than long lived objects.  Pooling the instances was all about reusing objects and making them last longer.  Is that actually a good thing? (https://v8.dev/blog/trash-talk) TODO: Perf testing!
-export const InstancePools = new Map();
+const InstancePools = new Map();
+Meta.pools = InstancePools;
 
 export function getTemplateInstance(template) {
     if (!InstancePools.has(template)) {
