@@ -1,3 +1,5 @@
+// @flow
+
 import Part from './part.mjs';
 
 // Mostly I think that attribute parts will be used to access a perticular node so the whole attribute update mechanism should maybe go.

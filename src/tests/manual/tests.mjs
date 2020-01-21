@@ -1,3 +1,5 @@
+// @flow
+
 import mount from '../../mount.mjs';
 
 import dial from './dial.mjs';
@@ -17,17 +19,17 @@ import sudoku from './sudoku.mjs';
 const tests = [
 	sudoku(),
 	// languageTesting(),
-	// calendarTest(),
-	// arrayPerformanceTest(),
-	// computedTest(),
-	// nodeArrayTest(),
-	// dial(),
-	// swappingTest(),
-	// homework(),
-	// cssTest(),
-	// svgTest(),
-	// basicTests,
-	// asyncGenTest()
+	calendarTest(),
+	arrayPerformanceTest(),
+	computedTest(),
+	nodeArrayTest(),
+	dial(),
+	swappingTest(),
+	homework(),
+	cssTest(),
+	svgTest(),
+	basicTests,
+	asyncGenTest()
 ];
 for (const test of tests) {
 	const instanceContainer = document.createElement('div');

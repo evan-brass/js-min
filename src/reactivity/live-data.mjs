@@ -1,3 +1,5 @@
+// @flow
+
 import { Reactive } from './reactive.mjs';
 
 export default class LiveData extends Reactive.implementation {

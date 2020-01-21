@@ -1,3 +1,5 @@
+// @flow
+
 export function Base_extend(inherit = HTMLElement) {
 	return class Base extends inherit {
 		abortController = new AbortController()

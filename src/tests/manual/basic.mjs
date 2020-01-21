@@ -1,3 +1,5 @@
+// @flow
+
 import html from '../../html.mjs';
 import ref from '../../users/ref.mjs';
 import LiveData from '../../reactivity/live-data.mjs';

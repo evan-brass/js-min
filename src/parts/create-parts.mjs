@@ -1,3 +1,5 @@
+// @flow
+
 import NodePart from './node-part.mjs';
 import AttributePart from './attribute-part.mjs';
 import AttributeValuePart from './attribute-value-part.mjs';

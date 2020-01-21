@@ -1,3 +1,5 @@
+// @flow
+
 import User from './user.mjs';
 
 export default function resizeObserve(observer, options = {}) {

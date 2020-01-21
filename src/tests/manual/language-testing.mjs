@@ -1,3 +1,5 @@
+// @flow
+
 import html from '../../html.mjs';
 import css from '../../users/css.mjs';
 

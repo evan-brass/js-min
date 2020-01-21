@@ -1,3 +1,5 @@
+// @flow
+
 import {Returnable} from '../parts/node-part.mjs';
 import createParts from '../parts/create-parts.mjs';
 import User from './user.mjs';

@@ -1,3 +1,5 @@
+// @flow
+
 import User from './user.mjs';
 import StylePart from '../parts/style-part.mjs';
 import { expression2user, verifyUser } from './common.mjs';

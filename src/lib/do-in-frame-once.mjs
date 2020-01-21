@@ -1,3 +1,5 @@
+// @flow
+
 const AFHandles = new Map();
 
 export default function doInFrameOnce(key, func) {

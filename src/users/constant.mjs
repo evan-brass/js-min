@@ -1,3 +1,5 @@
+// @flow
+
 import User from './user.mjs';
 import ALLTYPES from '../parts/all-types.mjs';
 

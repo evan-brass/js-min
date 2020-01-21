@@ -1,3 +1,5 @@
+// @flow
+
 import Part from './part.mjs';
 
 export default class StylePart extends Part {

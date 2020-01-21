@@ -1,3 +1,5 @@
+// @flow
+
 import Differed from "./differed.mjs";
 
 export default class Subject {

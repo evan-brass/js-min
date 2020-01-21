@@ -1,3 +1,5 @@
+// @flow
+
 import Trait from '../lib/trait.mjs';
 
 const propagation = new Map();

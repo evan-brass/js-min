@@ -1,3 +1,5 @@
+// @flow
+
 export default function* range(start, end, step) {
     if (!step) {
         step = (end - start > 0) ? 1 : -1;

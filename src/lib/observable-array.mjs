@@ -1,3 +1,5 @@
+// @flow
+
 import range from './range.mjs';
 
 export default class ObservableArray {

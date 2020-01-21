@@ -1,3 +1,5 @@
+// @flow
+
 // TODO: Need to include the id and frame NodeParts to support server side rendering where one template might have a template rendered within one of it's node parts.  I still don't know how that is going to be reported upward though...
 function findMarker(id, string) {
 	const markerFinder = new RegExp(`${id}-([0-9]+)`);

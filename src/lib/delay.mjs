@@ -1,3 +1,5 @@
+// @flow
+
 import abortError from '../cancellation/abort-error.mjs';
 
 export default function delay(ms, signal = undefined) {

@@ -1,3 +1,5 @@
+// @flow
+
 import { Reactive } from './reactive.mjs';
 
 const Invalid = Symbol('This symbol indicates the Computed has an invalid value and needs to recompute.');

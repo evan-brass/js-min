@@ -1,3 +1,5 @@
+// @flow
+
 import Trait from "../lib/trait.mjs";
 import Part from "./part.mjs";
 

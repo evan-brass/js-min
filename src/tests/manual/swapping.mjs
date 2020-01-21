@@ -1,3 +1,5 @@
+// @flow
+
 import html from '../../html.mjs';
 import delay from '../../lib/delay.mjs';
 

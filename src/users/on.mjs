@@ -1,3 +1,5 @@
+// @flow
+
 import User from './user.mjs';
 
 // MAYBE: Switch to class?  So that those functions would be on a shared prototype?

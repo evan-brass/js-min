@@ -1,3 +1,5 @@
+// @flow
+
 import User from './user.mjs';
 import {expression2user, verifyUser} from './common.mjs';
 import ALLTYPES from '../parts/all-types.mjs';

@@ -1,3 +1,5 @@
+// @flow
+
 import User from './user.mjs';
 import Swappable from './swappable.mjs';
 import {expression2user, verifyUser} from './common.mjs';

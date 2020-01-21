@@ -1,3 +1,5 @@
+// @flow
+
 import html from '../../html.mjs';
 
 export default function calendarTest() {

@@ -1,3 +1,5 @@
+// @flow
+
 import NodeArray from '../../users/node-array.mjs';
 import html from '../../html.mjs';
 import on from '../../users/on.mjs';

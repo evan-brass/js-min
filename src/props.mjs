@@ -1,3 +1,5 @@
+// @flow
+
 /* Formats: 
 {
 	prop1: Number,

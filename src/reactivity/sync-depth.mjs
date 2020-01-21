@@ -1,3 +1,5 @@
+// @flow
+
 // Current depth is the layer in the dependency graph that we are currently running.
 let currentDepth = false;
 let layerWaiters = [];

@@ -1,3 +1,5 @@
+// @flow
+
 import NodePart from './parts/node-part.mjs';
 import { verifyUser, expression2user } from './users/common.mjs';
 

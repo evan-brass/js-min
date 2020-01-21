@@ -1,3 +1,5 @@
+// @flow
+
 import User from './user.mjs';
 
 // This is just like on except for adding an abject of listeners to an element instead of a single handler

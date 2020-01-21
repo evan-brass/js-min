@@ -1,3 +1,5 @@
+// @flow
+
 const MetaRoot = {};
 
 export default MetaRoot;

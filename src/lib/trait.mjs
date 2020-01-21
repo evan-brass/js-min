@@ -1,3 +1,5 @@
+// @flow
+
 export default class Trait {
     constructor(description, implementation = null) {
         this.symbol = Symbol(description);

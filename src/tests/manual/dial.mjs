@@ -1,3 +1,5 @@
+// @flow
+
 // import on from '../../users/on.mjs';
 import on_mult from '../../users/on-mult.mjs';
 import html from '../../html.mjs';
