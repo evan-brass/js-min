@@ -1,5 +1,12 @@
 # js-min
-This is my attempt at my own JavaScript "framework".  In reality, I want to find coding patterns which solve the following problems and put those patterns into a library that makes programming simple, clear, and performant.
+js-min is for templating and reactivity with a little bit of glue.  js-min is for experimenting with alternatives and not for production use.  
+
+## Features:
+- Template Literals: Uses template literals for html and css.
+  - Template Elements: Template literals are mapped to HTML Template elements making them fast to clone
+- No VDOM: Expressions in the template literals (I call them "users" or "part users") have direct access to the dom and are responsible for any reactivity.
+
+---
 
 ## Examples:
 The current tests can be found here: [https://evan-brass.github.io/js-min/test.html] 
