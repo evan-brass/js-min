@@ -1,14 +1,20 @@
 // @flow
 
-// This doesn't actually conform to the promise spec.  The then method doesn't return a promise.  But it works for my use cases.  It's awaitable which is all I care about mostly.
-export default class Differed {
-	constructor() {
-		this._promise = new Promise((resolve, reject) => {
-			this.resolve = resolve;
-			this.reject = reject;
-		});
-	}
-	then(...args) {
-		return this._promise.then(...args);
-	}
+export default function differed/*:: <T>*/()/*:{
+	promise: Promise<T>,
+	resolve: (arg: T) => void,
+	reject: (arg: any) => void
+}*/ {
+	const func = arg => undefined; // Satisfy typing to make resolve and reject initialized
+	let resolve = func;
+	let reject = func;
+	const promise = new Promise((res, rej) => {
+		resolve = res;
+		reject = rej;
+	});
+	return {
+		promise, 
+		resolve, 
+		reject
+	};
 }

@@ -1,21 +1,37 @@
 // @flow
 
-import Differed from "./differed.mjs";
+import differed from "./differed.mjs";
 
-export default class Subject {
+/*::
+type Action<T> = {
+	type: 'yield' | 'return',
+	val: T
+} | {
+	type: 'throw',
+	val: any
+}
+*/
+
+export default class Subject/*:: <T>*/ {
+	/*::
+	differed: {
+		promise: Promise<Action<T>>,
+		resolve: (arg: Action<T>) => void
+	};*/
 	constructor() {
-		this.differed = new Differed();
+		this.differed = differed();
 	}
-	yield(val) {
+	yield(val/*:T*/) {
 		this.differed.resolve({type: 'yield', val});
 	}
-	return(val) {
+	return(val/*:T*/) {
 		this.differed.resolve({type: 'return', val});
 	}
-	throw(val) {
+	throw(val/*:any*/) {
 		this.differed.resolve({type: 'throw', val});
 	}
-	async *[Symbol.asyncIterator]() {
+	// $FlowFixMe
+	async *[Symbol.asyncIterator]()/*:AsyncIterator<T>*/ {
 		while (true) {
 			const {type, val} = await this.differed;
 			this.differed = new Differed();
@@ -36,4 +52,11 @@ export default class Subject {
 			}
 		}
 	}
+	/*:: 
+	@@asyncIterator(): AsyncIterator<T> {
+		// $FlowFixMe
+		return this[Symbol.asyncIterator];
+	}
+	*/
+
 }

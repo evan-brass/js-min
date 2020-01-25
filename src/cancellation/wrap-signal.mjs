@@ -1,4 +1,4 @@
-// @flow
+///<reference path="./wrap-signal.d.ts"/>
 
 import AbortError from './abort-error.mjs';
 
@@ -9,9 +9,9 @@ export default function wrapSignal(signal/*:AbortSignal*/) {
 	const signalPromise/*:Promise<void>*/ = new Promise((_resolve, reject) => {
 		signal.addEventListener('abort', reject.bind(null, AbortError()));
 	});
-	return function wrap/*flow-include <T>*/(promise/*: Promise<T>*/)/*:Promise<T>*/ {
+	return function wrap/*:: <T>*/(promise/*: Promise<T>*/)/*:Promise<T>*/ {
 		// Safe to cast because signalPromise will never resolve.
-		const castedSignalPromise = /*flow-include ((*/signalPromise/*: any): Promise<T>)*/
+		const castedSignalPromise = /*:: ((*/signalPromise/*: any): Promise<T>)*/
 		if (signal.aborted) {
 			return castedSignalPromise;
 		} else {

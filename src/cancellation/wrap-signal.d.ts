@@ -1,0 +1,1 @@
+export = function wrapSignal(signal: AbortSignal): <T>(prom: Promise<T>) => Promise<T>
