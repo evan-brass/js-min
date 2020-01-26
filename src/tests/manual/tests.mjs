@@ -14,21 +14,26 @@ import languageTesting from './language-testing.mjs';
 import arrayPerformanceTest from './array-performance.mjs';
 import sudoku from './sudoku.mjs';
 
-const tests = [
+const url = new URL(window.location.href);
+const includes = JSON.parse(url.searchParams.get('include') || '[]');
+let tests = [
 	sudoku(),
-	// languageTesting(),
-	// calendarTest(),
-	// arrayPerformanceTest(),
-	// computedTest(),
-	// nodeArrayTest(),
-	// dial(),
-	// swappingTest(),
-	// homework(),
-	// cssTest(),
-	// svgTest(),
-	// basicTests,
-	// asyncGenTest()
+	languageTesting(),
+	calendarTest(),
+	arrayPerformanceTest(),
+	computedTest(),
+	nodeArrayTest(),
+	dial(),
+	swappingTest(),
+	homework(),
+	cssTest(),
+	svgTest(),
+	basicTests,
+	asyncGenTest()
 ];
+if (includes.length > 0) {
+	tests = tests.filter((_, i) => includes.includes(i));
+}
 for (const test of tests) {
 	const instanceContainer = document.createElement('div');
 	instanceContainer.classList.add('instance');
