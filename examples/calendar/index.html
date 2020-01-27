@@ -1,0 +1,39 @@
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Counter Widget</title>
+	<script type="importmap">
+		{	
+			"imports": {
+				"cancellation/": "/src/cancellation/",
+				"lib/": "/src/lib/",
+				"parts/": "/src/parts/",
+				"reactivity/": "/src/reactivity/",
+				"users/": "/src/users/",
+				"templating/": "/src/templating/",
+				"custom-elements/": "/src/custom-elements/"
+			}
+		}
+	</script>
+</head>
+<body>
+	<script type="module">
+		import html from 'templating/html.mjs';
+		import mount from 'templating/mount.mjs';
+
+		mount(html`
+			<div>
+				<h1>Custom Element Calendar</h1>
+				${(async function* () {
+					yield html`Importing the calendar module`;
+					await import('./calendar-basic.mjs');
+					yield html`Waiting for the calendar-basic element to be defined`;
+					await customElements.whenDefined('calendar-basic');
+					yield html`<calendar-basic></calendar-basic>`;
+				})()}
+			</div>
+		`, document.body);
+	</script>
+</body>
+</html>

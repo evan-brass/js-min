@@ -1,0 +1,46 @@
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Counter Widget</title>
+	<script type="importmap">
+		{	
+			"imports": {
+				"cancellation/": "/src/cancellation/",
+				"lib/": "/src/lib/",
+				"parts/": "/src/parts/",
+				"reactivity/": "/src/reactivity/",
+				"users/": "/src/users/",
+				"templating/": "/src/templating/",
+				"custom-elements/": "/src/custom-elements/"
+			}
+		}
+	</script>
+</head>
+<body>
+	<script type="module">
+		import html from 'templating/html.mjs';
+		import mount from 'templating/mount.mjs';
+		import on from 'users/on.mjs';
+		import LiveData from 'reactivity/live-data.mjs';
+		import css from 'users/css.mjs';
+
+		const color = new LiveData();
+		color.value = 'black';
+
+		mount(html`
+			<h2 class="testing-css">Test Modifying CSS using the css tag</h2>
+			${css`h2.testing-css { 
+				color: ${color};
+			}`}
+			${[
+				'Red', 'Cornsilk', 'Black', 'Navy', 'Teal', 'RebeccaPurple', 'HotPink'
+			].map(val => html`
+				<button ${on('click', _ => color.value = val.toLowerCase())}>
+					${val}
+				</button>`
+			)}
+		`, document.body);
+	</script>
+</body>
+</html>

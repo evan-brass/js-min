@@ -1,0 +1,37 @@
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Counter Widget</title>
+	<script type="importmap">
+		{	
+			"imports": {
+				"cancellation": "/src/cancellation/",
+				"lib/": "/src/lib/",
+				"parts/": "/src/parts/",
+				"reactivity/": "/src/reactivity/",
+				"users/": "/src/users/",
+				"templating/": "/src/templating/",
+				"custom-elements/": "/src/custom-elements/"
+			}
+		}
+	</script>
+</head>
+<body>
+	<script type="module">
+		import html from 'templating/html.mjs';
+		import mount from 'templating/mount.mjs';
+		import LiveData from 'reactivity/live-data.mjs';
+		import on from 'users/on.mjs';
+
+		const count = new LiveData();
+		count.value = 10;
+
+		mount(html`
+			<button ${on('click', () => count.value -= 1)}>-</button>
+			${count}
+			<button ${on('click', () => count.value += 1)}>+</button>
+		`, document.body);
+	</script>
+</body>
+</html>
