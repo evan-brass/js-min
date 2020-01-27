@@ -1,5 +1,5 @@
-import NodePart from './parts/node-part.mjs';
-import { verifyUser, expression2user } from './users/common.mjs';
+import NodePart from 'parts/node-part.mjs';
+import { verifyUser, expression2user } from 'users/common.mjs';
 
 export default function mount(expression, root = document.body) {
     const temp = new Text();

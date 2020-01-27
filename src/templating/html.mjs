@@ -1,4 +1,4 @@
-import {getTemplateInstance} from './users/template-instance.mjs';
+import {getTemplateInstance} from 'users/template-instance.mjs';
 import {getTemplate, getTemplate_id} from './template.mjs';
 
 function stringsToInstance(strings) {

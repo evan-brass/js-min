@@ -1,6 +1,6 @@
-import hashString from "./lib/string-hash.mjs";
-import convertMarkers from "./parts/convert-markers.mjs";
-import MetaRoot from './introspection.mjs';
+import hashString from "lib/string-hash.mjs";
+import convertMarkers from "parts/convert-markers.mjs";
+import MetaRoot from '../introspection.mjs';
 
 const Meta = {
 	pregeneratedTemplateCount: 0,
