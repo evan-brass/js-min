@@ -1,7 +1,7 @@
 import User from './user.mjs';
 import {expression2user, verifyUser} from './common.mjs';
-import ALLTYPES from '../parts/all-types.mjs';
-import { Reactive } from '../reactivity/reactive.mjs';
+import ALLTYPES from 'parts/all-types.mjs';
+import { Reactive } from 'reactivity/reactive.mjs';
 
 export default function reactiveUser(reactive) {
 	let part, lastUser;

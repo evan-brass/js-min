@@ -1,7 +1,7 @@
 import User from './user.mjs';
-import NodePart, {Returnable} from '../parts/node-part.mjs';
-import ObservableArray from '../lib/observable-array.mjs';
-import doInFrameOnce from '../lib/do-in-frame-once.mjs';
+import NodePart, {Returnable} from 'parts/node-part.mjs';
+import ObservableArray from 'lib/observable-array.mjs';
+import doInFrameOnce from 'lib/do-in-frame-once.mjs';
 
 export default class ArrayInstance {
     constructor(expressions = []) {

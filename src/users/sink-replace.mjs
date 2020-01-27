@@ -1,7 +1,7 @@
 import User from './user.mjs';
 import Swappable from './swappable.mjs';
 import {expression2user, verifyUser} from './common.mjs';
-import ALLTYPES from '../parts/all-types.mjs';
+import ALLTYPES from 'parts/all-types.mjs';
 
 export default function sinkReplace(stream) {
 	// TODO: Make a class and put promise as a private member.

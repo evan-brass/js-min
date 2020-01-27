@@ -1,5 +1,5 @@
 import User from './user.mjs';
-import ALLTYPES from '../parts/all-types.mjs';
+import ALLTYPES from 'parts/all-types.mjs';
 
 export default function component(func) {
 	const target = {};

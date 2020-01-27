@@ -1,4 +1,4 @@
-import Trait from "../lib/trait.mjs";
+import Trait from "lib/trait.mjs";
 import Part from "./part.mjs";
 
 export const Returnable = new Trait("Returnable", {

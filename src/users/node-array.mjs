@@ -1,7 +1,7 @@
 import User from './user.mjs';
-import NodePart, {Returnable} from '../parts/node-part.mjs';
+import NodePart, {Returnable} from 'parts/node-part.mjs';
 import { expression2user, verifyUser } from './common.mjs';
-import range from '../lib/range.mjs';
+import range from 'lib/range.mjs';
 import Swappable from './swappable.mjs';
 
 

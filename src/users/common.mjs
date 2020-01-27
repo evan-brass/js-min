@@ -3,7 +3,7 @@ import constant from './constant.mjs';
 import sinkReplace from './sink-replace.mjs';
 import awaitReplace from './await-replace.mjs';
 import arrayHandle from './array-handle.mjs';
-import { Reactive } from '../reactivity/reactive.mjs';
+import { Reactive } from 'reactivity/reactive.mjs';
 import reactiveUser from './reactive-user.mjs';
 
 // TODO: Probably split these into two files with better names

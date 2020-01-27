@@ -1,5 +1,5 @@
 import User from './user.mjs';
-import StylePart from '../parts/style-part.mjs';
+import StylePart from 'parts/style-part.mjs';
 import { expression2user, verifyUser } from './common.mjs';
 
 const styleSheetCache = new Map(); // Could be a weakmap

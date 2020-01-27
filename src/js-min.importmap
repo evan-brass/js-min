@@ -1,0 +1,11 @@
+{	
+	"imports": {
+		"cancellation/": "/src/cancellation/",
+		"lib/": "/src/lib/",
+		"parts/": "/src/parts/",
+		"reactivity/": "/src/reactivity/",
+		"users/": "/src/users/",
+		"templating/": "/src/templating/",
+		"custom-elements/": "/src/custom-elements/"
+	}
+}

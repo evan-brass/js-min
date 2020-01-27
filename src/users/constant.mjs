@@ -1,5 +1,5 @@
 import User from './user.mjs';
-import ALLTYPES from '../parts/all-types.mjs';
+import ALLTYPES from 'parts/all-types.mjs';
 
 const Base = {
 	get [User]() { return this; },

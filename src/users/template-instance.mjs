@@ -1,5 +1,5 @@
-import {Returnable} from '../parts/node-part.mjs';
-import createParts from '../parts/create-parts.mjs';
+import {Returnable} from 'parts/node-part.mjs';
+import createParts from 'parts/create-parts.mjs';
 import User from './user.mjs';
 import {expression2user, verifyUser} from './common.mjs';
 import Swappable from './swappable.mjs';

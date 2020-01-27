@@ -1,4 +1,4 @@
-import Trait from '../lib/trait.mjs';
+import Trait from 'lib/trait.mjs';
 
 export default new Trait("User", {
     acceptTypes: new Set(),
