@@ -1,4 +1,4 @@
-import hashString from "lib/string-hash.mjs";
+import sha1 from "lib/string-hash.mjs";
 import convertMarkers from "parts/convert-markers.mjs";
 
 const TemplateCache = new Map();
@@ -45,9 +45,9 @@ export function registerTemplate(id, template, pregenerated = false) {
 	TemplateCache.set(id, template);
 }
 
-export function createId(strings) {
+export async function createId(strings) {
 	// Always start the id with a character so that it is valid everywhere in HTML.
-	return 'a' + Math.abs(hashString(strings.join('{{}}'))).toString(16);
+	return 'a' + await sha1(strings.join('{{}}'));
 }
 
 export function getTemplate_id(id) {
@@ -60,13 +60,13 @@ export function getTemplate_id(id) {
 
 const idCache = new WeakMap();
 
-export function getTemplate(strings) {
+export async function getTemplate(strings) {
 	if (!(strings instanceof Array)) {
 		throw new Error("Argument to createTemplate must be an Array of strings like that produced by a tagged template litteral.");
 	}
 	let id = idCache.get(strings);
 	if (!id) {
-		id = createId(strings);
+		id = await createId(strings);
 		idCache.set(strings, id);
 	}
 	if (TemplateCache.has(id)) {
