@@ -6,201 +6,31 @@ js-min is for templating and reactivity with a little bit of glue.  js-min is fo
   - Template Elements: Template literals are mapped to HTML Template elements making them fast to clone
 - No VDOM: Expressions in the template literals (I call them "users" or "part users") have direct access to the dom and are responsible for any reactivity.
 
-# Licensing:
+## Licensing:
 This code is split licensed.  Everything inside the src folder was written by me and placed into the public domain via the unlicense.  The examples folder, however, may have dependencies and so I've decided to not figure out the licensing for them.
 
 As always, this code is not intended to be used in production, it is just an experiment.  Feel free to fork it and make it your own.
 
+## Design:
+This is a response to lit-html.  I love the idea of using JS to build abstractions but I never feel comfortable if I know that those abstractions result in worse performance than if I'd written the code they run myself.  Because of this, I don't want to combine templating and reactivity into the same thing which is what most JS frameworks do today.  lit-html has a render function, a lot of other libraries have VDOM.  Instead what I wanted was something which extracts the whole "build dom -> extract references to important elements -> manipulate those elements" process that I've found in the custom-element code that I've written.
+
+### Interfaces - Templating:
+There are a few interfaces (I call them traits) that interact with eachother to build the templating.
+
+#### Parts:
+Parts are things that represent parts of the DOM.  Currently there are node, attribute, attribute-value, and style parts.  Each part is interacted with a little bit differently.  Node, attribute-value, and style parts are meant to be used using the update and clear methods.  The attribute part is unusual in that it has no update and clear definition and instead you access the element that the attribute was defined on using it's element property.  Attribute parts are what let us define event listeners, or us ref to get a reference to the element itself.  Attribute has no clear because it doesn't know what we've done to the element so it is our responsibility (as a user) to cleanup and uphold the expected lifecycle.  This usually isn't hard and naturally works with the addEventListener and removeEventListener type interfaces that web APIs have.
+
+#### Users:
+js-min includes a bunch of users by default.  I intend to fix this in the future, but it also has a function that converts just about anything into a user automatically: arrays, strings, numbers, elements, etc.  Users have a simple interface with an acceptTypes property, bind method, and unbind method. AcceptTypes is a JS Set of the types of parts that this user can be bound to.  This makes sure that something that expects to be bound to an attribute-part doesn't get bound to a node-part for example.  Event listeners can't be bound to blank spaces for example.  The Bind and Unbind functions constitute the user lifecyle.  You can control the part that you (as a user) are bound to until it is unbound from you (at which point you clean-up).  Pretty simple.
+
+#### Swappable:
+There is a slight optimization (which I think is broken after some of my refactoring) which is used to limit the amount of bind and unbinds.  Currently there's only one type of user that implements it which is the template-instance user.  What swappable does is give the currently bound part a chance to see the next value that will be bound to that part and then it can choose to perform the unbind-bind on it's own.  If for example I was replacing a template representing an HTMLButton with "Hello World" with another template instance that represented an HTMLButton with "Goodbye World" then it can leave the button alone and only unbind-bund the sub user which controls the text of the button.  Swapping doesn't come up very often (you almost have to intentionally come up with cases for it) but it can mean substantial savings when used.  You can think of it as a special case of dom-diffing even though it's very different.  A case where swapping might come up would be in removing an item from an array of items.  Swapping would move the items up rather than removing the node.  I'd like to add better control of swapping in the future.
+
+#### Returnable:
+Returnable is pretty simple, it is just a way of node-parts getting some HTML from a user and then returning that html when it is replaced with a new user.  This means that the fragment of dom doesn't have to be recreated in the future.  In the case of template-instance users they have to build a template element and then parse that template element's comment nodes to find where it's sub parts are and what kinds they are.  By returning the dom, the same user could be reused in the future without needing to reparse it.  It enables pooling template-instances.
+
 ---
-
-## Examples:
-The current tests can be found here: [https://evan-brass.github.io/js-min/test.html] 
-The code that produces those examples can be found here: [https://github.com/evan-brass/js-min/blob/master/test.html]
-All examples share these imports:
-```Javascript
-import LiveData from './src/live-data.mjs';
-import {s, on, mount} from './src/expressions.mjs';
-import html from './src/min.mjs';
-import {ArrayInstance} from './src/instance.mjs';
-```
-### Simple Counter:
-```JavaScript
-const count = new LiveData();
-count.value = 10;
-mount(html`
-    <button ${on('click', () => count.value -= 1)}>-</button>
-    ${count}
-    <button ${on('click', () => count.value += 1)}>+</button>
-`, document.body);
-```
-### State Machine:
-```JavaScript
-mount(html`${(async function*() {
-    const count = new LiveData();
-    count.value = 10;
-    yield html`First: Set the count to 25...<br />
-        <button ${on('click', () => count.value -= 1)}>-</button>
-        ${count}
-        <button ${on('click', () => count.value += 1)}>+</button>
-    `;
-    for await(const val of count) {
-        if (val == 25) break;
-    }
-    count.value = 0;
-    yield html`
-        Next: Set the thingy to 5<br />
-        <label>
-            ${count}
-            <input type="range" 
-                value="${s(count.value)}" 
-                min="0" max="10" step="1" 
-                ${on('change', e => count.value = e.target.valueAsNumber)}
-            />
-        </label>
-    `;
-    for await(const val of count) {
-        if (val == 5) break;
-    }
-    yield `Good Job 🎉  Thank you for following along`;
-})()}`, document.body);
-```
-### Change CSS:
-```JavaScript
-const color = new LiveData();
-color.value = 'black';
-mount(html`
-<h2 class="testing-css">Test Modifying CSS using NodePart</h2>
-<style>.testing-css{ color: ${color}; }</style>
-${new ArrayInstance([
-    'Red', 'Cornsilk', 'Black', 'Navy', 'Teal'
-].map(val => html`<button ${on('click', _ => color.value = val)}>${s(val)}</button>`))}
-`, document.body);
-```
-
-
-### How 'bout a reeal test?
-This is a recreation of a doohicky I made for a scavenger hunt my girlfriend was working on (The passcode is 2435)[https://evan-brass.github.io/courtyard-clue/].  The code can be found here [https://github.com/evan-brass/evan-brass.github.io/tree/master/courtyard-clue].  It looks very foreign but overall I'm fairly pleased with the erganomics:
-#### Code:
-```JavaScript
-import {s, on} from '../expressions.mjs';
-import html from '../min.mjs';
-import range from '../range.mjs';
-import { ArrayInstance } from '../instance.mjs';
-import LiveData from '../live-data.mjs';
-import Subject from '../subject.mjs';
-import delay from '../delay.mjs';
-
-export default function dial(
-    title = "Some Clue", 
-    secretMessage = "This is secret", 
-    symbols = Array.from(range(1, 10)), 
-    passcode = [1,2,3,4]
-) {
-    const scrollDiffs = new Subject();
-    const last_location = new Map()
-    return html`
-    <section class="dial-container"
-        ${ // These events are used to turn the dial:
-        on('wheel', e => {
-            const Scaler = .5;
-            scrollDiffs.yield(e.deltaY * Scaler);
-            e.preventDefault();
-        })}
-        ${on('touchstart', e => {
-            for (const touch of e.changedTouches) {
-                last_location.set(touch.identifier, touch.clientY);
-            }
-            e.preventDefault();
-        })}
-        ${on('touchmove', e => {
-            let diff = 0;
-            for (let touch of e.changedTouches) {
-                diff += touch.clientY - last_location.get(touch.identifier);
-                last_location.set(touch.identifier, touch.clientY);
-            }
-            scrollDiffs.yield(diff);
-            e.preventDefault();
-        })}
-        ${on('touchend', e => {
-            for (const touch of e.changedTouches) {
-                last_location.delete(touch.identifier);
-            }
-            e.preventDefault();
-        })}
-    >
-        <h1>${s(title)}</h1>
-        <div class="marker">^</div>
-        ${(async function*() {
-            const degrees = new LiveData();
-            degrees.value = 0;
-            const digits = passcode.map(_ => new LiveData());
-            const digit_status = new LiveData();
-            const secret_container = new LiveData();
-            
-            yield html`
-            <div class="dial" style="transform: rotate(-${degrees}deg)">
-                ${new ArrayInstance(symbols.map((sym, i) => 
-                    html`<span style="transform: translateX(-50%) rotateZ(${s((i)*360/symbols.length)}deg);">${s(sym)}</span>`
-                ))}
-            </div>
-            <div class="digits ${digit_status}">${new ArrayInstance(digits.map(num => 
-                html`<span>${num}</span>`
-            ))}</div>
-            <div>
-                ${secret_container}
-            </div>
-            `;
-            function normalize_degrees(degrees) {
-                // Normalize degrees from any number to an integer between [0, 360)
-                return ((degrees % 360) + 360) % 360;
-            }
-            function degrees_to_symbol(degrees) {
-                return symbols[Math.round(normalize_degrees(degrees) * symbols.length / 360) % symbols.length];
-            }
-                        
-            // Behavior:
-            let last_diff;
-
-            // Attempt to enter the password
-            passcode_enter:
-            while (1) {
-                for (const digit of digits) {
-                    // For every difference from the scroll wheel or touches:
-                    for await(const diff of scrollDiffs) {
-                        degrees.value = normalize_degrees(degrees.value + diff);
-                        digit.value = degrees_to_symbol(degrees.value);
-                        if (digits.every((digit, i) => passcode[i] == digit.value)) {
-                            // Check if the passcode is correct:
-                            break passcode_enter;
-                        } else if (last_diff === undefined) {
-                            last_diff = diff;
-                            continue;
-                        } else if ((last_diff < 0 && diff > 0) || (last_diff > 0 && diff < 0)) {
-                            // Check if we changed directions and should advance to the next digit
-                            last_diff = diff;
-                            break;
-                        }
-                    }
-                }
-                // If we used all the digits and got it wrong then change the digit container class:
-                digit_status.value = "wrong";
-                // Apply a penalty time:
-                await delay(950);
-                // Clear the digits:
-                digits.forEach(digit => digit.value = "")
-                // Clear the digits container class to nothing
-                digit_status.value = "";
-            }
-            // Passcode is correct.  Change to confirmation class on the digit container:
-            digit_status.value = "correct";
-            // Display the secret message
-            secret_container.value = secretMessage;
-        })()}
-        <link rel="stylesheet" href="./src/tests/dial.css"></style>
-    </section>
-    `;
-}
-```
+# OLD:
 #### Commentary:
 Look at how the asyncy-bits make the control flow fairly easy to understand.  In the original version, it has the same red highlighting for when you get the passcode wrong, however you couldn't see it because events don't have state unless you're adding and removing them constantly or using scoped isLoading type variables.  I like that this puts its state into a code location rather than into event variables (mostly);
 This was my first real test into how the framework is developing and whether or not it's still heading in what I believe is the right direction.  I think it is.  The parts that I'm a little concerned about are the whole Subject, LiveData, stuff.  I want all of the code to mostly feel like your code and for there to not really be any magic.  Those kindof feel like magic to me.  I also expected to be able to put more of the behavior in with the html and considered writing some sort of event to async generation function.  The problem with this is breaking information that comes from the framework out into the rest of the code.  It ended up having like an immediately invoked function to get the value out into the enclosing scope which felt off.  Instead I'm kinda pleased that the code within the dom is directly related to the dom: Events, simplified generation, etc.  Then the state machine controlling the interface is slightly bellow the html.  That seems proper to me.
