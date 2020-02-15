@@ -1,6 +1,7 @@
 import Trait from "lib/trait.mjs";
 import Part from "./part.mjs";
 
+// Should returnable be manual with bind and unbind?
 export const Returnable = new Trait("Returnable", {
     getFragment() {
         if (this._fragment) {

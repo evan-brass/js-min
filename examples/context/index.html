@@ -1,0 +1,59 @@
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Counter Widget</title>
+	<script type="importmap">
+		{	
+			"imports": {
+				"cancellation/": "/src/cancellation/",
+				"lib/": "/src/lib/",
+				"parts/": "/src/parts/",
+				"reactivity/": "/src/reactivity/",
+				"users/": "/src/users/",
+				"templating/": "/src/templating/",
+				"custom-elements/": "/src/custom-elements/"
+			}
+		}
+	</script>
+</head>
+<body>
+	<script type="module">
+		// Testing the templating context:
+		import { context } from 'templating/context.mjs';
+		import delay from 'lib/delay.mjs';
+
+		context.mount(context.html`
+			<h2>Test Swapping</h2>
+			${(async function*() {
+				function shouldSwap(txt) {
+					return context.html`<b>Should Swap:</b>${txt}`;
+				}
+				while(1) {
+					yield shouldSwap('1');
+					await delay(1000);
+					yield shouldSwap('2');
+					await delay(1000);
+					yield context.html`<i>Shouldn't Swap</i>`;
+					await delay(1000);
+				}
+			})()}
+		`);
+	</script>
+	<script type="module">
+		// Testing the template builder:
+		import { context } from 'templating/context.mjs';
+		import TemplateBuilder from 'templating/template-builder.mjs';
+
+		const template = document.createElement('template');
+		template.innerHTML = `
+			<h1>Testing <!--{type:'node'}--></h1>
+		`;
+
+		const builder1 = new TemplateBuilder().with_context(context).with_swapping().with_template(template);
+
+		const template1 = builder1.build();
+		console.log(template1);
+	</script>
+</body>
+</html>

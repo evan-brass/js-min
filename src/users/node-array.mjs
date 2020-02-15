@@ -1,8 +1,13 @@
+// TODO: rewrite (unshift still doesn't work) with better datastructures and stuff.
+// The reason that shift doesn't work is because the front parts are being overwritten but don't clear + remove themselves.  This isn't a problem on the back of the array like it is on the front for some reason.  This is one of the many inconsistencies that I'd like to fix when I rewrite this.
+
 import User from './user.mjs';
 import NodePart, {Returnable} from 'parts/node-part.mjs';
 import { expression2user, verifyUser } from './common.mjs';
 import range from 'lib/range.mjs';
-import Swappable from './swappable.mjs';
+import { exchange_users } from './common.mjs';
+
+// This code makes me so confused.  I know that it is a complex problem but I think it needs more iteration to come up with a more appropriate model of that complexity and an appropriate solution.
 
 
 export default class NodeArray {
@@ -97,7 +102,7 @@ export default class NodeArray {
 					let existingPart = this.parts[key];
 
 					if (newValue !== undefined) {
-						const newUser = expression2user(newValue);
+						let newUser = expression2user(newValue);
 						// So, it can happen that we get the same user set in two spots and if we try to bind before we've unbound from the previous part then everything gets a bit sad.  OK.  I don't understand this code anymore.  I think it moves the parts around using the package for move method.  But... Where is the existing part unbind?
 						// TODO: See if we can't make it constant instead of linear for any change.
 						// TODO: Use a map and then use get instead of indexof.  Then it would be ~constant instead of linear
@@ -137,17 +142,7 @@ export default class NodeArray {
 							}
 							verifyUser(newUser, existingPart);
 							// Handle swapping
-							if (existingUser) {
-								if (existingUser instanceof Swappable) {
-									const swapper = Swappable.get(existingUser);
-									if (swapper.canSwap(newUser)) swapper.doSwap(newUser);
-									else existingUser.unbind(existingPart);
-								} else {
-									existingUser.unbind(existingPart);
-								}
-							} else {
-								newUser.bind(existingPart);
-							}
+							newUser = exchange_users(existingUser, newUser, existingPart);
 						}
 						this.users[key] = newUser;
 					} else {
@@ -161,9 +156,9 @@ export default class NodeArray {
 				} else if (key == 'length') {
 					// Clear the expressions past the new length (or prefill the new length if the length is greater than the old I suppose)
 					const oldLength = this.expressions.length;
-					for (const i of range(oldLength, newValue)) {
-						this.array[i - 1] = undefined;
-						if (i >= newValue) this.parts[i - 1].clear();
+					for (const i of range(oldLength - 1, newValue - 1)) {
+						this.array[i] = undefined;
+						if (this.parts[i]) this.parts[i].clear();
 					}
 					this.users.length = newValue;
 					// TODO: Cleanup parts? or maybe above
