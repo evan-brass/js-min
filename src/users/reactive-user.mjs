@@ -1,16 +1,17 @@
 import User from './user.mjs';
-import {expression2user, verifyUser, exchange_users} from './common.mjs';
+import { verifyUser, exchange_users } from './common.mjs';
 import ALLTYPES from 'parts/all-types.mjs';
 import { Reactive } from 'reactivity/reactive.mjs';
+import def_e2u from 'users/def-expr2user.mjs';
 
-export default function reactiveUser(reactive) {
+export default function reactiveUser(reactive, e2u = def_e2u) {
 	let part, lastUser;
 	const reactiveUser = {
 		get depth() {
 			return reactive.depth + 1;
 		},
 		update() {
-			const user = expression2user(reactive.value);
+			const user = e2u(reactive.value);
 			verifyUser(user, part);
 
 			// Handle Swapping

@@ -26,10 +26,6 @@ export default class TemplateBuilder {
 		this.swapping = use_swapping;
 		return this;
 	}
-	with_debug_overlay(use_debug_overlay = true) {
-		this.debug_overlay = use_debug_overlay;
-		return this;
-	}
 	with_expr2user(expr2user) {
 		this.expr2user = expr2user;
 		return this;
@@ -41,265 +37,262 @@ export default class TemplateBuilder {
 		this.template = template;
 		return this;
 	}
-	with_generate_function(generate) {
-		if (this.template) {
-			throw new Error("Template can't have a generate function because it already has a template.");
-		}
-		this.generate = generate;
-		return this;
-	}
 	build() {
+		// TODO: handle pooling without swapping and viceversa
+
 		// Save the state of the builder at the point that build was called so that we can use it later throughout the template.  Ideally, I would use the preprocessor to slightly modify the template code based on the configuration.  No compiler and preprocessor for js so this will have some runtime costs.  If there were a JS compiler (something like prepack) then hopefully the entire template builder would be eliminated altogether and the templates that it builds would have the dead code eliminated.
 		const config = Object.freeze(Object.assign({}, this));
+		
+		// Used by templates that can swap
+		const lenderBase = {
+			getFragment() {
+				const frag = this.fragment;
+				if (frag) {
+					this.fragment = false;
+					return frag;
+				} else {
+					throw new Error("Fragment must be returned (aka. set) before it can be retreived.");
+				}
+			},
+			returnFragment(frag) {
+				// This is called when whoever had the instance is done with it.  We can clean it up and...
+				this.fragment = frag;
+			}
+		};
 
-		// return class Template {
-		// 	constructor() {
+		// Build the template
+		const ret = class Template {
+			static get_instance() {
+				if (config.pool_size && this.pool.length) {
+					return this.pool.pop();
+				} else {
+					return new Template();
+				}
+			}
+			constructor() {
+				// TODO: Handle debug_overlay
 
-		// 	}
-		// };
+				this.users = [];
 
-		let ret;
-		// Handle the template or generate function
-		if (this.template) {
-			// Handle Swapping
-			if (this.swapping) {
-				const lenderBase = {
-					getFragment() {
-						const frag = this.fragment;
-						if (frag) {
-							this.fragment = false;
-							return frag;
-						} else {
-							throw new Error("Fragment must be returned (aka. set) before it can be retreived.");
-						}
-					},
-					returnFragment(frag) {
-						// This is called when whoever had the instance is done with it.  We can clean it up and...
-						this.fragment = frag;
-					}
-				};
-				ret = class Template {
-					constructor() {
-						this.lender = Object.create(lenderBase);
-						this.lender.fragment = document.importNode(this.template.content, true);
-						{	let comments = [];
-							let walker = document.createTreeWalker(this.lender.fragment, NodeFilter.SHOW_COMMENT);
-							while (walker.nextNode()) comments.push(walker.currentNode);
-							this.lender.parts = [];
-							for (const comment of comments) {
-								for (const part of createParts(comment)) {
-									this.lender.parts.push(part);
-								}
-							}
-						}
-						this.users = [];
-					}
-					static swapInstances(existingInstance, replacingInstance) {
-						// Swapping means giving the new instance your parts and unbinding your users from them so that the new person can bind their users to it.  We then pool ourselves because we are no longer in use.  The new instance controls the old dom that we controlled and we control the dom that they controlled.  We want them to take control because they are the one who has been connected with the value that the programmer wants to be displayed. All future control to that dom is going to go through that new instance.  This also means switching the fragment lenders because your fragment is now their fragment and vice versa.
-				
-						if (!existingInstance.isBound) {
-							throw new Error("Existing instance must be bound in order to swap.");
-						}
-						if (replacingInstance.isBound) {
-							throw new Error("Replacing instance cannot be bound in order to swap.");
-						}
-						// Unbind users from the existing instance
-						if (existingInstance.isConnected) {
-							existingInstance.unbindUsers();
-							existingInstance.isConnected = false;
-						}
-				
-						// Sanity checks:
-						if (replacingInstance.lender.parts == existingInstance.lender.parts) {
-							throw new Error("Two instances should never have the same parts array.  This would likely indicate a bad past swap.");
-						} else if (replacingInstance.lender.parts.length !== existingInstance.lender.parts.length) {
-							throw new Error("Swapping instances must have the same number of parts.  Having a different number of parts could mean that the instances don't actually share a template or perhaps the template instantiation failed.");
-						}
-				
-						// Switch the parts between the instances
-						existingInstance.isBound = false;
-						replacingInstance.isBound = true;
-				
-						// Switch fragment lenders
-						const tempLender = existingInstance.lender;
-						existingInstance.lender = replacingInstance.lender;
-						existingInstance.lender.owningInstance = existingInstance;
-						replacingInstance.lender = tempLender;
-						replacingInstance.lender.owningInstance = replacingInstance;
-				
-						// If the existing instance had pooling enabled then it may be pooled now
-						// TODO: Enable pooling
-						// existingInstance.mayPool();
-				
-						// If the replacingInstance has already been connected then we should bind it's users
-						if (replacingInstance.isConnected) replacingInstance.bindUsers();
-					}
-				
-					// Implement the Swappable interface to catch swapping an instance with an instance derived from the same template
-					get [Swappable]() { return this; }
-					canSwap(newUser) {
-						return newUser instanceof ret;
-					}
-					doSwap(newInstance) {
-						// Perform the swap:
-						ret.swapInstances(this, newInstance);
-						return newInstance;
-					}
-					bindUsers() {
-						for (let i = 0; i < this.lender.parts.length; ++i) {
-							const user = this.users[i];
-							const part = this.lender.parts[i];
-							verifyUser(user, part);
-							user.bind(part);
-						}
-					}
-					unbindUsers() {
-						this.users.forEach((oldUser, i) => {
-							oldUser.unbind(this.lender.parts[i]);
-						});
-						this.users.length = 0;
-					}
-					get [Returnable]() { return this.lender; }
-					connect(expressions) {
-						// this.isBound is whether or not the instance has been bound to another part.  We only want to bind our users if we ourselves have already been bound.  If we haven't been then we should wait until we are bound to bind our users.  This solves the problem of swapping because an instance that is swapped-in won't have been bound yet.
-						if (this.isConnected && this.isBound) {
-							this.unbindUsers();
-						}
-						this.users = expressions.map(this.expr2user);
-						if (this.users.length !== this.lender.parts.length) {
-							throw new Error("Different number of users then this instance has parts.");
-						}
-						// Make sure that all the users are appropriate for the parts
-						this.users.forEach((user, i) => verifyUser(user, this.lender.parts[i]));
-				
-						this.isConnected = true;
-				
-						if (this.isBound) {
-							this.bindUsers();
-						}
-					}
-					bind(part) {
-						this.isBound = true;
-						// I had to move update before the user binding because css users need to get their root node which before we update our part is a document fragment... which doesn't have an adoptedStylesheets property.  I could do some funkery with doInFrameOnce but I don't like that so I'm just going to switch it here.
-						part.update(this);
-				
-						if (this.isConnected) this.bindUsers();
-					}
-					unbind(part) {
-						this.isBound = false;
-						if (this.isConnected) {
-							this.unbindUsers();
-							this.isConnected = false;
-						}
-				
-						part.clear();
-			
-						// TODO: Return to the pool.
-					}
-				};
-			} else {
-				ret = class Template {
-					constructor() {
-						this.users = [];
-						this.parts = [];
+				// Import the template element's contents
+				const fragment = document.importNode(this.template.content, true);
 
-						// Import the template
-						this.fragment = document.importNode(this.template.content, true);
-
-						// Turn the comment nodes into parts:
-						{	let comments = [];
-							let walker = document.createTreeWalker(this.fragment, NodeFilter.SHOW_COMMENT);
-							while (walker.nextNode()) comments.push(walker.currentNode);
-							for (const comment of comments) {
-								for (const part of createParts(comment)) {
-									this.parts.push(part);
-								}
-							}
-						}
-
-						// Used to make sure that we only connect our users once we have both received them and we have also been bound to a part.
-						this.isBound = false;
-						this.isConnected = false;
-					}
-					bindUsers() {
-						for (let i = 0; i < this.parts.length; ++i) {
-							const user = this.users[i];
-							const part = this.parts[i];
-							verifyUser(user, part);
-							user.bind(part);
-						}
-					}
-					unbindUsers() {
-						this.users.forEach((oldUser, i) => {
-							oldUser.unbind(this.parts[i]);
-						});
-						this.users.length = 0;
-					}
-					bind(part) {
-						this.isBound = true;
-						// I had to move update before the user binding because css users need to get their root node which before we update our part is a document fragment... which doesn't have an adoptedStylesheets property.  I could do some funkery with doInFrameOnce but I don't like that so I'm just going to switch it here.
-						part.update(this.fragment);
-				
-						if (this.isConnected) this.bindUsers();
-					}
-					unbind(part) {
-						this.isBound = false;
-						if (this.isConnected) {
-							this.unbindUsers();
-							this.isConnected = false;
-						}
-				
-						part.clear();
-			
-						// TODO: Return to the pool.
-					}
-					connect(expressions) {
-						// this.isBound is whether or not the instance has been bound to another part.  We only want to bind our users if we ourselves have already been bound.  If we haven't been then we should wait until we are bound to bind our users.  This solves the problem of swapping because an instance that is swapped-in won't have been bound yet.
-						if (this.isConnected && this.isBound) {
-							this.unbindUsers();
-						}
-						this.users = expressions.map(this.expr2user);
-						if (this.users.length !== this.parts.length) {
-							throw new Error("Different number of users then this instance has parts.");
-						}
-						// Make sure that all the users are appropriate for the parts
-						this.users.forEach((user, i) => verifyUser(user, this.parts[i]));
-				
-						this.isConnected = true;
-				
-						if (this.isBound) {
-							this.bindUsers();
+				// Turn the comment nodes into parts:
+				const parts = [];
+				{	
+					let comments = [];
+					let walker = document.createTreeWalker(fragment, NodeFilter.SHOW_COMMENT);
+					while (walker.nextNode()) comments.push(walker.currentNode);
+					for (const comment of comments) {
+						for (const part of createParts(comment)) {
+							parts.push(part);
 						}
 					}
 				}
+
+				if (config.swapping && config.pool_size) {
+					// We only need a lender if we are both pooling and swapping, otherwise we can just use the usual fragment layout
+					this.lender = Object.create(lenderBase);
+					this.lender.fragment = fragment
+					this.lender.parts = parts;
+				} else {
+					this.parts = parts;
+					this.fragment = fragment;
+				}
+
+				// Used to make sure that we only connect our users once we have both received them and we have also been bound to a part.
+				this.isBound = false;
+				this.isConnected = false;
 			}
-			ret.prototype.template = this.template;
-		} else if (this.generate) {
-			// TODO: Implement
-			throw new Error("Generate functions aren't supported yet.");
+			// Implement the Swappable interface to catch swapping an instance with an instance derived from the same template
+			static swapInstances(existingInstance, replacingInstance) {
+				// Swapping means giving the new instance your parts and unbinding your users from them so that the new person can bind their users to it.  We then pool ourselves because we are no longer in use.  The new instance controls the old dom that we controlled and we control the dom that they controlled.  We want them to take control because they are the one who has been connected with the value that the programmer wants to be displayed. All future control to that dom is going to go through that new instance.  This also means switching the fragment lenders because your fragment is now their fragment and vice versa.
+		
+				if (!existingInstance.isBound) {
+					throw new Error("Existing instance must be bound in order to swap.");
+				}
+				if (replacingInstance.isBound) {
+					throw new Error("Replacing instance cannot be bound in order to swap.");
+				}
+				// Unbind users from the existing instance
+				if (existingInstance.isConnected) {
+					existingInstance.unbindUsers();
+					existingInstance.isConnected = false;
+				}
+
+				const ex_parts = config.pool_size ? existingInstance.lender.parts : existingInstance.parts;
+				const re_parts = config.pool_size ? replacingInstance.lender.parts : replacingInstance.parts;
+		
+				// Sanity checks:
+				if (ex_parts == re_parts) {
+					throw new Error("Two instances should never have the same parts array.  This would likely indicate a bad past swap.");
+				} else if (ex_parts.length !== re_parts.length) {
+					throw new Error("Swapping instances must have the same number of parts.  Having a different number of parts could mean that the instances don't actually share a template or perhaps the template instantiation failed.");
+				}
+		
+				// Switch the parts between the instances
+				if (!config.pool_size) {
+					const temp = existingInstance.parts;
+					existingInstance.parts = replacingInstance.parts;
+					replacingInstance.parts = temp;
+				}
+				existingInstance.isBound = false;
+				replacingInstance.isBound = true;
+		
+				// Switch fragment (or fragment lenders)
+				if (config.pool_size) {
+					const temp = existingInstance.lender;
+					existingInstance.lender = replacingInstance.lender;
+					replacingInstance.lender = temp;
+				} else {
+					const temp = existingInstance.fragment;
+					existingInstance.fragment = replacingInstance.fragment;
+					replacingInstance.fragment = temp;
+				}
+		
+				// If the existing instance had pooling enabled then it may be pooled now
+				if (config.pool_size) {
+					existingInstance.mayPool();
+				}
+		
+				// If the replacingInstance has already been connected then we should bind it's users
+				if (replacingInstance.isConnected) replacingInstance.bindUsers();
+			}
+			canSwap(newUser) {
+				return newUser instanceof ret;
+			}
+			doSwap(newInstance) {
+				// Perform the swap:
+				ret.swapInstances(this, newInstance);
+				return newInstance;
+			}
+			mayPool() {
+				if (this.isBound) {
+					throw new Error("Shouldn't return to the pool unless the instance is unbound.");
+				} else if (this.isConnected) {
+					throw new Error("Shouldn't return to the pool unless the instance has disconnected (unbound) it's users.");
+				} else {
+					this.constructor.pool.push(this);
+				}
+			}
+			bindUsers() {
+				const parts = (config.swapping && config.pool_size) ? this.lender.parts : this.parts;
+
+				for (let i = 0; i < parts.length; ++i) {
+					const user = this.users[i];
+					const part = parts[i];
+					verifyUser(user, part);
+					user.bind(part);
+				}
+			}
+			unbindUsers() {
+				const parts = (config.swapping && config.pool_size) ? this.lender.parts : this.parts;
+
+				this.users.forEach((oldUser, i) => {
+					oldUser.unbind(parts[i]);
+				});
+				this.users.length = 0;
+			}
+			connect(expressions) {
+				const parts = (config.swapping && config.pool_size) ? this.lender.parts : this.parts;
+
+				// this.isBound is whether or not the instance has been bound to another part.  We only want to bind our users if we ourselves have already been bound.  If we haven't been then we should wait until we are bound to bind our users.  This solves the problem of swapping because an instance that is swapped-in won't have been bound yet.
+				if (this.isConnected && this.isBound) {
+					this.unbindUsers();
+				}
+				this.users = expressions.map(this.expr2user);
+				if (this.users.length !== parts.length) {
+					throw new Error("Different number of users then this instance has parts.");
+				}
+				// Make sure that all the users are appropriate for the parts
+				this.users.forEach((user, i) => verifyUser(user, parts[i]));
+		
+				this.isConnected = true;
+		
+				if (this.isBound) {
+					this.bindUsers();
+				}
+			}
+			bind(part) {
+				this.isBound = true;
+				// I had to move update before the user binding because css users need to get their root node which before we update our part is a document fragment... which doesn't have an adoptedStylesheets property.  I could do some funkery with doInFrameOnce but I don't like that so I'm just going to switch it here.
+				if (config.pool_size) {
+					// We only use implement the Returnable trait when we're pooling because that's the only time that we want our fragment back.
+					part.update(this);
+				} else {
+					if (config.swapping && config.pool_size) {
+						// In the case of swapping without pooling, the lender isn't so much of a lender I guess it really just stores the parts and fragment.  That could be handled be two cases which might be something to do in the future.
+						part.update(this.lender.fragment);
+					} else {
+						part.update(this.fragment);
+					}
+				}
+		
+				if (this.isConnected) this.bindUsers();
+			}
+			unbind(part) {
+				this.isBound = false;
+				if (this.isConnected) {
+					this.unbindUsers();
+					this.isConnected = false;
+				}
+		
+				part.clear();
+	
+				if (config.pool_size) {
+					this.mayPool();
+				}
+			}
+			getFragment() {
+				if (!config.swapping && config.pool_size) {
+					const frag = this.fragment;
+					if (frag) {
+						this.fragment = false;
+						return frag;
+					} else {
+						throw new Error("Fragment must be returned (aka. set) before it can be retreived.");
+					}
+				} else {
+					throw new Error("The fragment should only directly implement the Returnable trait if swapping is disabled but pooling isn't.");
+				}
+			}
+			returnFragment(frag) {
+				if (!config.swapping && config.pool_size) {
+					// This is called when whoever had the instance is done with it.  We can clean it up and...
+					this.fragment = frag;
+				} else {
+					throw new Error("The fragment should only directly implement the Returnable trait if swapping is disabled but pooling isn't.");
+				}
+			}
+		};
+
+		if (config.swapping) {
+			// Only define the swapping symbol if swapping is enabled.
+			Object.defineProperty(ret.prototype, Swappable, {
+				get() { return this; }
+			});
 		} else {
-			throw new Error("Either a template or a generate function must be set to build a template.");
+			delete ret.prototype.canSwap;
+			delete ret.prototype.doSwap;
+			delete ret.swapInstances;
+		}
+
+		if (config.template) {
+			ret.prototype.template = config.template;
+		}
+
+		if (config.pool_size) {
+			// Only add a pool array if pooling is enabled.
+			ret.pool = [];
+			Object.defineProperty(ret.prototype, Returnable, {
+				get() { return config.swapping ? this.lender : this; }
+			});
+		} else {
+			delete ret.prototype.mayPool;
 		}
 
 		// Handle expr2user
 		ret.prototype.expr2user = this.expr2user;
-
-		// Handle Pooling
-		if (this.pool_size) {
-			ret.pool = [];
-			ret.get_instance = function() {
-				if (ret.pool.length) {
-					return ret.pool.pop();
-				} else {
-					return new ret();
-				}
-			};
-			// TODO: Handle returning to the pool
-		} else {
-			ret.get_instance = function() {
-				return new ret();
-			};
-		}
 
 		// Add some properties common to all templates
 		Object.defineProperty(ret.prototype, User, {
@@ -307,10 +300,6 @@ export default class TemplateBuilder {
 		});
 		ret.prototype.acceptTypes = new Set(['node']);
 
-		// Handle Debug Overlay
-		if (this.debug_overlay) {
-			throw new Error("The debug overlay is not currently implemented.");
-		}
 		return ret;
 	}
 }

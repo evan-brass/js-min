@@ -1,10 +1,12 @@
 import User from './user.mjs';
-import {expression2user, verifyUser} from './common.mjs';
+import { verifyUser } from './common.mjs';
+import def_e2u from './def-expr2user.mjs';
+
 import ALLTYPES from 'parts/all-types.mjs';
 
 // TODO: Use abort signals instead of this cancel stuff.
 
-export default function awaitReplace(promise) {
+export default function awaitReplace(promise, e2u = def_e2u) {
 	let user;
 	let unbound = false;
 	return {
@@ -12,7 +14,7 @@ export default function awaitReplace(promise) {
 		bind(part) {
 			promise.then(expression => {
 				if (!unbound) {
-					user = expression2user(expression);
+					user = e2u(expression);
 					verifyUser(user, part);
 					user.bind(part);
 				}
