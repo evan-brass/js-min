@@ -1,58 +1,17 @@
-// TODO: rewrite (unshift still doesn't work) with better datastructures and stuff.
-// The reason that shift doesn't work is because the front parts are being overwritten but don't clear + remove themselves.  This isn't a problem on the back of the array like it is on the front for some reason.  This is one of the many inconsistencies that I'd like to fix when I rewrite this.
-
 import User from './user.mjs';
 import NodePart, {Returnable} from 'parts/node-part.mjs';
-import { expression2user, verifyUser } from './common.mjs';
-import range from 'lib/range.mjs';
-import { exchange_users } from './common.mjs';
+import { verifyUser, exchange_users } from './common.mjs';
+import def_e2u from './def-expr2user.mjs';
 
-// This code makes me so confused.  I know that it is a complex problem but I think it needs more iteration to come up with a more appropriate model of that complexity and an appropriate solution.
-
+// TODO: Add optimized array implementations - Use hints and tricks
 
 export default class NodeArray {
-	// The goal here is to optimize some of the common array functions.  When we're using our proxy bellow we might not know what's going on as well and might have to redo work.
-	push(...newItems) {
-		// ASSUME: None of the newItems can already be in the list.
-		for (let i = 0; i < newItems.length; ++i) {
-			const expr = newItems[i];
-			const user = expression2user(expr);
-			let part;
-			const length = this.expressions.length + i;
-			if (length == this.parts.length) {
-				const temp = new Text();
-				this.last.parentNode.insertBefore(temp, this.last);
-				part = new NodePart(temp);
-				this.parts.push(part);
-			} else {
-				part = this.parts[length]
-			}
-			verifyUser(user, part);
-			this.users.push(user);
-			user.bind(part);
-		}
-		return this.expressions.push(...newItems);
-	}
-	/*
-	pop() {
-		// TODO: implement
-	}
-	splice(start, deleteCount, ...newItems) {
-		// TODO: implement
-	}
-	shift() {
-		// TODO: implement
-	}
-	unshift(...newItems) {
-		// TODO: implement
-	}
-	*/
-	prune() {
-		this.parts.splice(this.users.length);
-	}
-	constructor(expressions) {
-		this.expressions = Array.from(expressions);
-		this.users = this.expressions.map(expression2user);
+	constructor(expressions, e2u = def_e2u) {
+		// We have three arrays that together simulate the one array that is passed in... kinda yuck.
+		// TODO: Implement a diffing approach that doesn't have as much memory overhead.
+		this.e2u = e2u;
+		this.expressions = expressions;
+		this.users = this.expressions.map(this.e2u);
 		this.parts = [];
 		this._fragment = new DocumentFragment();
 		for (const user of this.users) {
@@ -61,25 +20,11 @@ export default class NodeArray {
 			const part = new NodePart(text);
 			this.parts.push(part);
 			verifyUser(user, part);
-			user.bind(part);
+			exchange_users(undefined, user, part);
 		}
-		this.last = new Text();
-		this._fragment.appendChild(this.last);
+		this._tail = new Text();
+		this._fragment.appendChild(this._tail);
 
-		const insertNodeAt = (index, node = new Text()) => {
-			// Find the next part and insert before it
-			for (const i of range(index + 1, this.parts.length, 1)) {
-				const refPart = this.parts[i];
-				if (refPart) {
-					refPart.insertBefore(node);
-					return node;
-				}
-			}
-			// I'm pretty sure I never need to worry about using insert before because I have this.last now
-			// No next parts so just insert it last
-			this.last.parentNode.insertBefore(node, this.last);
-			return node;
-		}
 		this.array = new Proxy(this.expressions, {
 			get: (_, key) => {
 				if (this.expressions.hasOwnProperty(key)) { // Numeric indexes and length hopefully.
@@ -93,82 +38,178 @@ export default class NodeArray {
 				}
 			},
 			set: (_, key, newValue) => {
-				// TODO: Need to split this up and clarify the logic
-				// My old method was to unbind the user and rebind it elsewhere but this doesn't hold true to the lifecycle that the template instance expects.  It therefore unbind's it's users and then clears it's expression array. What this means is that I have to move the parts around.  Or, I could add a move method to users so that they can be moved between parts without an unbind then bind.
-				const num = Number.parseInt(key);
-				if (!isNaN(num) && num >= 0) {
-					// I'm not really sure whether or not I could just use num everywhere instead of using key.
-					const existingUser = this.users[key];
-					let existingPart = this.parts[key];
+				const index = Number.parseInt(key);
+				if (key == 'length') {
+					const new_length = Number.parseInt(newValue);
+					const old_length = this.expressions.length;
 
-					if (newValue !== undefined) {
-						let newUser = expression2user(newValue);
-						// So, it can happen that we get the same user set in two spots and if we try to bind before we've unbound from the previous part then everything gets a bit sad.  OK.  I don't understand this code anymore.  I think it moves the parts around using the package for move method.  But... Where is the existing part unbind?
-						// TODO: See if we can't make it constant instead of linear for any change.
-						// TODO: Use a map and then use get instead of indexof.  Then it would be ~constant instead of linear
-						let oldIndex;
-						if (newValue instanceof Object) {
-							// So... If we're dealing with elements then we'll accidentally create a fresh constant user and then move the existing user which causes it to not be unbound and then when it is unbound or the existing part is used a reference, then the part's element has been moved out from under it.  This breaks things.
-							// MAYBE: Throw an error when elements are used as expressions?  There may be a way of fixing this when I get around to making it linear.  The map will likely be either expression -> index or user -> index.  Also, we'll only want to worry about keeping the index if it's an object because that's the only thing that we can be sure will be unique.  Everything else we'll treat as if we don't have one in the array already.  If you wan't to have the same object in multiple places (like a string or something) then you might need to wrap it with a const user or something.  Which makes me think that it might need to be user -> index...  I don't know!
-							oldIndex = this.expressions.indexOf(newValue);
-						} else {
-							// This should be primitive values, but do we really care about moving them anyway?
-							oldIndex = this.users.indexOf(newValue);
+					// Handle new_length < old_length;
+					if (new_length < old_length) {
+						for (let i = new_length; i < old_length; ++i) {
+							const old_part = this.parts[i];
+							const old_user = this.users[i];
+							if (old_part && old_user) {
+								old_user.unbind(old_part);
+								old_part.remove();
+								delete this.expressions[i];
+								delete this.parts[i];
+								delete this.users[i];
+							} else {
+								// We might have already deleted the items;
+							}
+
 						}
-						if (oldIndex != -1) {
-							const actualPart = this.parts[oldIndex];
-							this.parts[oldIndex] = false;
-							this.parts[key] = actualPart;
-
-							// Check if there are any existing parts between us and our new destination so that if there aren't any then we don't have to package and move the part.  Instead, we can just say that it's in the new spot.
-							let clear = true;
-							for (const i of range(oldIndex, num)) {
-								if (this.parts[i]) {
-									clear = false;
-									break;
-								}
-							}
-							if (!clear) {
-								const frag = actualPart.packageForMove();
-								insertNodeAt(num, frag);
-							}
-
-							this.users[key] = this.users[oldIndex];
-							this.users[oldIndex] = false;
-						} else {
-							// TODO: Refactor these conditionals to make it cleaner
-							if (!existingPart) {
-								existingPart = this.parts[key] = new NodePart(insertNodeAt(num));
-							}
-							verifyUser(newUser, existingPart);
-							// Handle swapping
-							newUser = exchange_users(existingUser, newUser, existingPart);
-						}
-						this.users[key] = newUser;
+						// Set lengths on each sub array?
+						this.expressions.length = new_length;
+						this.parts.length = new_length;
+						this.users.length = new_length;
+					} else if (new_length > old_length) {
+						console.log("Expanding the length of the array isn't implemented yet.");
 					} else {
-						// TODO: Cleanup parts? or maybe bellow
-						if (existingUser) {
-							existingUser.unbind(existingPart);
-						}
-						this.users[key] = undefined;
+						// Do nothing if the length is already correct.
 					}
-
-				} else if (key == 'length') {
-					// Clear the expressions past the new length (or prefill the new length if the length is greater than the old I suppose)
-					const oldLength = this.expressions.length;
-					for (const i of range(oldLength - 1, newValue - 1)) {
-						this.array[i] = undefined;
-						if (this.parts[i]) this.parts[i].clear();
-					}
-					this.users.length = newValue;
-					// TODO: Cleanup parts? or maybe above
+				} else if (!isNaN(index) && index >=0) {
+					this.set(index, newValue);
 				} else {
-					throw new Error('Error setting key: ', key, ' with value ', newValue);
+					throw new Error('Unable to respond to setting the key: ', key);
 				}
-				this.expressions[key] = newValue;
 				return true;
 			}
 		});
+	}
+	set(index, value, hints_in = {}) {
+		// I think that if all neccessary hints are supplied then we can do the set in constant time.  Otherwise, it's some janky linear I think.
+		const self = this;
+		const hints = {
+			get old_index() {
+				if (hints_in.old_index === undefined) {
+					if (typeof value === 'object') {
+						// O(n)
+						return self.expressions.indexOf(value);
+					} else {
+						return -1;
+					}
+				} else {
+					return hints_in.old_index;
+				}
+			},
+			get old_value() {
+				if (hints_in.old_value === undefined) {
+					// Convert to boolean.
+					return self.users[index] !== undefined;
+				} else {
+					return hints_in.old_value;
+				}
+			},
+			get values_between() {
+				if (hints_in.values_between === undefined) {
+					// O(n)
+					const low = Math.min(index, old_index) + 1;
+					const high = Math.max(index, old_index) - 1;
+					for (let i = low; i <= high; ++i) {
+						if (self.parts[i]) {
+							return true;
+						}
+						return false;
+					}
+				} else {
+					return hints_in.values_between;
+				}
+			},
+			get relative_index() {
+				if (hints_in.relative_index === undefined) {
+					// Find the closest index with a filled part that we can insert relative too: negative meens insert before, positive means insert after.  What about zero? Well, we can't put an item before the zeroth index so zero indicates insert after.  What if the array is empty and there's no parts to insert relative too?  Then we return false and we'll place it relative to a special element that is always at the end of the array.
+					let before = index;
+					let after = index;
+					// O(n)
+					while (--before >= 0 || ++after < self.parts.length) {
+						if (self.parts[before]) {
+							return before;
+						}
+						if (self.parts[after]) {
+							return -after;
+						}
+					}
+					return false;
+				} else {
+					return hints_in.relative_index;
+				}
+			}
+		};
+
+		// If there's a user / part already at the location, then remove them (But leave the part for now so that we have the ability to change things relative to it):
+		const old_value = hints.old_value;
+		const oldPart = this.parts[index];
+		if (old_value) {
+			const oldUser = this.users[index];
+			oldUser.unbind(oldPart);
+		}
+
+		// This node (or document fragment) will be placed relative to the index
+		let dom_to_relative;
+		
+		const old_index = hints.old_index;
+		if (old_index !== -1) {
+			// Item is already in the array at oldIndex: remove it
+			const existing_part = this.parts[old_index];
+			const existing_user = this.users[old_index];
+			// existing_expression is (should be) the same as value
+			delete this.parts[old_index];
+			delete this.users[old_index];
+			delete this.expressions[old_index];
+			
+			// Update the arrays:
+			this.parts[index] = existing_part;
+			this.users[index] = existing_user;
+			
+			// Move the value from it's old position to the new if there are values between, do nothing otherwise:
+			const values_between = hints.values_between;
+			if (values_between) {
+				dom_to_relative = existing_part.packageForMove();
+			}
+		} else {
+			// If the item is new to the array then we need to place a text item and then build a part after it's been placed in the dom:
+			dom_to_relative = new Text();
+		}
+
+		if (dom_to_relative) {
+			// Handle placing the dom relative to the index or relative to the existing part, depending.
+			if (old_value) {
+				// If there is a value already at the index that the value is moving to then we can place it relative to the part that is already there, taking over its location:
+				oldPart.insertBefore(dom_to_relative);
+			} else {
+				const relative_index = hints.relative_index;
+				const relative_part = this.parts[Math.abs(relative_index)];
+				if (relative_index === false) {
+					// Place relative to tail
+					this._tail.parentNode.insertBefore(dom_to_relative, this._tail);
+				} else if (relative_index < 0) {
+					// Place before part at relative_index
+					relative_part.insertBefore(dom_to_relative);
+				} else {
+					// Place after part at relative_index
+					relative_part.insertAfter(dom_to_relative);
+				}
+			}
+		}
+		
+		// Handle binding new users:
+		if (old_index == -1) {
+			// now that the text item is in the dom, we can build the new part and add bind the user to it:
+			const part = new NodePart(dom_to_relative);
+			const user = this.e2u(value);
+			this.parts[index] = part;
+			this.users[index] = user;
+			user.bind(part);
+		}
+		
+		// Update the expressions array:
+		this.expressions[index] = value;
+		
+		// If there was an old part then we can remove it now that it has been used to relatively place the existing part:
+		if (old_value) {
+			oldPart.remove();
+		}
 	}
 
 	// Implement the Returnable Interface
