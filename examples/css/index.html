@@ -19,14 +19,11 @@
 </head>
 <body>
 	<script type="module">
-		import html from 'templating/html.mjs';
-		import mount from 'templating/mount.mjs';
 		import on from 'users/on.mjs';
 		import LiveData from 'reactivity/live-data.mjs';
-		import css from 'users/css.mjs';
+		import { mount, html, css } from 'templating/def-context.mjs';
 
-		const color = new LiveData();
-		color.value = 'black';
+		const color = new LiveData('rebeccapurple');
 
 		mount(html`
 			<h2 class="testing-css">Test Modifying CSS using the css tag</h2>

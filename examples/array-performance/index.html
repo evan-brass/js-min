@@ -102,7 +102,6 @@
 				}, function cleanup() {
 					// Clear the listItems node-array
 					listItems.array.length = 0;
-					listItems.prune();
 					// Clear any li's from the straight javascript version
 					ul.querySelectorAll('li').forEach(el => el.remove());
 				}, [

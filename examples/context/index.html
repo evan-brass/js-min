@@ -20,7 +20,7 @@
 <body>
 	<script type="module">
 		// Testing the templating context:
-		import { context } from 'templating/context.mjs';
+		import context from 'templating/def-context.mjs';
 		import delay from 'lib/delay.mjs';
 
 		context.mount(context.html`
@@ -42,7 +42,7 @@
 	</script>
 	<script type="module">
 		// Testing the template builder:
-		import { context } from 'templating/context.mjs';
+		import context from 'templating/def-context.mjs';
 		import TemplateBuilder from 'templating/template-builder.mjs';
 
 		const template = document.createElement('template');
@@ -50,7 +50,7 @@
 			<h1>Testing <!--{type:'node'}--></h1>
 		`;
 
-		const builder1 = new TemplateBuilder().with_context(context).with_swapping().with_template(template);
+		const builder1 = new TemplateBuilder().with_expr2user(context.e2u).with_swapping().with_template(template);
 
 		const template1 = builder1.build();
 		console.log(template1);

@@ -1,7 +1,5 @@
 import Base from 'custom-elements/base.mjs';
-import html from 'templating/html.mjs';
-import css from 'users/css.mjs';
-import mount from 'templating/mount.mjs';
+import { html, css, mount } from 'templating/def-context.mjs';
 import NEVER from 'lib/never.mjs';
 import wrapSignal from 'cancellation/wrap-signal.mjs';
 import LiveData from 'reactivity/live-data.mjs';
