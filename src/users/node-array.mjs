@@ -6,7 +6,7 @@ import def_e2u from './def-expr2user.mjs';
 // TODO: Add optimized array implementations - Use hints and tricks
 
 export default class NodeArray {
-	constructor(expressions, e2u = def_e2u) {
+	constructor(expressions = [], e2u = def_e2u) {
 		// We have three arrays that together simulate the one array that is passed in... kinda yuck.
 		// TODO: Implement a diffing approach that doesn't have as much memory overhead.
 		this.e2u = e2u;
