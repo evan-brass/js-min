@@ -3,14 +3,16 @@ import { html, css, mount } from 'templating/def-context.mjs';
 import NEVER from 'lib/never.mjs';
 import wrapSignal from 'cancellation/wrap-signal.mjs';
 import LiveData from 'reactivity/live-data.mjs';
-import Computed from 'reactivity/computed.mjs';
+import Computed, { Unchanged, diff } from 'reactivity/computed.mjs';
 
 import { DateTime, Duration, Interval, Info } from './luxon.mjs';
+import range from 'lib/range.mjs';
+
 import resizeObserve from 'users/resize-observe.mjs';
 import on from 'users/on.mjs';
 import ref from 'users/ref.mjs';
-
-const compareIntervals = (a, b) => a.equals(b);
+import arrow_nav from 'users/arrow-nav.mjs';
+import component from 'users/component.mjs';
 
 export default class CalendarBasic extends Base {
 	constructor() {
@@ -33,6 +35,7 @@ export default class CalendarBasic extends Base {
 				overflow-y: auto;
 				overflow-x: hidden;
 			*/
+			display: layout(blocklike);
 		}
 		header {
 			display: flex;
@@ -67,7 +70,7 @@ export default class CalendarBasic extends Base {
 			display: contents;
 		}
 		.cell {
-			/* I'm using negative margins to make colloring the outline of an element easier. */
+			/* I'm using negative margins to make colloring the outline of an element easier. TODO: Replace with a paint worklet? */
 			box-sizing: border-box;
 			grid-row: auto / span 6;
 			border: 1px solid #aaa;
@@ -92,14 +95,20 @@ export default class CalendarBasic extends Base {
 	}
 	// I would like to convert this whole LiveData + getter + setter + (attributeChangedCallback?) into a decorator setup once somebody starts supporting them. These also need to delete any attributes that have already been added by a framework before the element was upgraded + call the setter with the value they set.
 	_basis = new LiveData(DateTime.local())
-	_month = new Computed(basis => Interval.fromDateTimes(
-		basis.startOf('month'),
-		basis.endOf('month')
-	), this._basis).setCompare(compareIntervals)
+	_month = new Computed(diff(basis => {
+		if (basis.o && basis.o.startOf('month').equals(basis.n.startOf('month'))) {
+			return Unchanged;
+		} else {
+			return Interval.fromDateTimes(
+				basis.n.startOf('month'),
+				basis.n.endOf('month')
+			);
+		}
+	}), this._basis)
 	_visible = new Computed(month => Interval.fromDateTimes(
 		month.start.startOf('week'),
 		month.end.endOf('week')
-	), this._month).setCompare(compareIntervals)
+	), this._month)
 	get basis() {
 		return this._basis.value;
 	}
@@ -109,32 +118,63 @@ export default class CalendarBasic extends Base {
 	}
 	
 	buildCells() {
-		return (new Array(42)).fill("").map((_, i) => {
+		const cells = [];
+		let last_basis;
+		const updater = new Computed(diff((visible, basis) => {
+			// Handle the basis changing (which must have happened if )
+			if (last_basis) {
+				last_basis.basis = '';
+				last_basis.tabIndex = '-1';
+				last_basis = false;
+			}
+			const basis_index = Interval.fromDateTimes(visible.n.start, basis.n).count('days') - 1;
+			const new_basis = cells[basis_index];
+			new_basis.basis = 'basis';
+			new_basis.tabIndex = '0';
+			last_basis = new_basis;
+
+			if (visible.n !== visible.o) {
+				for (const i of range(0, 42)) {
+					const cell = cells[i];
+					const date = visible.n.start.plus({days: i});
+	
+					// Add the date:
+					cell.date = date.toLocaleString({day: 'numeric'});
+	
+					// Check if it's in the month:
+					if (date.hasSame(basis.n, 'month')) {
+						cell.inMonth = 'in-month';
+					} else {
+						cell.inMonth = '';
+					}
+				}
+			}
+			
+			// This computed is only used for effects:
+			return '';
+		}), this._visible, this._basis);
+		for (const i of range(0, 42)) {
+			// TODO: Handle focusing:
+			cells.push(component(prop => html`
+				<div 
+					tabIndex="${prop('tabIndex', '-1')}" 
+					class="cell 
+						${prop('inMonth', '')}
+						${prop('basis', '')}
+					"
+					${on('focus', _ => this.basis = this._visible.value.start.plus({days: i}))}
+				>
+					${prop('date', '__')}
+				</div>
+			`));
+		}
+		// We put the updater computed into the array so that it get's pulled and updates the rest of the cells as long as it's bound and sinking
+		cells.push(updater);
+		return cells;
+
+		return Array.from(range(0, 42)).map((_, i) => {
 			const day = new Computed(visible => visible.start.plus({days: i}), this._visible);
 			return html`<div 
-					${on('keydown', e => {
-						// Arrow key navigation that takes the language direction into consideration when using the left and right arrow keys.
-						const {target, keyCode} = e;
-						const LEFT = 37;
-						const RIGHT = 39;
-						const UP = 38;
-						const DOWN = 40;
-						const langDir = window.getComputedStyle(target).direction;
-						if (keyCode == UP) {
-							this.basis = day.value.plus({weeks: -1});
-						} else if (keyCode == DOWN) {
-							this.basis = day.value.plus({weeks: 1});
-						} else if (keyCode == LEFT) {
-							this.basis = day.value.plus({days: langDir == 'ltr' ? -1 : 1});
-						} else if (keyCode == RIGHT) {	
-							this.basis = day.value.plus({days: langDir == 'ltr' ? 1 : -1});
-						} else {
-							// If the keycode isn't any of the arrow keys then don't prevent default.
-							return;
-						}
-						// I don't want the page to scroll if the up and down arrow keys are pressed.
-						e.preventDefault();
-					})}
 					tabIndex="${new Computed((basis, day) => 
 						basis.hasSame(day, 'day') ? '0' : '-1',
 					this._basis, day)}" 
@@ -159,28 +199,36 @@ export default class CalendarBasic extends Base {
 		// Show the weekday names and adjust between long / short / narrow based on the available space in the calendar's header.
 		const types = ["long", "short", "narrow"];
 		const index = new LiveData(0);
-		const weekdayNames = new Computed(index => Info.weekdays(types[index]), index);
+		const weekdayNames = new Computed(diff(index => {
+			if (index.o && index.o === index.n) {
+				return Unchanged;
+			} else {
+				return Info.weekdays(types[index.n]);
+			}
+		}), index);
 		const fits = new Map();
 		const canIncrease = new Map();
 		const observer = new ResizeObserver((entries, _observer) => {
+			let working_index = index.value;
 			let decrease = false;
 			for (const {target} of entries) {
 				if (!fits.has(target)) { fits.set(target, []); canIncrease.set(target, false); }
-				fits.get(target)[index.value] = target.scrollWidth;
-				if (target.offsetWidth < target.scrollWidth && index.value < types.length - 1) {
+				fits.get(target)[working_index] = target.scrollWidth;
+				if (target.offsetWidth < target.scrollWidth && working_index < types.length - 1) {
 					decrease = true;
 				}
 				canIncrease.set(target, 
-					target.offsetWidth > (fits.get(target)[index.value - 1] || Infinity)
+					target.offsetWidth > (fits.get(target)[working_index - 1] || Infinity)
 				);
 			}
 			if (decrease) {
-				++(index.value);
+				++(working_index);
 			} 
-			// TODO: Fix the bellow condition...
+			// TODO: Fix the bellow condition so that it doesn't add another linear complexity term.
 			else if ([...canIncrease.values()].every(val => val)) {
-				--(index.value);
+				--(working_index);
 			}
+			index.value = working_index; // Only update the live-data once
 		});
 		return html`<div class="weekdays">
 			${Info.weekdays().map((_, i) => html`
@@ -205,7 +253,26 @@ export default class CalendarBasic extends Base {
 				</h1>
 			</header>
 			${this.buildWeekdays()}
-			<div class="cells">
+			<div class="cells" ${arrow_nav({
+				// Arrow key navigation that takes the language direction into consideration when using the left and right arrow keys.
+				up: () => {
+					this.basis = this.basis.plus({weeks: -1});
+				},
+				down: () => {
+					this.basis = this.basis.plus({weeks: 1});
+				},
+				left: (target) => {
+					const langDir = window.getComputedStyle(target).direction;
+					this.basis = this.basis.plus({days: langDir == 'ltr' ? -1 : 1});
+				},
+				right: (target) => {	
+					const langDir = window.getComputedStyle(target).direction;
+					this.basis = this.basis.plus({days: langDir == 'ltr' ? 1 : -1});
+				},
+				space: () => {
+					// TODO: Open day and view events?
+				}
+			})}>
 				${this.buildCells()}
 			</div>
 		`,
@@ -218,22 +285,3 @@ export default class CalendarBasic extends Base {
 	}
 }
 customElements.define('calendar-basic', CalendarBasic);
-// OLD Props: 
-// props({
-// 	'lang': {
-// 		type: String,
-// 		default: function () {
-// 			// The default will only be used if we don't have a default set via attribute or property
-// 			let lang;
-// 			// Check for a language attribute on a DOM parent
-// 			let langEl = this.matches('[lang]');
-// 			if (langEl) {
-// 				return langEl.getAttribute('lang');
-// 			}
-// 			// Use the navigator's language
-// 			else {
-// 				return navigator.language;
-// 			}
-// 		}
-// 	}
-// }, 

@@ -2,10 +2,11 @@ import User from './user.mjs';
 import ALLTYPES from 'parts/all-types.mjs';
 
 export default function component(func) {
+	// TODO: Make these maps:
 	const target = {};
 	const values = {};
 	const parts = {};
-	const prop = name => {
+	const prop = (name, def_value) => {
 		if (!parts[name]) {
 			parts[name] = new Set();
 			Object.defineProperty(target, name, {
@@ -26,7 +27,11 @@ export default function component(func) {
 			acceptTypes: ALLTYPES,
 			bind(part) {
 				parts[name].add(part);
-				part.update(values[name]);
+				if (values[name] !== undefined) {
+					part.update(values[name]);
+				} else {
+					part.update(def_value);
+				}
 			},
 			unbind(part) {
 				parts[name].delete(part);

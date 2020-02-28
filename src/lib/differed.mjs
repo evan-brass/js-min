@@ -1,12 +1,10 @@
-// This doesn't actually conform to the promise spec.  The then method doesn't return a promise.  But it works for my use cases.  It's awaitable which is all I care about mostly.
-export default class Differed {
-	constructor() {
-		this._promise = new Promise((resolve, reject) => {
-			this.resolve = resolve;
-			this.reject = reject;
-		});
-	}
-	then(...args) {
-		return this._promise.then(...args);
-	}
+export default function differed() {
+	let resolve, reject;
+	const prom = new Promise((res, rej) => {
+		resolve = res;
+		reject = rej;
+	});
+	prom.res = resolve;
+	prom.rej = reject;
+	return prom;
 }
