@@ -240,6 +240,7 @@ export default class CalendarBasic extends Base {
 	}
 
 	async run(signal) {
+		await CSS.layoutWorklet.addModule('./month-layout.js');
 		const wrap = wrapSignal(signal);
 		const unmount = mount(html`
 			${this.styles}
