@@ -6674,4 +6674,3 @@ function friendlyDateTime(dateTimeish) {
 }
 
 export { DateTime, Duration, FixedOffsetZone, IANAZone, Info, Interval, InvalidZone, LocalZone, Settings, Zone };
-//# sourceMappingURL=luxon.js.map
