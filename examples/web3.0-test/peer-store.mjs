@@ -1,6 +1,6 @@
 import Peer from './peer.mjs';
 import { parse_message } from './signaling-api.mjs';
-import NodeArray from 'users/node-array-2.mjs';
+import NodeArray from 'users/node-array.mjs';
 import User from 'users/user.mjs';
 
 class PeerStore {
@@ -84,16 +84,4 @@ function wrap_request(request, handlers) {
 		request.addEventListener('success', ({target}) => resolve(target));
 		request.addEventListener('error', reject);
 	});
-}
-
-export async function get_peers() {
-	const db = await database;
-	let transaction = db.transaction(['peers'], 'readonly');
-	let request = transaction.objectStore('peers').getAll();
-	return (await wrap_request(request)).result;
-}
-export async function put_peer(peer) {
-	const db = await database;
-	const transaction = db.transaction(['peers'], 'readwrite');
-	return (await wrap_request(transaction.objectStore('peers').put(peer))).result;
 }
