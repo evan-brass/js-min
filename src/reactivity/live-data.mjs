@@ -1,60 +1,37 @@
-import { Reactive } from './reactive.mjs';
+import wrapSignal from 'cancellation/wrap-signal.mjs';
+import differed from 'lib/differed.mjs';
 
-export default class LiveData extends Reactive.implementation {
-	constructor(initialValue) {
-		super();
+const UnInit = Symbol('This symbol means that no value has been set yet.');
+
+export default class LiveData {
+	constructor(initialValue = UnInit) {
+		this._nextValue = differed();
 		this._value = initialValue;
 	}
-
 	set value(newValue) {
 		this._value = newValue;
-		this.propagate();
-	}
-	// Implement the Reactive Trait:
-	get depth() {
-		// Live Data objects have no dependencies so their depth is always 0
-		return 0;
+		// Shouldn't be a problem because promise resolution happens in the microtask stage, but I might as well setup the new _nextValue before resolving the old one.
+		const old = this._nextValue;
+		this._nextValue = differed();
+		old.res();
 	}
 	get value() {
-		return this._value;
+		if (this._value === UnInit) {
+			console.warn(new Error("Live Data accessed before a value was set - returning undefined."));
+			return undefined;
+		} else {
+			return this._value;
+		}
 	}
-
-	[Symbol.asyncIterator]() {
-		const CaughtUp = Symbol('This symbol indicates that the async iterator is caught up with the live data object');
-		let toIssue = this.value;
-		let resolve = [];
-		const self = this;
-		const ReactiveUser = {
-			get depth() {
-				return self.depth + 1;
-			},
-			update() {
-				if (resolve.length) {
-					resolve.shift()({value: self.value, done: false});
-				} else {
-					toIssue = self.value;
-				}
-			},
-			get [Reactive]() { return this; }
-		};
-		this.depend(ReactiveUser);
-		return {
-			next() {
-				if (toIssue !== CaughtUp) {
-					const temp = toIssue;
-					toIssue = CaughtUp;
-					return Promise.resolve({value: temp, done: false});
-				} else {
-					return new Promise(res => resolve.push(res));
-				}
-			},
-			return() {
-				self.undepend(ReactiveUser);
-				return Promise.resolve({done: true});
-			},
-			[Symbol.asyncIterator]() {
-				return this;
-			}
-		};
+	async *[Symbol.asyncIterator]() {
+		// If we already have a value then we want to yield that right away.
+		let prom = (this._value !== UnInit) ? Promise.resolve() : this._nextValue;
+		let wrap = false;
+		while (true) {
+			await (wrap ? wrap(prom) : prom);
+			prom = this._nextValue;
+			const signal = yield this.value; // Always yield the most up to date value
+			wrap = signal ? wrapSignal(signal) : false;
+		}
 	}
 }
