@@ -8,9 +8,7 @@
 			"imports": {
 				"cancellation/": "/src/cancellation/",
 				"lib/": "/src/lib/",
-				"parts/": "/src/parts/",
 				"reactivity/": "/src/reactivity/",
-				"users/": "/src/users/",
 				"templating/": "/src/templating/",
 				"custom-elements/": "/src/custom-elements/"
 			}
@@ -24,10 +22,10 @@
 	<script type="module">
 		import Base from 'custom-elements/base.mjs';
 		import html from 'templating/html.mjs';
-		import on from 'users/on.mjs';
+		import on from 'templating/users/on.mjs';
 		import delay from 'lib/delay.mjs';
 		import range from 'lib/range.mjs';
-		import css from 'users/css.mjs';
+		import css from 'templating/css.mjs';
 		import mount from 'templating/mount.mjs';
 		import NEVER from 'lib/never.mjs';
 

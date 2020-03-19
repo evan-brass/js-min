@@ -8,9 +8,7 @@
 			"imports": {
 				"cancellation/": "/src/cancellation/",
 				"lib/": "/src/lib/",
-				"parts/": "/src/parts/",
 				"reactivity/": "/src/reactivity/",
-				"users/": "/src/users/",
 				"templating/": "/src/templating/",
 				"custom-elements/": "/src/custom-elements/"
 			}
@@ -19,9 +17,11 @@
 </head>
 <body>
 	<script type="module">
-		import on from 'users/on.mjs';
 		import LiveData from 'reactivity/live-data.mjs';
-		import { mount, html, css } from 'templating/def-context.mjs';
+		import html from 'templating/html.mjs';
+		import mount from 'templating/mount.mjs';
+		import css from 'templating/css.mjs';
+		import on from 'templating/users/on.mjs';
 
 		const color = new LiveData('rebeccapurple');
 

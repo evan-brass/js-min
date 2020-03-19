@@ -9,17 +9,10 @@ export function exchange_users(oldUser, newUser, part) {
 			if (swapper.canSwap(newUser)) {
 				return swapper.doSwap(newUser);
 			}
-			else {
-				oldUser.unbind(part);
-				newUser.bind(part);
-				return newUser;
-			}
-		} else {
-			oldUser.unbind(part);
-			newUser.bind(part)
-			return newUser;
 		}
-	} else {
+		oldUser.unbind(part);
+	}
+	if (newUser) {
 		newUser.bind(part);
 		return newUser;
 	}

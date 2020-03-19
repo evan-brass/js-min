@@ -1,5 +1,7 @@
 import Base from 'custom-elements/base.mjs';
-import { html, css, mount } from 'templating/def-context.mjs';
+import html from 'templating/html.mjs';
+import css from 'templating/css.mjs';
+import mount from 'templating/mount.mjs';
 import NEVER from 'lib/never.mjs';
 import wrapSignal from 'cancellation/wrap-signal.mjs';
 import LiveData from 'reactivity/live-data.mjs';
@@ -8,11 +10,11 @@ import Computed, { Unchanged, diff } from 'reactivity/computed.mjs';
 import { DateTime, Duration, Interval, Info } from './luxon.mjs';
 import range from 'lib/range.mjs';
 
-import resizeObserve from 'users/resize-observe.mjs';
-import on from 'users/on.mjs';
-import ref from 'users/ref.mjs';
-import arrow_nav from 'users/arrow-nav.mjs';
-import component from 'users/component.mjs';
+import resizeObserve from 'templating/users/resize-observe.mjs';
+import on from 'templating/users/on.mjs';
+import ref from 'templating/users/ref.mjs';
+import arrow_nav from 'templating/users/arrow-nav.mjs';
+import component from 'templating/users/component.mjs';
 
 export default class CalendarBasic extends Base {
 	constructor() {
@@ -35,7 +37,7 @@ export default class CalendarBasic extends Base {
 				overflow-y: auto;
 				overflow-x: hidden;
 			*/
-			display: layout(blocklike);
+			/* display: layout(blocklike); */
 		}
 		header {
 			display: flex;
@@ -154,7 +156,6 @@ export default class CalendarBasic extends Base {
 			return '';
 		}), this._visible, this._basis);
 		for (const i of range(0, 42)) {
-			// TODO: Handle focusing:
 			cells.push(component(prop => html`
 				<div 
 					tabIndex="${prop('tabIndex', '-1')}" 
@@ -171,28 +172,6 @@ export default class CalendarBasic extends Base {
 		// We put the updater computed into the array so that it get's pulled and updates the rest of the cells as long as it's bound and sinking
 		cells.push(updater);
 		return cells;
-
-		return Array.from(range(0, 42)).map((_, i) => {
-			const day = new Computed(visible => visible.start.plus({days: i}), this._visible);
-			return html`<div 
-					tabIndex="${new Computed((basis, day) => 
-						basis.hasSame(day, 'day') ? '0' : '-1',
-					this._basis, day)}" 
-					class="cell 
-						${new Computed((day, month) => month.contains(day) ? 'in-month' : '', day, this._month)}
-						${new Computed((basis, day) => basis.hasSame(day, 'day') ? 'basis' : '', this._basis, day)}
-					"
-					${on('focus', _ => this.basis = day.value)}
-					${ref(el => new Computed((day, basis) => {
-						if (basis.hasSame(day, 'day') && el.getRootNode().activeElement) {
-							el.focus();
-						}
-					}, day, this._basis))}
-				>
-					${new Computed(day => day.toLocaleString({day: 'numeric'}), day)}
-				</div>
-			`;
-		});
 	}
 	buildWeekdays() {
 		// MAYBE: Handle not default locale?
@@ -240,7 +219,7 @@ export default class CalendarBasic extends Base {
 	}
 
 	async run(signal) {
-		await CSS.layoutWorklet.addModule('./month-layout.js');
+		// await CSS.layoutWorklet.addModule('./month-layout.js');
 		const wrap = wrapSignal(signal);
 		const unmount = mount(html`
 			${this.styles}

@@ -8,9 +8,7 @@
 			"imports": {
 				"cancellation/": "/src/cancellation/",
 				"lib/": "/src/lib/",
-				"parts/": "/src/parts/",
 				"reactivity/": "/src/reactivity/",
-				"users/": "/src/users/",
 				"templating/": "/src/templating/",
 				"custom-elements/": "/src/custom-elements/"
 			}
@@ -20,7 +18,7 @@
 <body>
 	<script type="module">
 		import mount from 'templating/mount.mjs';
-		import on_mult from 'users/on-mult.mjs';
+		import on_mult from 'templating/users/on-mult.mjs';
 		import html from 'templating/html.mjs';
 		import range from 'lib/range.mjs';
 		import LiveData from 'reactivity/live-data.mjs';

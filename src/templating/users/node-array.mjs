@@ -1,15 +1,15 @@
 import User from './user.mjs';
-import NodePart, {Returnable} from 'parts/node-part.mjs';
+import NodePart, {Returnable} from '../parts/node-part.mjs';
 import { verifyUser, exchange_users } from './common.mjs';
-import def_e2u from './def-expr2user.mjs';
+import default_expression_to_user from '../expression-to-user.mjs';
 
 // TODO: Add optimized array implementations - Use hints and tricks
 
 export default class NodeArray {
-	constructor(expressions = [], e2u = def_e2u) {
+	constructor(expressions = [], expression_to_user = default_expression_to_user) {
 		// We have three arrays that together simulate the one array that is passed in... kinda yuck.
 		// TODO: Implement a diffing approach that doesn't have as much memory overhead.
-		this.e2u = e2u;
+		this.e2u = expression_to_user;
 		this.expressions = expressions;
 		this.users = this.expressions.map(this.e2u);
 		this.parts = [];
@@ -77,6 +77,27 @@ export default class NodeArray {
 			}
 		});
 	}
+	get length() {
+		return this.array.length;
+	}
+	set length(newLength) {
+		return this.array.length = newLength;
+	}
+	// Customize the normal array functions to provide proper hinting:
+	// TODO: push, splice, unshift, shift, pop, etc.
+	// push(...items) {
+	// 	for (let i = 0; i < items.length; ++i) {
+	// 		const item = items[i];
+	// 		this.set(this.length, item, {
+	// 			old_index: -1,
+	// 			old_value: false,
+	// 			get values_between() { throw new Error("values_between shouldn't be needed"); },
+	// 			relative_index: this.length + i - 1
+	// 		});
+	// 	}
+	// 	this.length += items.length;
+	// }
+
 	set(index, value, hints_in = {}) {
 		// I think that if all neccessary hints are supplied then we can do the set in constant time.  Otherwise, it's some janky linear I think.
 		const self = this;

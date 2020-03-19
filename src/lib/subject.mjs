@@ -1,22 +1,22 @@
-import Differed from "./differed.mjs";
+import differed from "./differed.mjs";
 
 export default class Subject {
 	constructor() {
-		this.differed = new Differed();
+		this.differed = new differed();
 	}
 	yield(val) {
-		this.differed.resolve({type: 'yield', val});
+		this.differed.res({type: 'yield', val});
 	}
 	return(val) {
-		this.differed.resolve({type: 'return', val});
+		this.differed.res({type: 'return', val});
 	}
 	throw(val) {
-		this.differed.resolve({type: 'throw', val});
+		this.differed.res({type: 'throw', val});
 	}
 	async *[Symbol.asyncIterator]() {
 		while (true) {
 			const {type, val} = await this.differed;
-			this.differed = new Differed();
+			this.differed = new differed();
 			switch(type) {
 				case 'yield':
 					try {

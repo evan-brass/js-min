@@ -1,11 +1,11 @@
 import User from './user.mjs';
 import { verifyUser } from './common.mjs';
-import def_e2u from './def-expr2user.mjs';
-import ALLTYPES from 'parts/all-types.mjs';
+import default_expression_to_user from '../expression-to-user.mjs';
+import ALLTYPES from '../parts/all-types.mjs';
 import NodeArray from './node-array.mjs';
 
-function joinHandle(expressions, part, e2u = def_e2u) {
-	const users = Array.from(expressions).map(e2u);
+function joinHandle(expressions, part, expression_to_user = default_expression_to_user) {
+	const users = Array.from(expressions).map(expression_to_user);
 	const shared = new Array(users.length).fill('');
 	const fakeParts = [];
 	for (let i = 0; i < users.length; ++i) {
@@ -32,8 +32,8 @@ function joinHandle(expressions, part, e2u = def_e2u) {
 	};
 }
 
-function shareHandle(expressions, part, e2u = def_e2u) {
-	const users = Array.from(expressions).map(e2u);
+function shareHandle(expressions, part, expression_to_user = default_expression_to_user) {
+	const users = Array.from(expressions).map(expression_to_user);
 	for (const user of users) {
 		verifyUser(user, part);
 		user.bind(part);
@@ -45,7 +45,7 @@ function shareHandle(expressions, part, e2u = def_e2u) {
 	};
 }
 
-export default function arrayHandle(expression, e2u = def_e2u) {
+export default function arrayHandle(expression, expression_to_user = default_expression_to_user) {
 	// The problem is that we won't know what type of part we're going to be bound to until we're bound.
 	return {
 		get [User]() { return this; },
@@ -55,13 +55,13 @@ export default function arrayHandle(expression, e2u = def_e2u) {
 				case 'style':
 					// Should probably use insertRule and deleteRule instead of array joining, but...
 				case 'attribute-value':
-					this.unbind = joinHandle(expression, part, e2u);
+					this.unbind = joinHandle(expression, part, expression_to_user);
 					break;
 				case 'attribute':
-					this.unbind = shareHandle(expression, part, e2u);
+					this.unbind = shareHandle(expression, part, expression_to_user);
 					break;
 				case 'node':
-					const nodeArray = new NodeArray(expression, e2u);
+					const nodeArray = new NodeArray(expression, expression_to_user);
 					verifyUser(nodeArray, part); // Probably not needed but just in case there's more stuff in verifyUser later
 					nodeArray.bind(part);
 					this.unbind = nodeArray.unbind.bind(nodeArray);

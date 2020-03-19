@@ -18,7 +18,7 @@ function convertAttributeMarkers(node, id) {
 		parts: []
 	}
 	for (const attrName of node.getAttributeNames()) {
-		const [before, order, after] = findMarker(id, attrName);
+		const [_before, order, _after] = findMarker(id, attrName);
 		if (order != -1) {
 			elementData.parts.push({
 				type: "attribute",
@@ -67,7 +67,7 @@ function convertAttributeMarkers(node, id) {
 export default function convertMarkers(root, id) {
 	// The reason that we need to call normalize is because if a marker spanned accross a text node then we wouldn't find it because we check each text node individually.  Hypothetically, since we just created the template element then it should be normal, but to satisfy paranoia...
 	root.content.normalize();
-	// Don't call normalize later because it would collapse the Text nodes that hold the location for node type parts (Shouldn't be a problem when we later switch away from using Text nodes to always framed NodeParts).
+	// Don't call normalize later because it would collapse the Text nodes that hold the location for node type parts (Shouldn't be a problem when we later switch away from using Text nodes to always framed NodeParts using comment nodes - The reason for switching to framed + comments is for server side rendering and rehydration).
 	const walker = document.createTreeWalker(
 		root.content, 
 		NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT

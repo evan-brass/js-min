@@ -1,12 +1,12 @@
 import User from './user.mjs';
 import { verifyUser } from './common.mjs';
-import def_e2u from './def-expr2user.mjs';
+import default_expression_to_user from '../expression-to-user.mjs';
 
-import ALLTYPES from 'parts/all-types.mjs';
+import ALLTYPES from '../parts/all-types.mjs';
 
 // TODO: Use abort signals instead of this cancel stuff.
 
-export default function awaitReplace(promise, e2u = def_e2u) {
+export default function awaitReplace(promise, expression_to_user = default_expression_to_user) {
 	let user;
 	let unbound = false;
 	return {
@@ -14,13 +14,14 @@ export default function awaitReplace(promise, e2u = def_e2u) {
 		bind(part) {
 			promise.then(expression => {
 				if (!unbound) {
-					user = e2u(expression);
+					user = expression_to_user(expression);
 					verifyUser(user, part);
 					user.bind(part);
 				}
 			});
 		},
 		unbind(part) {
+			// TODO: Stop this old cancel stuff.
 			promise.cancel && promise.cancel();
 			unbound = true;
 			part.clear();

@@ -8,9 +8,7 @@
 			"imports": {
 				"cancellation/": "/src/cancellation/",
 				"lib/": "/src/lib/",
-				"parts/": "/src/parts/",
 				"reactivity/": "/src/reactivity/",
-				"users/": "/src/users/",
 				"templating/": "/src/templating/",
 				"custom-elements/": "/src/custom-elements/"
 			}
@@ -18,18 +16,42 @@
 	</script>
 </head>
 <body>
+	<script type="_module">
+		let calendar = document.createElement('div');
+		document.body.appendChild(calendar);
+		calendar.innerHTML = `
+			<div class="event-source">
+				<div class="event-piece" slot="events">Event 1 - Piece 1</div>
+				<div class="event-piece" slot="events">Event 1 - Piece 2</div>
+			</div>
+			<div class="event-source">
+				<div class="event-piece" slot="events">Event 1 - Piece 1</div>
+				<div class="event-piece" slot="events">Event 1 - Piece 2</div>
+			</div>
+		`;
+		calendar.attachShadow({mode: 'open'});
+		calendar.shadowRoot.innerHTML = `
+			<section>
+				<header>
+					Hello World
+				</header>
+				<slot name="events">default contents</slot>
+			</section>
+		`;
+	</script>
 	<script type="module">
-		import context from 'templating/def-context.mjs';
+		import mount from 'templating/mount.mjs';
+		import html from 'templating/html.mjs';
 
-		context.mount(context.html`
+		mount(html`
 			<div>
 				<h1>Custom Element Calendar</h1>
 				${(async function* () {
-					yield context.html`Importing the calendar module`;
+					yield html`Importing the calendar module`;
 					await import('./calendar-basic.mjs');
-					yield context.html`Waiting for the calendar-basic element to be defined`;
+					yield html`Waiting for the calendar-basic element to be defined`;
 					await customElements.whenDefined('calendar-basic');
-					yield context.html`<calendar-basic></calendar-basic>`;
+					yield html`<calendar-basic></calendar-basic>`;
 				})()}
 			</div>
 		`, document.body);

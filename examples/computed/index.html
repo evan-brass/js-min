@@ -8,9 +8,7 @@
 			"imports": {
 				"cancellation/": "/src/cancellation/",
 				"lib/": "/src/lib/",
-				"parts/": "/src/parts/",
 				"reactivity/": "/src/reactivity/",
-				"users/": "/src/users/",
 				"templating/": "/src/templating/",
 				"custom-elements/": "/src/custom-elements/"
 			}
@@ -19,8 +17,9 @@
 </head>
 <body>
 	<script type="module">
-		import { html,  mount } from 'templating/def-context.mjs';
-		import on from 'users/on.mjs';
+		import html from 'templating/html.mjs';
+		import mount from 'templating/mount.mjs';
+		import on from 'templating/users/on.mjs';
 		import LiveData from 'reactivity/live-data.mjs';
 		import Computed from 'reactivity/computed.mjs';
 

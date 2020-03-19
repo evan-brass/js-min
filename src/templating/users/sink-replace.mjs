@@ -1,9 +1,9 @@
 import User from './user.mjs';
 import {verifyUser, exchange_users} from './common.mjs';
-import ALLTYPES from 'parts/all-types.mjs';
-import def_e2u from './def-expr2user.mjs';
+import ALLTYPES from '../parts/all-types.mjs';
+import default_expression_to_user from '../expression-to-user.mjs';
 
-export default function sinkReplace(stream, e2u = def_e2u) {
+export default function sinkReplace(stream, expression_to_user = default_expression_to_user) {
 	// TODO: Make a class and put promise as a private member.
 	let isBound = false;
 	let iteration;
@@ -15,7 +15,7 @@ export default function sinkReplace(stream, e2u = def_e2u) {
 			iteration = stream[Symbol.asyncIterator]();
 			function handle({value, done}) {
 				if (isBound && value != undefined) {
-					const user = e2u(value);
+					const user = expression_to_user(value);
 					verifyUser(user, part);
 
 					if (!done) {

@@ -1,12 +1,12 @@
-import User from 'users/user.mjs';
-import {Returnable} from 'parts/node-part.mjs';
-import Swappable from 'users/swappable.mjs';
-import createParts from 'parts/create-parts.mjs';
-import {verifyUser} from 'users/common.mjs';
-import def_e2u from 'users/def-expr2user.mjs';
+import User from './users/user.mjs';
+import { Returnable } from './parts/node-part.mjs';
+import Swappable from './users/swappable.mjs';
+import createParts from './parts/create-parts.mjs';
+import { verifyUser } from './users/common.mjs';
+import default_expression_to_user from './expression-to-user.mjs';
 
 // Using the template builder is initialization
-export default class TemplateBuilder {
+export class TemplateBuilder {
 	constructor() {
 		// TODO: Maybe the default should be to enable pooling and swapping because I think they are pretty good for performance / efficiency.  But I don't want you to pay for things you don't need, so the defaults are off.
 		this.pool_size = 0;
@@ -16,7 +16,7 @@ export default class TemplateBuilder {
 
 		this.template = false;
 		this.generate = false;
-		this.expr2user = def_e2u;
+		this.expression_to_user = default_expression_to_user;
 	}
 	with_pooling(pool_size = 3) {
 		this.pool_size = pool_size;
@@ -26,18 +26,11 @@ export default class TemplateBuilder {
 		this.swapping = use_swapping;
 		return this;
 	}
-	with_expr2user(expr2user) {
-		this.expr2user = expr2user;
+	with_expression_to_user(expression_to_user) {
+		this.expression_to_user = expression_to_user;
 		return this;
 	}
-	with_template(template) {
-		if (this.generate) {
-			throw new Error("Template can't have a template because it already has a generate function.");
-		}
-		this.template = template;
-		return this;
-	}
-	build() {
+	build(template) {
 		// TODO: handle pooling without swapping and viceversa
 
 		// Save the state of the builder at the point that build was called so that we can use it later throughout the template.  Ideally, I would use the preprocessor to slightly modify the template code based on the configuration.  No compiler and preprocessor for js so this will have some runtime costs.  If there were a JS compiler (something like prepack) then hopefully the entire template builder would be eliminated altogether and the templates that it builds would have the dead code eliminated.
@@ -75,7 +68,7 @@ export default class TemplateBuilder {
 				this.users = [];
 
 				// Import the template element's contents
-				const fragment = document.importNode(this.template.content, true);
+				const fragment = document.importNode(template.content, true);
 
 				// Turn the comment nodes into parts:
 				const parts = [];
@@ -200,7 +193,7 @@ export default class TemplateBuilder {
 				if (this.isConnected && this.isBound) {
 					this.unbindUsers();
 				}
-				this.users = expressions.map(this.expr2user);
+				this.users = expressions.map(this.expression_to_user);
 				if (this.users.length !== parts.length) {
 					throw new Error("Different number of users then this instance has parts.");
 				}
@@ -291,8 +284,8 @@ export default class TemplateBuilder {
 			delete ret.prototype.mayPool;
 		}
 
-		// Handle expr2user
-		ret.prototype.expr2user = this.expr2user;
+		// Handle expression_to_user
+		ret.prototype.expression_to_user = this.expression_to_user;
 
 		// Add some properties common to all templates
 		Object.defineProperty(ret.prototype, User, {
@@ -303,3 +296,5 @@ export default class TemplateBuilder {
 		return ret;
 	}
 }
+
+export default new TemplateBuilder().with_pooling(5).with_swapping();
