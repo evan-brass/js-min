@@ -1,5 +1,5 @@
-import wrapSignal from 'cancellation/wrap-signal.mjs';
-import differed from 'lib/differed.mjs';
+import wrapSignal from '../cancellation/wrap-signal.mjs';
+import differed from '../lib/differed.mjs';
 
 const UnInit = Symbol('This symbol means that no value has been set yet.');
 

@@ -1,4 +1,4 @@
-import sha1 from 'lib/string-hash.mjs';
+import sha1 from '../lib/string-hash.mjs';
 import convertMarkers from './parts/convert-markers.mjs';
 import default_template_builder from './template-builder.mjs';
 

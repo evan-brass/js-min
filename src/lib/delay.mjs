@@ -1,4 +1,4 @@
-import abortError from 'cancellation/abort-error.mjs';
+import abortError from '../cancellation/abort-error.mjs';
 
 export default function delay(ms, signal = undefined) {
 	return new Promise((resolve, reject) => {

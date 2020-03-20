@@ -1,5 +1,5 @@
-import Never from 'lib/never.mjs';
-import range from 'lib/range.mjs';
+import Never from '../lib/never.mjs';
+import range from '../lib/range.mjs';
 
 // TODO: Cancellation signals
 export const Unchanged = Symbol("This symbol represent that the value of the Computed didn't change and therefore shouldn't propagate down.");
