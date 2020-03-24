@@ -3,6 +3,7 @@ import User from './users/user.mjs';
 import sinkReplace from './users/sink-replace.mjs';
 import constant from './users/constant.mjs';
 import arrayHandle from './users/array-handle.mjs';
+import awaitReplace from './users/await-replace.mjs';
 
 // Used to check if the expression handlers were able to convert the expression.  If they can then they return the User.  If they can't then they return their second parameter which is this Unchanged symbol.
 // Alternatively, I could do and instanceof User on the result... so I might change it to that in the future.
@@ -27,6 +28,12 @@ export function make_expression_to_user(handlers) {
 export default make_expression_to_user([
 	// By default, handle primative types: string, number, undefined, symbol as constants
 	(expr, un) => typeof expr !== 'object' ? constant(expr) : un,
+	// By default, handle primative Object types here:
+	(expr, un) => 
+		(	expr instanceof Number ||
+			expr instanceof Boolean ||
+			expr instanceof String
+		)  ? constant(expr) : un,
 	// By default, handle HTMLElements as constants
 	(expr, un) => expr instanceof Node ? constant(expr) : un,
 	// By default, handle arrays with default array handling
