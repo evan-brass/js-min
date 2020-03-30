@@ -3,17 +3,6 @@
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>Counter Widget</title>
-	<script type="importmap">
-		{	
-			"imports": {
-				"cancellation/": "/src/cancellation/",
-				"lib/": "/src/lib/",
-				"reactivity/": "/src/reactivity/",
-				"templating/": "/src/templating/",
-				"custom-elements/": "/src/custom-elements/"
-			}
-		}
-	</script>
 </head>
 <body>
 	<script type="_module">
@@ -40,8 +29,8 @@
 		`;
 	</script>
 	<script type="module">
-		import mount from 'templating/mount.mjs';
-		import html from 'templating/html.mjs';
+		import mount from '../../src/templating/mount.mjs';
+		import html from '../../src/templating/html.mjs';
 
 		mount(html`
 			<div>

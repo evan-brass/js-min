@@ -1,20 +1,20 @@
-import Base from 'custom-elements/base.mjs';
-import html from 'templating/html.mjs';
-import css from 'templating/css.mjs';
-import mount from 'templating/mount.mjs';
-import NEVER from 'lib/never.mjs';
-import wrapSignal from 'cancellation/wrap-signal.mjs';
-import LiveData from 'reactivity/live-data.mjs';
-import Computed, { Unchanged, diff } from 'reactivity/computed.mjs';
+import Base from '../../src/custom-elements/base.mjs';
+import html from '../../src/templating/html.mjs';
+import css from '../../src/templating/css.mjs';
+import mount from '../../src/templating/mount.mjs';
+import NEVER from '../../src/lib/never.mjs';
+import wrapSignal from '../../src/cancellation/wrap-signal.mjs';
+import LiveData from '../../src/reactivity/live-data.mjs';
+import Computed, { Unchanged, diff } from '../../src/reactivity/computed.mjs';
 
 import { DateTime, Duration, Interval, Info } from './luxon.mjs';
-import range from 'lib/range.mjs';
+import range from '../../src/lib/range.mjs';
 
-import resizeObserve from 'templating/users/resize-observe.mjs';
-import on from 'templating/users/on.mjs';
-import ref from 'templating/users/ref.mjs';
-import arrow_nav from 'templating/users/arrow-nav.mjs';
-import component from 'templating/users/component.mjs';
+import resizeObserve from '../../src/templating/users/resize-observe.mjs';
+import on from '../../src/templating/users/on.mjs';
+import ref from '../../src/templating/users/ref.mjs';
+import arrow_nav from '../../src/templating/users/arrow-nav.mjs';
+import component from '../../src/templating/users/component.mjs';
 
 export default class CalendarBasic extends Base {
 	constructor() {
