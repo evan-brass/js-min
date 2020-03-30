@@ -15,7 +15,7 @@
 */
 // TODO: Probably need a camel to kebbab case thing but it's ok for now.
 // TODO: Switch to class decorators instead of the property object.  Do the same to enable computed properties and computed properties with dynamic dependencies.
-import LiveData from './reactivity/live-data.mjs';
+import LiveData from '../reactivity/live-data.mjs';
 
 export default function props(definitions, inherit = HTMLElement) {
 	// Build class

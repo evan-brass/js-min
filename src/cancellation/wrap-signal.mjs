@@ -6,6 +6,7 @@ export default function wrapSignal(signal) {
 			reject(new DOMException('Signal was aborted', 'AbortError'));
 		});
 	});
+	signalPromise.catch(_ => {}); // Stop the browser from thinking that not catching a signalPromise is a problem.
 	return function wrap(promise) {
 		if (signal.aborted) {
 			return signalPromise;
