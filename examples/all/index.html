@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>All Examples in one page:</title>
+		<style>
+			iframe {
+				display: block;
+				width: 100%;
+				border: none;
+			}
+			h1 {
+				margin-inline-end: 0;
+			}
+		</style>
+	</head>
+	<body>
+		<script>
+			function resizeIframes() {
+				document.querySelectorAll('iframe').forEach(iframe => {
+					iframe.style.height = iframe.contentWindow.document.body.scrollHeight + 'px';
+				});
+			}
+			window.onload = resizeIframes;
+			document.querySelectorAll('iframe').forEach(ifream => {
+				iframe.contentWindow.addEventListener('load', resizeIframes);
+			});
+		</script>
+		<button onclick="javascript:resizeIframes()">Resize Iframes</button>
+		<h1>array-performance:</h1>
+		<iframe src="../array-performance/"></iframe>
+		<h1>async-generator:</h1>
+		<iframe src="../async-generator/"></iframe>
+		<h1>base-test:</h1>
+		<iframe src="../base-test/"></iframe>
+		<h1>calendar:</h1>
+		<iframe src="../calendar/"></iframe>
+		<h1>computed:</h1>
+		<iframe src="../computed/"></iframe>
+		<h1>counter-widget:</h1>
+		<iframe src="../counter-widget/"></iframe>
+		<h1>css:</h1>
+		<iframe src="../css/"></iframe>
+		<h1>dial:</h1>
+		<iframe src="../dial/"></iframe>
+		<h1>homework:</h1>
+		<iframe src="../homework/"></iframe>
+		<h1>node-array:</h1>
+		<iframe src="../node-array/"></iframe>
+		<h1>sudoku:</h1>
+		<iframe src="../sudoku/"></iframe>
+		<h1>svg:</h1>
+		<iframe src="../svg/"></iframe>
+		<h1>swapping:</h1>
+		<iframe src="../swapping/"></iframe>
+	</body>
+</html>
