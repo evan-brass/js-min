@@ -1,9 +1,9 @@
 export function base_extend(inherit = HTMLElement) {
-	return class Base extends inherit {
-		abortController = new AbortController()
-		
+	return class Base extends inherit {		
 		constructor() {
 			super();
+
+			this.abortController = new AbortController();
 			
 			// Construct the shadow DOM
 			this.attachShadow({mode: 'open'});

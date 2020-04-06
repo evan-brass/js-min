@@ -17,7 +17,7 @@ export default class LiveData {
 	}
 	get value() {
 		if (this._value === UnInit) {
-			console.warn(new Error("Live Data accessed before a value was set - returning undefined."));
+			console.warn(new Error('Live Data accessed before a value was set - returning undefined.'));
 			return undefined;
 		} else {
 			return this._value;

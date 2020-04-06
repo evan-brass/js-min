@@ -4,20 +4,20 @@ import User from './user.mjs';
 
 // MAYBE: Switch to class?  So that those functions would be on a shared prototype?
 export default function on_mult(object) {
-    return {
-        acceptTypes: new Set(['attribute']),
-        get [User] () {
-            return this;
-        },
-        bind(part) {
+	return {
+		acceptTypes: new Set(['attribute']),
+		get [User] () {
+			return this;
+		},
+		bind(part) {
 			for (let event in object) {
 				part.element.addEventListener(event, object[event]);
 			}
-        },
-        unbind(part) {
+		},
+		unbind(part) {
 			for (let event in object) {
 				part.element.removeEventListener(event, object[event]);
 			}
-        }
-    };
+		}
+	};
 }

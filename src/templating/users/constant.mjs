@@ -8,13 +8,13 @@ const Base = {
 	bind(part) {
 		part.update(this.value);
 	},
-	unbind(part) {
+	unbind(_part) {
 		// part.clear();
 	}
-}
+};
 
 export default function constant(value) {
 	const user = Object.create(Base);
 	user.value = value;
-    return user;
+	return user;
 }

@@ -28,6 +28,7 @@ export default function props(definitions, inherit = HTMLElement) {
 				const def = definitions[key].default;
 
 				let initial_value;
+				// eslint-disable-next-line no-prototype-builtins
 				if (this.hasOwnProperty(key)) {
 					// Our element had a property set before it was upgraded -> use as initial value and delete it.
 					initial_value = this[key];

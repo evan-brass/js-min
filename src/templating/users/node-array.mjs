@@ -27,7 +27,7 @@ export default class NodeArray {
 
 		this.array = new Proxy(this.expressions, {
 			get: (_, key) => {
-				if (this.expressions.hasOwnProperty(key)) { // Numeric indexes and length hopefully.
+				if (key in this.expressions) { // Numeric indexes and length hopefully.
 					return this.expressions[key];
 				} else if (key in this && this[key] instanceof Function) {
 					return this[key].bind(this);
@@ -241,7 +241,7 @@ export default class NodeArray {
 			this._fragment = false;
 			return frag;
 		} else {
-			throw new Error("Fragment must be returned (aka. set) before it can be retreived again.");
+			throw new Error('Fragment must be returned (aka. set) before it can be retreived again.');
 		}
 	}
 	returnFragment(frag) {

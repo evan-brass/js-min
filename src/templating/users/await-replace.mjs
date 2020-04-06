@@ -28,5 +28,5 @@ export default function awaitReplace(promise, expression_to_user = default_expre
 			if (user) user.unbind(part);
 		},
 		get [User]() { return this; }
-	}
+	};
 }

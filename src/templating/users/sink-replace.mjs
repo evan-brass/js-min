@@ -34,5 +34,5 @@ export default function sinkReplace(stream, expression_to_user = default_express
 			part.clear();
 		},
 		get [User]() { return this; }
-	}
+	};
 }

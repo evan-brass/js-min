@@ -8,7 +8,7 @@ function find_marker(id, string) {
 		const after = string.slice(exec.index + full_match.length);
 		return [before, Number.parseInt(order), after];
 	} else {
-		return [string, -1, ""];
+		return [string, -1, ''];
 	}
 }
 
@@ -16,12 +16,12 @@ function convert_attribute_markers(node, id) {
 	const element_data = {
 		shared: [],
 		parts: []
-	}
+	};
 	for (const attribute_name of node.getAttributeNames()) {
 		const [_before, order, _after] = find_marker(id, attribute_name);
 		if (order != -1) {
 			element_data.parts.push({
-				type: "attribute",
+				type: 'attribute',
 				order
 			});
 			node.removeAttribute(attribute_name);
@@ -34,12 +34,12 @@ function convert_attribute_markers(node, id) {
 					shared = [];
 					element_data.shared.push(shared);
 				}
-				if (before != "") {
+				if (before != '') {
 					shared.push(before);
 				}
 				value = after;
 				element_data.parts.push({
-					type: "attribute-value",
+					type: 'attribute-value',
 					order,
 					attrName: attribute_name,
 					index: shared.length,
@@ -47,7 +47,7 @@ function convert_attribute_markers(node, id) {
 				});
 				// I don't think that getting attributes is always in DOM string order
 				element_data.parts.sort((a, b) => a.order - b.order);
-				shared.push(""); // String where this part's value goes
+				shared.push(''); // String where this part's value goes
 				[before, order, after] = find_marker(id, value);
 			}
 			if (shared) {
@@ -58,7 +58,7 @@ function convert_attribute_markers(node, id) {
 			}
 		}
 	}
-	if (element_data.shared.length == 0) {delete element_data.shared};
+	if (element_data.shared.length == 0) {delete element_data.shared;}
 	if (element_data.parts.length > 0) {
 		node.parentNode.insertBefore(new Comment(JSON.stringify(element_data)), node);
 	}
@@ -77,24 +77,24 @@ export default function convert_markers(root, id) {
 		const node = walker.currentNode;
 		if (node.nodeType == Node.ELEMENT_NODE) {
 			convert_attribute_markers(node, id);
-			if (node.nodeName == "STYLE") {
-				console.warn(new Error("Please consider using the Stylesheet constructor or a pattern that will transition well to it eventually instead of using style tags: https://wicg.github.io/construct-stylesheets/"));
+			if (node.nodeName == 'STYLE') {
+				console.warn(new Error('Please consider using the Stylesheet constructor or a pattern that will transition well to it eventually instead of using style tags: https://wicg.github.io/construct-stylesheets/'));
 			}
 		} else if (node.nodeType == Node.TEXT_NODE) {
 			const [before, order, after] = find_marker(id, node.data);
 			if (order != -1) {
-				if (node.parentNode.nodeName == "STYLE") {
+				if (node.parentNode.nodeName == 'STYLE') {
 					throw new Error("Node parts aren't allowed within style tags because during parsing they don't allow DOM comments inside which means they couldn't be sent in a precompiled template.");
 				}
 				const comment = new Comment(JSON.stringify({
 					type: 'node',
 					order
 				}));
-				if (before != "") {
+				if (before != '') {
 					node.parentNode.insertBefore(new Text(before), node);
 				}
 				node.parentNode.insertBefore(comment, node);
-				if (after != "") {
+				if (after != '') {
 					node.parentNode.insertBefore(new Text(after), node.nextSibling);
 				}
 				next_node = walker.nextNode();

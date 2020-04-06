@@ -43,5 +43,5 @@ export default make_expression_to_user([
 	// By default, handle Async Iterators with replacement
 	(expr, un) => expr[Symbol.asyncIterator] ? sinkReplace(expr) : un,
 	// By default, handle Iterators by converting them to an array and handling that.
-	(expr, un) => expr[Symbol.iterator] ? arrayHandle(Array.from(expr), e2u) : un,
+	(expr, un) => expr[Symbol.iterator] ? arrayHandle(Array.from(expr)) : un,
 ]);

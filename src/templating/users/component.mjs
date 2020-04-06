@@ -37,7 +37,7 @@ export default function component(func) {
 				parts[name].delete(part);
 				part.clear();
 			}
-		}
+		};
 	};
 	const result = func(prop);
 	// Make the target pass the User from what was returned by the func

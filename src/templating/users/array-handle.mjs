@@ -17,7 +17,7 @@ function joinHandle(expressions, part, expression_to_user = default_expression_t
 				part.update(shared.join(' ')); // I'm pretty sure that both style and attribute-values can use a space between their array values.
 			},
 			clear() { this.update(''); }
-		}
+		};
 		fakeParts.push(fakePart);
 		const user = users[i];
 		verifyUser(user, fakePart);
@@ -51,27 +51,29 @@ export default function arrayHandle(expression, expression_to_user = default_exp
 		get [User]() { return this; },
 		acceptTypes: ALLTYPES,
 		bind(part) {
-			switch(part.type) {
-				case 'style':
-					// Should probably use insertRule and deleteRule instead of array joining, but...
-				case 'attribute-value':
-					this.unbind = joinHandle(expression, part, expression_to_user);
-					break;
-				case 'attribute':
-					this.unbind = shareHandle(expression, part, expression_to_user);
-					break;
-				case 'node':
-					const nodeArray = new NodeArray(expression, expression_to_user);
-					verifyUser(nodeArray, part); // Probably not needed but just in case there's more stuff in verifyUser later
-					nodeArray.bind(part);
-					this.unbind = nodeArray.unbind.bind(nodeArray);
-					break;
-				default:
-					throw new Error("A default array user hasn't been defined for that type of part");
+			switch (part.type) {
+			case 'style':
+				// Should probably use insertRule and deleteRule instead of array joining, but...
+			// eslint-disable-next-line no-fallthrough
+			case 'attribute-value':
+				this.unbind = joinHandle(expression, part, expression_to_user);
+				break;
+			case 'attribute':
+				this.unbind = shareHandle(expression, part, expression_to_user);
+				break;
+			case 'node':
+				// TODO: Stop using NodeArray and only support static arrays.  People can always use NodeArray if they need it.
+				const nodeArray = new NodeArray(expression, expression_to_user);
+				verifyUser(nodeArray, part); // Probably not needed but just in case there's more stuff in verifyUser later
+				nodeArray.bind(part);
+				this.unbind = nodeArray.unbind.bind(nodeArray);
+				break;
+			default:
+				throw new Error("A default array user hasn't been defined for that type of part");
 			}
 		},
-		unbind(_part) { 
-			throw new Error('unbind should have been overridden or bind was not called before unbind'); 
+		unbind(_part) {
+			throw new Error('unbind should have been overridden or bind was not called before unbind');
 		}
-	}
+	};
 }

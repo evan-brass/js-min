@@ -1,4 +1,4 @@
-import differed from "./differed.mjs";
+import differed from './differed.mjs';
 
 export default class Subject {
 	constructor() {
@@ -18,19 +18,19 @@ export default class Subject {
 			const {type, val} = await this.differed;
 			this.differed = new differed();
 			switch(type) {
-				case 'yield':
-					try {
-						this.lastNext = yield val;
-					} catch(err) {
-						this.lastError = err;
-					}
-					break;
-				case 'return':
-					return val;
-				case 'throw':
-					throw val;
-				default:
-					throw new Error("Unknown type");
+			case 'yield':
+				try {
+					this.lastNext = yield val;
+				} catch(err) {
+					this.lastError = err;
+				}
+				break;
+			case 'return':
+				return val;
+			case 'throw':
+				throw val;
+			default:
+				throw new Error('Unknown type');
 			}
 		}
 	}

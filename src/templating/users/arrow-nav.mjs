@@ -28,16 +28,16 @@ export default function key_nav(handlers) {
 			}
 		}
 	};
-    return {
-        acceptTypes: new Set(['attribute']),
-        get [User] () {
-            return this;
-        },
-        bind(part) {
-            part.element.addEventListener('keydown', callback);
-        },
-        unbind(part) {
-            part.element.removeEventListener('keydown', callback);
-        }
-    };
+	return {
+		acceptTypes: new Set(['attribute']),
+		get [User] () {
+			return this;
+		},
+		bind(part) {
+			part.element.addEventListener('keydown', callback);
+		},
+		unbind(part) {
+			part.element.removeEventListener('keydown', callback);
+		}
+	};
 }
