@@ -131,8 +131,8 @@ export default class NodeArray {
 						if (self.parts[i]) {
 							return true;
 						}
-						return false;
 					}
+					return false;
 				} else {
 					return hints_in.values_between;
 				}
