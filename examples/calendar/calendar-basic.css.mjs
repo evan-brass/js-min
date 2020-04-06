@@ -12,7 +12,6 @@ export default css`
 			overflow-y: auto;
 			overflow-x: hidden;
 		*/
-		/* display: layout(blocklike); */
 	}
 	header {
 		display: flex;
