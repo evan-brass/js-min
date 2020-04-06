@@ -17,7 +17,7 @@
 		function dial(
 			title = "Some Clue", 
 			secretMessage = "This is secret", 
-			symbols = Array.from(range(1, 10)), 
+			symbols = Array.from(range(0, 10)), 
 			passcode = [1,2,3,4]
 		) {
 			const scrollDiffs = new Subject();
@@ -27,9 +27,12 @@
 				${ // These events are used to turn the dial:
 				on_mult({
 					'wheel': e => {
-						const Scaler = .5;
-						scrollDiffs.yield(e.deltaY * Scaler);
-						e.preventDefault();
+						// const Scaler = .5;
+						// scrollDiffs.yield(e.deltaY * Scaler);
+						const Scaler = 3.5;
+						const direction = Math.max(-1, Math.min(1, e.deltaY));
+						scrollDiffs.yield(direction * Scaler);
+						// e.preventDefault();
 					},
 					'touchstart': e => {
 						for (const touch of e.changedTouches) {
@@ -95,17 +98,19 @@
 							// For every difference from the scroll wheel or touches:
 							for await(const diff of scrollDiffs) {
 								degrees.value = normalize_degrees(degrees.value + diff);
-								digit.value = degrees_to_symbol(degrees.value);
-								if (digits.every((digit, i) => passcode[i] == digit.value)) {
-									// Check if the passcode is correct:
-									break passcode_enter;
-								} else if (last_diff === undefined) {
+								if (last_diff === undefined) {
 									last_diff = diff;
-									continue;
-								} else if ((last_diff < 0 && diff > 0) || (last_diff > 0 && diff < 0)) {
+								}
+								if ((last_diff < 0 && diff > 0) || (last_diff > 0 && diff < 0)) {
 									// Check if we changed directions and should advance to the next digit
 									last_diff = diff;
 									break;
+								} else {
+									digit.value = degrees_to_symbol(degrees.value);
+									if (digits.every((digit, i) => passcode[i] == digit.value)) {
+										// Check if the passcode is correct:
+										break passcode_enter;
+									}
 								}
 							}
 						}
