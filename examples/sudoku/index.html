@@ -3,25 +3,14 @@
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>Counter Widget</title>
-	<script type="importmap">
-		{	
-			"imports": {
-				"cancellation/": "/src/cancellation/",
-				"lib/": "/src/lib/",
-				"reactivity/": "/src/reactivity/",
-				"templating/": "/src/templating/",
-				"custom-elements/": "/src/custom-elements/"
-			}
-		}
-	</script>
 </head>
 <body>
 	<script type="module">
-		import html from 'templating/html.mjs';
-		import mount from 'templating/mount.mjs';
-		import on from 'templating/users/on.mjs';
-		import css from 'templating/css.mjs';
-		import range from 'lib/range.mjs';
+		import html from '../../src/templating/html.mjs';
+		import mount from '../../src/templating/mount.mjs';
+		import on from '../../src/templating/users/on.mjs';
+		import css from '../../src/templating/css.mjs';
+		import range from '../../src/lib/range.mjs';
 		const _ = 0;
 		const puzzle = [
 			5, 3, _,  _, 7, _,  _, _, _,

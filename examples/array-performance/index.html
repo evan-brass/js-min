@@ -3,27 +3,16 @@
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>Counter Widget</title>
-	<script type="importmap">
-		{	
-			"imports": {
-				"cancellation/": "/src/cancellation/",
-				"lib/": "/src/lib/",
-				"reactivity/": "/src/reactivity/",
-				"templating/": "/src/templating/",
-				"custom-elements/": "/src/custom-elements/"
-			}
-		}
-	</script>
 </head>
 <body>
 	<script type="module">
-		import html from 'templating/html.mjs';
-		import mount from 'templating/mount.mjs';
-		import NodeArray from 'templating/users/node-array.mjs';
-		import on from 'templating/users/on.mjs';
-		import ref from 'templating/users/ref.mjs';
+		import html from '../../src/templating/html.mjs';
+		import mount from '../../src/templating/mount.mjs';
+		import NodeArray from '../../src/templating/users/node-array.mjs';
+		import on from '../../src/templating/users/on.mjs';
+		import ref from '../../src/templating/users/ref.mjs';
 		
-		import LiveData from 'reactivity/live-data.mjs';
+		import LiveData from '../../src/reactivity/live-data.mjs';
 
 		const listItems = new NodeArray([]);
 		let ul;

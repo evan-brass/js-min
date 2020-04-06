@@ -3,27 +3,16 @@
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>Counter Widget</title>
-	<script type="importmap">
-		{	
-			"imports": {
-				"cancellation/": "/src/cancellation/",
-				"lib/": "/src/lib/",
-				"reactivity/": "/src/reactivity/",
-				"templating/": "/src/templating/",
-				"custom-elements/": "/src/custom-elements/"
-			}
-		}
-	</script>
 </head>
 <body>
 	<script type="module">
-		import mount from 'templating/mount.mjs';
-		import on_mult from 'templating/users/on-mult.mjs';
-		import html from 'templating/html.mjs';
-		import range from 'lib/range.mjs';
-		import LiveData from 'reactivity/live-data.mjs';
-		import Subject from 'lib/subject.mjs';
-		import delay from 'lib/delay.mjs';
+		import mount from '../../src/templating/mount.mjs';
+		import on_mult from '../../src/templating/users/on-mult.mjs';
+		import html from '../../src/templating/html.mjs';
+		import range from '../../src/lib/range.mjs';
+		import LiveData from '../../src/reactivity/live-data.mjs';
+		import Subject from '../../src/lib/subject.mjs';
+		import delay from '../../src/lib/delay.mjs';
 
 		function dial(
 			title = "Some Clue", 

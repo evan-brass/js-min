@@ -3,31 +3,20 @@
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<title>Custom Element based Tests</title>
-	<script type="importmap">
-		{	
-			"imports": {
-				"cancellation/": "/src/cancellation/",
-				"lib/": "/src/lib/",
-				"reactivity/": "/src/reactivity/",
-				"templating/": "/src/templating/",
-				"custom-elements/": "/src/custom-elements/"
-			}
-		}
-	</script>
 </head>
 <body>
 	<main>
 		<test-1></test-1>
 	</main>
 	<script type="module">
-		import Base from 'custom-elements/base.mjs';
-		import html from 'templating/html.mjs';
-		import on from 'templating/users/on.mjs';
-		import delay from 'lib/delay.mjs';
-		import range from 'lib/range.mjs';
-		import css from 'templating/css.mjs';
-		import mount from 'templating/mount.mjs';
-		import NEVER from 'lib/never.mjs';
+		import Base from '../../src/custom-elements/base.mjs';
+		import html from '../../src/templating/html.mjs';
+		import on from '../../src/templating/users/on.mjs';
+		import delay from '../../src/lib/delay.mjs';
+		import range from '../../src/lib/range.mjs';
+		import css from '../../src/templating/css.mjs';
+		import mount from '../../src/templating/mount.mjs';
+		import NEVER from '../../src/lib/never.mjs';
 
 		class Test1 extends Base {
 			async run(abortSignal) {

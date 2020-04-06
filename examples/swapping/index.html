@@ -3,24 +3,13 @@
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>Counter Widget</title>
-	<script type="importmap">
-		{	
-			"imports": {
-				"cancellation/": "/src/cancellation/",
-				"lib/": "/src/lib/",
-				"reactivity/": "/src/reactivity/",
-				"templating/": "/src/templating/",
-				"custom-elements/": "/src/custom-elements/"
-			}
-		}
-	</script>
 </head>
 <body>
 	<script type="module">
-		import html from 'templating/html.mjs';
-		import css from 'templating/css.mjs';
-		import mount from 'templating/mount.mjs';
-		import delay from 'lib/delay.mjs';
+		import html from '../../src/templating/html.mjs';
+		import css from '../../src/templating/css.mjs';
+		import mount from '../../src/templating/mount.mjs';
+		import delay from '../../src/lib/delay.mjs';
 
 		mount(html`
 			<h2>Test Swapping</h2>
