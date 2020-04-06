@@ -3,14 +3,14 @@ import Base from '../../src/custom-elements/base.mjs';
 import html from '../../src/templating/html.mjs';
 import mount from '../../src/templating/mount.mjs';
 import NEVER from '../../src/lib/never.mjs';
-import wrapSignal from '../../src/cancellation/wrap-signal.mjs';
+import wrap_signal from '../../src/cancellation/wrap-signal.mjs';
 import LiveData from '../../src/reactivity/live-data.mjs';
 import Computed, { Unchanged, diff } from '../../src/reactivity/computed.mjs';
 
 import { DateTime, Interval, Info } from './luxon.mjs';
 import range from '../../src/lib/range.mjs';
 
-import resizeObserve from '../../src/templating/users/resize-observe.mjs';
+import resize_observe from '../../src/templating/users/resize-observe.mjs';
 import on from '../../src/templating/users/on.mjs';
 import arrow_nav from '../../src/templating/users/arrow-nav.mjs';
 import component from '../../src/templating/users/component.mjs';
@@ -51,8 +51,8 @@ export default class CalendarBasic extends Base {
 	get basis() {
 		return this._basis.value;
 	}
-	set basis(newDate) {
-		this._basis.value = newDate;
+	set basis(new_date) {
+		this._basis.value = new_date;
 		return true;
 	}
 	
@@ -148,7 +148,7 @@ export default class CalendarBasic extends Base {
 		});
 		return html`<div class="weekdays">
 			${Info.weekdays().map((_, i) => html`
-				<span class="weekday" ${resizeObserve(observer)}>
+				<span class="weekday" ${resize_observe(observer)}>
 					${new Computed(names => names[i], weekdayNames)}
 				</span>
 			`)}
@@ -157,7 +157,7 @@ export default class CalendarBasic extends Base {
 
 	async run(signal) {
 		// await CSS.layoutWorklet.addModule('./month-layout.js');
-		const wrap = wrapSignal(signal);
+		const wrap = wrap_signal(signal);
 		const unmount = mount(html`
 			${this.styles}
 			<header>
