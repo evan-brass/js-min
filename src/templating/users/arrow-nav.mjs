@@ -11,6 +11,7 @@ export default function key_nav(handlers) {
 	} */
 	const callback = e => {
 		const { target, keyCode } = e;
+		// TODO: Switch this to a map?:
 		const code_to_handler = {
 			37: 'left',
 			39: 'right',
@@ -19,9 +20,12 @@ export default function key_nav(handlers) {
 			32: 'space'
 		};
 		if (keyCode in code_to_handler) {
-			handlers[code_to_handler[keyCode]](target);
-			// I don't want the page to scroll if the up and down arrow keys are pressed.
-			e.preventDefault();
+			const handler_name = code_to_handler[keyCode];
+			if (handler_name in handlers) {
+				handlers[handler_name](target);
+				// I don't want the page to scroll if the up and down arrow keys are pressed.
+				e.preventDefault();
+			}
 		}
 	};
     return {
