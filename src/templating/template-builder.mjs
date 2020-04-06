@@ -44,7 +44,7 @@ export class TemplateBuilder {
 					this.fragment = false;
 					return frag;
 				} else {
-					throw new Error("Fragment must be returned (aka. set) before it can be retreived.");
+					throw new Error('Fragment must be returned (aka. set) before it can be retreived.');
 				}
 			},
 			returnFragment(frag) {
@@ -86,7 +86,7 @@ export class TemplateBuilder {
 				if (config.swapping && config.pool_size) {
 					// We only need a lender if we are both pooling and swapping, otherwise we can just use the usual fragment layout
 					this.lender = Object.create(lenderBase);
-					this.lender.fragment = fragment
+					this.lender.fragment = fragment;
 					this.lender.parts = parts;
 				} else {
 					this.parts = parts;
@@ -102,10 +102,10 @@ export class TemplateBuilder {
 				// Swapping means giving the new instance your parts and unbinding your users from them so that the new person can bind their users to it.  We then pool ourselves because we are no longer in use.  The new instance controls the old dom that we controlled and we control the dom that they controlled.  We want them to take control because they are the one who has been connected with the value that the programmer wants to be displayed. All future control to that dom is going to go through that new instance.  This also means switching the fragment lenders because your fragment is now their fragment and vice versa.
 		
 				if (!existingInstance.isBound) {
-					throw new Error("Existing instance must be bound in order to swap.");
+					throw new Error('Existing instance must be bound in order to swap.');
 				}
 				if (replacingInstance.isBound) {
-					throw new Error("Replacing instance cannot be bound in order to swap.");
+					throw new Error('Replacing instance cannot be bound in order to swap.');
 				}
 				// Unbind users from the existing instance
 				if (existingInstance.isConnected) {
@@ -118,7 +118,7 @@ export class TemplateBuilder {
 		
 				// Sanity checks:
 				if (ex_parts == re_parts) {
-					throw new Error("Two instances should never have the same parts array.  This would likely indicate a bad past swap.");
+					throw new Error('Two instances should never have the same parts array.  This would likely indicate a bad past swap.');
 				} else if (ex_parts.length !== re_parts.length) {
 					throw new Error("Swapping instances must have the same number of parts.  Having a different number of parts could mean that the instances don't actually share a template or perhaps the template instantiation failed.");
 				}
@@ -195,7 +195,7 @@ export class TemplateBuilder {
 				}
 				this.users = expressions.map(this.expression_to_user);
 				if (this.users.length !== parts.length) {
-					throw new Error("Different number of users then this instance has parts.");
+					throw new Error('Different number of users then this instance has parts.');
 				}
 				// Make sure that all the users are appropriate for the parts
 				this.users.forEach((user, i) => verifyUser(user, parts[i]));
@@ -243,7 +243,7 @@ export class TemplateBuilder {
 						this.fragment = false;
 						return frag;
 					} else {
-						throw new Error("Fragment must be returned (aka. set) before it can be retreived.");
+						throw new Error('Fragment must be returned (aka. set) before it can be retreived.');
 					}
 				} else {
 					throw new Error("The fragment should only directly implement the Returnable trait if swapping is disabled but pooling isn't.");

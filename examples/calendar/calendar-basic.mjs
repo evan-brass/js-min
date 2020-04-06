@@ -1,3 +1,4 @@
+/* eslint-disable indent */
 import Base from '../../src/custom-elements/base.mjs';
 import html from '../../src/templating/html.mjs';
 import mount from '../../src/templating/mount.mjs';
@@ -6,12 +7,11 @@ import wrapSignal from '../../src/cancellation/wrap-signal.mjs';
 import LiveData from '../../src/reactivity/live-data.mjs';
 import Computed, { Unchanged, diff } from '../../src/reactivity/computed.mjs';
 
-import { DateTime, Duration, Interval, Info } from './luxon.mjs';
+import { DateTime, Interval, Info } from './luxon.mjs';
 import range from '../../src/lib/range.mjs';
 
 import resizeObserve from '../../src/templating/users/resize-observe.mjs';
 import on from '../../src/templating/users/on.mjs';
-import ref from '../../src/templating/users/ref.mjs';
 import arrow_nav from '../../src/templating/users/arrow-nav.mjs';
 import component from '../../src/templating/users/component.mjs';
 
@@ -20,6 +20,24 @@ import calendar_basic_css from './calendar-basic.css.mjs';
 export default class CalendarBasic extends Base {
 	constructor() {
 		super();
+
+		// Setup reactivity:
+		this._basis = new LiveData(DateTime.local());
+		this._month = new Computed(diff(basis => {
+			if (basis.o && basis.o.startOf('month').equals(basis.n.startOf('month'))) {
+				return Unchanged;
+			} else {
+				return Interval.fromDateTimes(
+					basis.n.startOf('month'),
+					basis.n.endOf('month')
+				);
+			}
+		}), this._basis);
+		this._visible = new Computed(month => Interval.fromDateTimes(
+			month.start.startOf('week'),
+			month.end.endOf('week')
+		), this._month);
+
 		// Make sure that the direction is set using whatever the language is that is used by the calendar.
 		this.shadowRoot.host.setAttribute('dir', 'auto');
 	}
@@ -30,21 +48,6 @@ export default class CalendarBasic extends Base {
 		return calendar_basic_css;
 	}
 	// I would like to convert this whole LiveData + getter + setter + (attributeChangedCallback?) into a decorator setup once somebody starts supporting them. These also need to delete any attributes that have already been added by a framework before the element was upgraded + call the setter with the value they set.
-	_basis = new LiveData(DateTime.local())
-	_month = new Computed(diff(basis => {
-		if (basis.o && basis.o.startOf('month').equals(basis.n.startOf('month'))) {
-			return Unchanged;
-		} else {
-			return Interval.fromDateTimes(
-				basis.n.startOf('month'),
-				basis.n.endOf('month')
-			);
-		}
-	}), this._basis)
-	_visible = new Computed(month => Interval.fromDateTimes(
-		month.start.startOf('week'),
-		month.end.endOf('week')
-	), this._month)
 	get basis() {
 		return this._basis.value;
 	}
@@ -110,7 +113,7 @@ export default class CalendarBasic extends Base {
 	buildWeekdays() {
 		// MAYBE: Handle not default locale?
 		// Show the weekday names and adjust between long / short / narrow based on the available space in the calendar's header.
-		const types = ["long", "short", "narrow"];
+		const types = ['long', 'short', 'narrow'];
 		const index = new LiveData(0);
 		const weekdayNames = new Computed(diff(index => {
 			if (index.o && index.o === index.n) {
@@ -158,7 +161,7 @@ export default class CalendarBasic extends Base {
 		const unmount = mount(html`
 			${this.styles}
 			<header>
-				${/* So... I'm putting displayed-month before the title and then using flex order to switch it to title then displayed month.  This is to make sure that the dir="auto" on the main element first encounters the text of the displayed month rather than the title.  That way the direction is coherent with the language that the dates are displayed in rather than the title of the calendar.  I'm going to treat the titles, descriptions, etc as user input and wrap them in bdi tags (For support, it looks like I should do dir="auto" as well: https://caniuse.com/#search=bdi) */ ""}
+				${/* So... I'm putting displayed-month before the title and then using flex order to switch it to title then displayed month.  This is to make sure that the dir="auto" on the main element first encounters the text of the displayed month rather than the title.  That way the direction is coherent with the language that the dates are displayed in rather than the title of the calendar.  I'm going to treat the titles, descriptions, etc as user input and wrap them in bdi tags (For support, it looks like I should do dir="auto" as well: https://caniuse.com/#search=bdi) */ ''}
 				<h2 class="displayed-month">
 					${new Computed(basis => basis.toLocaleString({month: 'long', year: 'numeric'}), this._basis)}
 				</h2>
@@ -190,7 +193,7 @@ export default class CalendarBasic extends Base {
 				${this.buildCells()}
 			</div>
 		`,
-		this.shadowRoot)
+		this.shadowRoot);
 		try {
 			await wrap(NEVER);
 		} finally {
