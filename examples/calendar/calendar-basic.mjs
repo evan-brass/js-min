@@ -158,7 +158,7 @@ export default class CalendarBasic extends Base {
 		const unmount = mount(html`
 			${this.styles}
 			<header>
-				${/* <!-- So... I'm putting displayed-month before the title and then using flex order to switch it to title then displayed month.  This is to make sure that the dir="auto" on the main element first encounters the text of the displayed month rather than the title.  That way the direction is coherent with the language that the dates are displayed in rather than the title of the calendar.  I'm going to treat the titles, descriptions, etc as user input and wrap them in bdi tags (For support, it looks like I should do dir="auto" as well: https://caniuse.com/#search=bdi) -->*/ ""}
+				${/* So... I'm putting displayed-month before the title and then using flex order to switch it to title then displayed month.  This is to make sure that the dir="auto" on the main element first encounters the text of the displayed month rather than the title.  That way the direction is coherent with the language that the dates are displayed in rather than the title of the calendar.  I'm going to treat the titles, descriptions, etc as user input and wrap them in bdi tags (For support, it looks like I should do dir="auto" as well: https://caniuse.com/#search=bdi) */ ""}
 				<h2 class="displayed-month">
 					${new Computed(basis => basis.toLocaleString({month: 'long', year: 'numeric'}), this._basis)}
 				</h2>
