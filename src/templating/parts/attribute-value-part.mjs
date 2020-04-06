@@ -1,15 +1,15 @@
 import Part from './part.mjs';
 
 export default class AttributeValuePart extends Part {
-    constructor(element, attributeName, shared, sharedIndex) {
+    constructor(element, attribute_name, shared, shared_index) {
         super("attribute-value", element);
-        this.attributeName = attributeName;
+        this.attribute_name = attribute_name;
         this.shared = shared;
-        this.sharedIndex = sharedIndex;
+        this.shared_index = shared_index;
     }
     update(newValue) {
-        this.shared[this.sharedIndex] = newValue;
-        this.element.setAttribute(this.attributeName, this.shared.join(''));
+        this.shared[this.shared_index] = newValue;
+        this.element.setAttribute(this.attribute_name, this.shared.join(''));
     }
     clear() {
         this.update('');

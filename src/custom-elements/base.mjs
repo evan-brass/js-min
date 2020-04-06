@@ -1,4 +1,4 @@
-export function Base_extend(inherit = HTMLElement) {
+export function base_extend(inherit = HTMLElement) {
 	return class Base extends inherit {
 		abortController = new AbortController()
 		
@@ -19,4 +19,4 @@ export function Base_extend(inherit = HTMLElement) {
 	};
 }
 
-export default Base_extend();
+export default base_extend();
