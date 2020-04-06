@@ -25,20 +25,19 @@ export default function props(definitions, inherit = HTMLElement) {
 			this._data = {};
 			// Setup the live data objects
 			for (const key in definitions) {
-				const def = definitions[key];
-				this._data[key] = new LiveData();
+				const def = definitions[key].default;
 
-				// For when someone sets the properties of our element before we've been upgraded.
+				let initial_value;
 				if (this.hasOwnProperty(key)) {
-					const presetValue = this[key];
+					// Our element had a property set before it was upgraded -> use as initial value and delete it.
+					initial_value = this[key];
 					delete this[key];
-					this._data[key].value = presetValue;
-				} else if (definitions[key].default) {
-					// Only use the default if the prop hasn't been set already
-					this._data[key].value = (def instanceof Function) ? 
-					def.call(this) :
-					def;
+				} else if (def !== undefined) {
+					// No initial property so use the default if there is one.
+					initial_value = (def instanceof Function) ? def.call(this) : def;
 				}
+
+				this._data[key] = new LiveData(initial_value);
 			}
 		}
 		attributeChangedCallback(key, _, newValue) {
@@ -52,7 +51,7 @@ export default function props(definitions, inherit = HTMLElement) {
 		}
 	}
 	for (const key in definitions) {
-		// Normallize / expand the definitions for later
+		// Normalize / expand the definitions for later
 		if (!definitions[key].type) {
 			definitions[key] = {
 				type: definitions[key]
