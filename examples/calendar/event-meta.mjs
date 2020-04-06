@@ -1,8 +1,6 @@
-"use strict";
+import PropertyMixin from './property-mixin.js';
 
-import PropertyMixin from "./property-mixin.js";
-
-import EventBasic from "./event-basic.mjs/index.js";
+import EventBasic from './event-basic.mjs/index.js';
 
 export default class EventMeta extends PropertyMixin(HTMLElement) {
 	constructor() {

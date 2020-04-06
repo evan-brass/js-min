@@ -1,3 +1,5 @@
+/* eslint-disable quotes */
+/* eslint-disable indent */
 /*
  * Copyright 2019 JS Foundation and other contributors
 
