@@ -20,6 +20,7 @@ function make_html(template_builder) {
 		let id = id_cache.get(strings);
 		if (!id) {
 			return awaitReplace((async () => {
+				// Sadly have to have awaitreplace because the hash function is async.
 				const id = 'a' + await sha1(strings.join('{{}}'));
 				id_cache.set(strings, id);
 

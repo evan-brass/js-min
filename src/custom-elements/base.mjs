@@ -1,3 +1,4 @@
+// TODO: this.abortController should be private
 export function base_extend(inherit = HTMLElement) {
 	return class Base extends inherit {		
 		constructor() {
