@@ -12,7 +12,7 @@
 		const channel = new BroadcastChannel('google-auth');
 
 		// Parse the application/x-www-form-urlencoded that comes after the '#'
-		const params = new URLSearchParams(window.hash.slice(1));
+		const params = new URLSearchParams(window.location.hash.slice(1));
 
 		// Move the parameters onto an object and then broadcast it.
 		const ret = {};
