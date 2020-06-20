@@ -19,9 +19,20 @@
 		for (const [key, value] of params) {
 			ret[key] = value;
 		}
+		// Handle Errors:
+		if (ret.error) {
+			ret = new Error(ret.error);
+		} else {
+			// Convert the expires_in into a timestamp (removing 5sec for safety)
+			ret.valid_until = Date.now() + (ret.expires_in - 5) * 1000;
+			delete ret.expires_in;
+			// Convert the scope property into an array of scopes:
+			ret.scopes = ret.scope.split(' ');
+			delete ret.scope;
+		}
+
+		// Post the message:
 		channel.postMessage(ret);
-		// Convert the expires_in into a timestamp (removing 5sec for safety)
-		ret.valid_until = new Date(Date.now() + (ret.expires_in - 5) * 1000);
 
 
 		// TODO: Also store in local storage.
