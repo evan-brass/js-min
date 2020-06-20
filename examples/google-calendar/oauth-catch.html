@@ -20,11 +20,21 @@
 			ret[key] = value;
 		}
 		channel.postMessage(ret);
+		// Convert the expires_in into a timestamp (removing 5sec for safety)
+		ret.valid_until = new Date(Date.now() + (ret.expires_in - 5) * 1000);
+
 
 		// TODO: Also store in local storage.
+		window.localStorage.setItem('google-token', JSON.stringify(ret));
 
-		// Close the redirected page.
-		window.close();
+		// I'm not sure how to get Google to let me use my client id with localhost.  So if we're not running as localhost, then redirect to localhost.
+		if (window.location.hostname != 'localhost') {
+			window.location.replace('https://localhost/examples/google-calendar/oauth-catch.html' + window.location.hash);
+		} else {
+			// Close the catch-page.
+			window.close();
+		}
+
 	</script>
 </body>
 
