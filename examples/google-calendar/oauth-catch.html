@@ -1,0 +1,31 @@
+<html lang="en">
+
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>OAuth Catcher</title>
+</head>
+
+<body>
+	<p>This page is just to catch the OAuth redirect. It will self close shortly...</p>
+	<script type="Application/ECMAScript">
+		const channel = new BroadcastChannel('google-auth');
+
+		// Parse the application/x-www-form-urlencoded that comes after the '#'
+		const params = new URLSearchParams(window.hash.slice(1));
+
+		// Move the parameters onto an object and then broadcast it.
+		const ret = {};
+		for (const [key, value] of params) {
+			ret[key] = value;
+		}
+		channel.postMessage(ret);
+
+		// TODO: Also store in local storage.
+
+		// Close the redirected page.
+		window.close();
+	</script>
+</body>
+
+</html>
