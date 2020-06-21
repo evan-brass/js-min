@@ -50,9 +50,6 @@ function single_btn(text = "") {
 	return func;
 }
 
-const sample_token = '#access_token=ya29.a0AfH6SMAyJXXmSTdU7Q5EMSQdVrgP1461rFtfO1v_DJ4hM5QJCdtoFwdJt-NeYr1vVbXzkq56XOOFyBtEFzay6B3x5H8DHt_pYHcPbFpbRSpGqtdnGdkzFzPkXdquIDUdgV8nfAEbiqi798swlQqzyogJ8RLzN1QTBLY&token_type=Bearer&expires_in=3599&scope=https://www.googleapis.com/auth/calendar.settings.readonly%20https://www.googleapis.com/auth/calendar.events%20https://www.googleapis.com/auth/calendar.readonly%20https://www.googleapis.com/auth/calendar.events.readonly%20https://www.googleapis.com/auth/calendar';
-
-
 // OAuth info:
 const client_id = '178771898722-c1r69eremasui0igehgmeg95nfb758jc.apps.googleusercontent.com';
 const redirect_uri = 'https://evan-brass.github.io/js-min/examples/google-calendar/oauth-catch.html';
