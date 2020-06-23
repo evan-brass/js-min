@@ -28,6 +28,12 @@ export default function expression_handler(expression, target_node, part_kind, r
 		} else {
 			if (expression instanceof CustomHandler) {
 				expression[CustomHandler](target_node, part_kind, recursive_handler);
+			} else if (expression instanceof Node) {
+				if (part_kind == 'node') {
+					target_node.replaceWith(expression);
+				} else {
+					throw new Error("Don't know what to do with a Node in a non-node part kind.");
+				}
 			} else if (expression[Symbol.iterator] !== undefined) {
 				if (part_kind == 'node') {
 					// Create a new comment node for each sub expression.

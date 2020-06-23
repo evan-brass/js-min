@@ -1,17 +1,15 @@
-import html from '../../src/templating/html.mjs';
-import mount from '../../src/templating/mount.mjs';
+import html from '../../src/template-v2/html.mjs';
+import mount from '../../src/template-v2/mount.mjs';
 import LiveData from '../../src/reactivity/live-data.mjs';
-import on from '../../src/templating/users/on.mjs';
+import on from '../../src/template-v2/on.mjs';
 
 mount((async function* asyncGenTest() {
 	const count = new LiveData();
 	count.value = 10;
 	yield html`First: Set the count to 25...<br />
-		${html`
-			<button ${on('click', () => count.value -= 1)}>-</button>
-			${count}
-			<button ${on('click', () => count.value += 1)}>+</button>
-		`}
+		<button ${on('click', () => count.value -= 1)}>-</button>
+		${count}
+		<button ${on('click', () => count.value += 1)}>+</button>
 	`;
 	for await (const val of count) {
 		if (val == 25) break;
@@ -22,7 +20,7 @@ mount((async function* asyncGenTest() {
 		<label>
 			${count}
 			<input type="range" 
-				value="${count.value}" 
+				${async el => { for await (const v of count) el.setAttribute('value', c); }}
 				min="0" max="10" step="1" 
 				${on('input', e => count.value = e.target.valueAsNumber)}
 			/>
