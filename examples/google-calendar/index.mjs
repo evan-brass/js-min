@@ -19,23 +19,6 @@ import LiveData from '../../src/reactivity/live-data.mjs';
 // }
 // document.body.appendChild(counter());
 
-function str(val) {
-	return function(el) {
-		el.replaceWith(new Text(val));
-	}
-}
-
-function arr(arr) {
-	return function(el) {
-		for (const item of arr) {
-			const comment = new Comment();
-			el.parentNode.insertBefore(comment, el);
-			item(comment);
-		}
-		el.remove();
-	}
-}
-
 function single_btn(text = "") {
 	let btn;
 	const prom = new Promise(res => {
@@ -120,8 +103,8 @@ sink((async function*() {
 	const calendars = list_response.items;
 
 	yield html`Got calendar list: <ul>
-		${arr(calendars.map(cal => sink((async function*(){
-			yield html`<li><span ${el => el.style.color = cal.backgroundColor}>${str(cal.summary)}</span></li>`;
-		})())))}
+		${calendars.map(cal => sink((async function*(){
+			yield html`<li><span ${el => el.style.color = cal.backgroundColor}>${cal.summary}</span></li>`;
+		})()))}
 	</ul>`;
 })())(temp);
