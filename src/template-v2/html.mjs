@@ -1,10 +1,10 @@
 import create_template from './create-template.mjs';
 import instantiate_template from './instantiate-template.mjs';
-import expression_handler from './expression-handler.mjs';
+import default_expression_handler from './expression-handler-2.mjs';
 
 const template_cache = new WeakMap();
 
-export function make_html(expression_handler) {
+export function make_html(expression_handler = default_expression_handler) {
 	return function html(strings, ...expressions) {
 		let template = template_cache.get(strings);
 		if (!template) {
@@ -18,4 +18,4 @@ export function make_html(expression_handler) {
 	}
 }
 
-export default make_html(expression_handler);
+export default make_html();
