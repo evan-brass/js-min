@@ -1,10 +1,11 @@
 import create_template from './create-template.mjs';
 import instantiate_template from './instantiate-template.mjs';
-import default_expression_handler from './expression-handler-2.mjs';
+import expression_to_handler from './expression-to-handler.mjs';
+import PartHandler from './part-handler.mjs';
 
 const template_cache = new WeakMap();
 
-export function make_html(expression_handler = default_expression_handler) {
+export function make_html(e2h = expression_to_handler) {
 	return function html(strings, ...expressions) {
 		let template = template_cache.get(strings);
 		if (!template) {
@@ -12,9 +13,16 @@ export function make_html(expression_handler = default_expression_handler) {
 			template_cache.set(strings, template);
 		}
 
-		return instantiate_template(template, (index, target_node, kind) => {
-			expression_handler(expressions[index], target_node, kind, expression_handler);
-		});
+		// TODO: Catch expressions that don't have associated parts / mismatched expressions and parts.
+
+		return {
+			[PartHandler](target_node, signal) {
+				const fragment = instantiate_template(template, (index, element, kind) => {
+					const handler = e2h(expressions[index], kind, e2h)(element, signal);
+				});
+				target_node.replaceWith(fragment);
+			}
+		};
 	}
 }
 

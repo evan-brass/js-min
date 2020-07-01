@@ -1,6 +1,8 @@
+
 export default function on(event, handler, options = {}) {
-	return function (el, part_kind, _recursive_handler) {
-		if (part_kind !== 'attribute') throw new Error('On can only be used with attribute kinds of parts.');
+	return (el, signal, kind) => {
+		if (kind !== 'attribute') throw new Error('On can only be used in attribute locations.');
 		el.addEventListener(event, handler, options);
-	}
+		signal.addEventListener('abort', _ => el.removeEventListener(event, handler));
+	};
 }

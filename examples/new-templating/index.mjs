@@ -1,4 +1,5 @@
 import html from '../../src/template-v2/html.mjs';
+import mount from '../../src/template-v2/mount.mjs';
 import on from '../../src/template-v2/on.mjs';
 import LiveData from '../../src/reactivity/live-data.mjs';
 
@@ -11,7 +12,7 @@ function sink(source) {
 	}
 }
 
-document.body.appendChild(html`
+mount(html`
 	<h1>Title: ${el => el.replaceWith('Replaced text.')}</h1>
 	<p>
 		This is a post.
@@ -31,4 +32,4 @@ function counter() {
 		<button ${on('click', _ => count.value += 1)}>+</button>
 	`;
 }
-document.body.appendChild(counter());
+mount(counter());
