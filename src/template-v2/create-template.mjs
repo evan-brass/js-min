@@ -1,3 +1,5 @@
+import {get_path, compile_paths} from './descendant-path.mjs';
+
 // We can remove the asyncronous sha-1 hash with a 17-character random string that's only generated once.
 const marker_base = crypto.getRandomValues(new Uint8Array(8)).reduce((str, n) => str + n.toString(16).padStart(2, '0'), 'a');
 const marker_finder = new RegExp(`${marker_base}-([0-9]+)`);
@@ -15,6 +17,7 @@ function find_marker(string) {
 }
 
 export default function create_template(strings) {
+	const paths = [];
 	// Create a template element with the markers:
 	let order = 0;
 	let template_contents = strings[0];
@@ -36,18 +39,12 @@ export default function create_template(strings) {
 	while (next_node) {
 		const node = walker.currentNode;
 		if (node.nodeType == Node.ELEMENT_NODE) {
-			const element_parts = [];
 			for (const attribute_name of node.getAttributeNames()) {
 				const [_before, i, _after] = find_marker(attribute_name);
 				if (i != -1) {
-					element_parts.push({ i });
+					paths[i] = get_path(node, template.content);
 					node.removeAttribute(attribute_name);
-				} else {
-					// No longer support attribute value parts.
 				}
-			}
-			if (element_parts.length > 0) {
-				node.parentNode.insertBefore(new Comment(JSON.stringify(element_parts)), node);
 			}
 		} else if (node.nodeType == Node.TEXT_NODE) {
 			const [before, i, after] = find_marker(node.data);
@@ -55,21 +52,30 @@ export default function create_template(strings) {
 				if (node.parentNode.nodeName == 'STYLE') {
 					throw new Error("Node parts aren't allowed within style tags because during parsing they don't allow DOM comments inside which means they couldn't be sent in a precompiled template.");
 				}
-				const comment = new Comment(JSON.stringify({ i }));
-				if (before != '') {
-					node.parentNode.insertBefore(new Text(before), node);
-				}
-				node.parentNode.insertBefore(comment, node);
+				const placeholder = new Comment();
 				if (after != '') {
-					node.parentNode.insertBefore(new Text(after), node.nextSibling);
+					node.after(after);
 				}
 				next_node = walker.nextNode();
-				node.remove();
+				if (before != '') {
+					node.replaceWith(before, placeholder);
+				} else {
+					node.replaceWith(placeholder);
+				}
+
+				// Get the content:
+				paths[i] = get_path(placeholder, template.content);
+				
 				continue;
 			}
 		}
 		next_node = walker.nextNode();
 	}
 
-	return template;
+	// TODO: Verify that part_getter returns the same nodes before and after a final template.content.normalize().  This is because the tree should be in normal form when it is loaded by the browser and if part_getter returns something different then that's a big big problem.
+
+	return {
+		template,
+		part_getter: compile_paths(paths)
+	};
 }

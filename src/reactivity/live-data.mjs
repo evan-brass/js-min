@@ -1,5 +1,6 @@
 import wrapSignal from '../cancellation/wrap-signal.mjs';
 import differed from '../lib/differed.mjs';
+import PartHandler from '../template-v2/part-handler.mjs';
 
 const UnInit = Symbol('This symbol means that no value has been set yet.');
 
@@ -32,6 +33,15 @@ export default class LiveData {
 			prom = this._nextValue;
 			const signal = yield this.value; // Always yield the most up to date value
 			wrap = signal ? wrapSignal(signal) : false;
+		}
+	}
+	async [PartHandler](target, signal) {
+		if (target.nodeType != Node.COMMENT_NODE) throw new Error("Live Data only supports node positions at the moment");
+		let text = new Text();
+		target.replaceWith(text);
+		for await (const val of this) {
+			if (signal.aborted) break;
+			text.data = val.toString();
 		}
 	}
 }

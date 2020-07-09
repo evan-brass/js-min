@@ -1,13 +1,13 @@
-import expression_to_handler from './expression-to-handler.mjs';
+import apply_expression from "./apply-expression.mjs";
 
-export function make_mount(e2h = expression_to_handler) {
+export function make_mount(apply_expr = apply_expression) {
 	return function mount(expression, root = document.body) {
 		const controller = new AbortController();
 
-		const temp = new Text();
+		const temp = new Comment();
 		root.appendChild(temp);
 
-		e2h(expression, 'node', e2h)(temp, controller.signal);
+		apply_expr(expression, temp, controller.signal);
 
 		return () => controller.abort();
 	};
