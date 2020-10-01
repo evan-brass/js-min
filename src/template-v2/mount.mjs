@@ -9,6 +9,8 @@ export function make_mount(apply_expr = apply_expression) {
 
 		apply_expr(expression, temp, controller.signal);
 
+		// TODO: Cleanup the comment node that get's left behind when the expression cleans itself up.
+
 		return () => controller.abort();
 	};
 }

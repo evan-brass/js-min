@@ -39,6 +39,7 @@ export default class LiveData {
 		if (target.nodeType != Node.COMMENT_NODE) throw new Error("Live Data only supports node positions at the moment");
 		let text = new Text();
 		target.replaceWith(text);
+		signal.addEventListener('abort', () => text.replaceWith(new Comment()));
 		for await (const val of this) {
 			if (signal.aborted) break;
 			text.data = val.toString();

@@ -15,6 +15,4 @@ export function compile_paths(paths) {
 		`root${path.map(index => `.childNodes[${index}]`).join('')}`
 	).join(', ')}];`;
 	return new Function('root', body);
-
-	// return root => paths.map(path => path.reduce((t, i) => t.childNodes[i], root));
 }

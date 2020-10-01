@@ -22,3 +22,4 @@ I'm quite pleased with the ergonomics of the existing templating library so I wa
 5. Use functions more than objects
 6. Use abortSignals instead of bind/unbind
 7. Run eagerly instead of lazily
+8. Use descendant paths instead of comment node based instantiation.

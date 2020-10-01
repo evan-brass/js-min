@@ -9,7 +9,10 @@ export default function apply_expression(expression, target_node, signal) {
 	} else if (expr_type == 'function') {
 		expression(target_node, signal);
 	} else if ((expr_type == 'number' || expr_type == 'bigint' || expr_type == 'string') && target_node.nodeType == Node.COMMENT_NODE) {
-		target_node.replaceWith(expression.toString());
+		let text = new Text();
+		text.data = expression.toString();
+		target_node.replaceWith(text);
+		signal.addEventListener('abort', _ => text.replaceWith(new Comment()));
 	} else if (expr_type == 'object') {
 		if (expression instanceof Node) {
 			target_node.replaceWith(expression);
@@ -21,7 +24,8 @@ export default function apply_expression(expression, target_node, signal) {
 				apply_expression(sub, new_node, signal);
 			}
 			target_node.remove();
-		} else if (expression[Symbol.iterator] !== undefined && target_node.nodeType == Node.COMMENT_NODE) {
+		} else if (expression[Symbol.iterator] !== undefined && target_node.nodeType !== Node.COMMENT_NODE) {
+			// Share the target node.
 			for (const sub of expression) {
 				apply_expression(sub, target_node, signal);
 			}

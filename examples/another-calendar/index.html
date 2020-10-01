@@ -1,0 +1,50 @@
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Another Calendar</title>
+</head>
+<body>
+	<script type="module">
+		import html from '../../src/template-v2/html.mjs';
+		import mount from '../../src/template-v2/mount.mjs';
+		import apply_expression from '../../src/template-v2/apply-expression.mjs';
+
+		function derive_controller(signal) {
+			const derived = new AbortController();
+			signal.addEventListener('abort', () => derived.abort());
+			return derived;
+		}
+
+		function sink(ai) {
+			return function sink_handler(el, signal) {
+				const temp = new Comment();
+				el.before(temp);
+				(async () => {
+					let last = false;
+					for await (const expr of ai) {
+						if (signal.aborted) break;
+						if (last) last.abort();
+						last = derive_controller(signal);
+
+						apply_expression(expr, el.previousSibling, last.signal);
+					}
+				})();
+			};
+		}
+
+		mount(html`
+			<div>
+				<h1>Custom Element Calendar</h1>
+				${sink((async function* () {
+					yield html`Importing the calendar module`;
+					await import('./calendar-basic.mjs');
+					yield html`Waiting for the calendar-basic element to be defined`;
+					await customElements.whenDefined('calendar-basic');
+					yield html`<calendar-basic></calendar-basic>`;
+				})())}
+			</div>
+		`, document.body);
+	</script>
+</body>
+</html>
