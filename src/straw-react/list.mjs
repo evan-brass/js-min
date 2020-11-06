@@ -4,6 +4,9 @@ const common = {
 	map(func) {
 		return map_list(this, func);
 	},
+	filter(func) {
+		return filter_list(this, func);
+	}
 };
 
 export default function list(...items) {
@@ -75,4 +78,53 @@ function map_list(parent_list, func) {
 		},
 		...common
 	};
+}
+
+function filter_list(parent_list, func) {
+	let waiters = new Set();
+	let arr = [];
+	let index_map;
+
+	const splice_handler = (index, remove_count, new_count) => {
+		push_context(splice_handler);
+		
+		let new_items = [];
+		let new_remove_count = index_map.slice(index, index + remove_count).reduce((p, c) => c !== false ? p + 1 : p, 0);
+		let new_index = index_map[index] || 0;
+		index_map.splice(index, remove_count, ...parent_list.all().slice(index, index + new_count).map(item => {
+			if (func(item)) {
+				new_items.push(item);
+				return new_index + new_items.length - 1;
+			} else {
+				false
+			}
+		}));
+		arr.splice(new_index, new_remove_count, ...new_items);
+		waiters = queue_waiters(waiters, index, remove_count, new_count);
+
+		pop_context(splice_handler);
+	};
+
+	push_context(splice_handler);
+	index_map = parent_list.all().map(item => {
+		if (func(item)) {
+			arr.push(item);
+			return arr.length - 1;
+		} else {
+			return false;
+		}
+	});
+	pop_context(splice_handler);
+
+	return {
+		get(index) {
+			aquire_waiters(waiters);
+			return arr[index];
+		},
+		all() {
+			aquire_waiters(waiters);
+			return arr;
+		},
+		...common
+	}
 }

@@ -16,6 +16,7 @@ export default function apply_expression(expression, target_node, signal) {
 	} else if (expr_type == 'object') {
 		if (expression instanceof Node) {
 			target_node.replaceWith(expression);
+			signal.addEventListener('abort', () => expression.replaceWith(new Comment()));
 		} else if (expression[Symbol.iterator] !== undefined && target_node.nodeType == Node.COMMENT_NODE) {
 			// Create a new comment node for each sub expression.
 			for (const sub of expression) {
