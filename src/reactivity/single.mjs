@@ -1,6 +1,6 @@
 import { aquire_waiters, queue_waiters } from "./context.mjs";
 
-export function single(initial) {
+export default function single(initial) {
 	let value = initial;
 	let waiters = new Set();
 	return {

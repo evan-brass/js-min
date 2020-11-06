@@ -1,13 +1,14 @@
-import html from '../../src/template-v2/html.mjs';
-import mount from '../../src/template-v2/mount.mjs';
-import LiveData from '../../src/reactivity/live-data.mjs';
-import on from '../../src/template-v2/on.mjs';
+import html from '../../src/templating/html.mjs';
+import mount from '../../src/templating/mount.mjs';
+import { use_later } from '../../src/reactivity/use.mjs';
+import single from '../../src/reactivity/single.mjs';
+import on from '../../src/templating/on.mjs';
+import set_text from '../../src/templating/set_text.mjs';
 
-const count = new LiveData();
-count.value = 10;
+const count = single(10);
 
 mount(html`
 	<button ${on('click', () => count.value -= 1)}>-</button>
-	${count}
+	${set_text(use_later(t => t(count.value), true))}
 	<button ${on('click', () => count.value += 1)}>+</button>
 `, document.body);
