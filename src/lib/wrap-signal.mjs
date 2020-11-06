@@ -1,6 +1,6 @@
 // TODO: Add reference counting / something to automatically abort an operation if it is no longer needed.
 
-export default function wrapSignal(signal) {
+export function wrap_signal(signal) {
 	const signalPromise = new Promise((_, reject) => {
 		signal.addEventListener('abort', _ => {
 			reject(new DOMException('Signal was aborted', 'AbortError'));
