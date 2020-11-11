@@ -15,28 +15,28 @@ const abc = computed(() => ab.value + c.value);
 mount(html`
 	<h2>Computed Tests:</h2>
 	<label>
-		a: ${set_text(use_later(t => t(a.value), true))}
 		<input type="range"
 			${el => el.value = a.value}
 			min="1" max="10" step="1" 
 			${on('input', e => a.value = e.target.valueAsNumber)}
 		>
+		a: ${set_text(use_later(t => t(a.value), true))}
 	</label><br>
 	<label>
-		b: ${set_text(use_later(t => t(b.value), true))}
 		<input type="range"
 			${el => el.value = b.value}
 			min="1" max="10" step="1"
 			${on('input', e => b.value = e.target.valueAsNumber)}
 		>
+		b: ${set_text(use_later(t => t(b.value), true))}
 	</label><br>
 	<label>
-		c: ${set_text(use_later(t => t(c.value), true))}
 		<input type="range"
 			${el => el.value = c.value}
 			min="1" max="10" step="1" 
 			${on('input', e => c.value = e.target.valueAsNumber)}
 		>
+		c: ${set_text(use_later(t => t(c.value), true))}
 	</label><br>
 	<label>
 		a + b: 
