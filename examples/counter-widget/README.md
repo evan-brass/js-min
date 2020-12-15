@@ -17,7 +17,7 @@ The mount function is useful because it binds a user to a node-part that it make
 ```javascript
 import LiveData from 'reactivity/live-data.mjs';
 ```
-LiveData is used to build the reactivity in this example.  LiveData objects have a getter and setter called 'value' that is used to set the value of the live-data object.  To use it reactively you can use it's async iterator.  The async iterator on live-data sends updates when its value changes.  If you're curious about the internals you can read the live-data code.  It's pretty short.  That will tell you how it handles an async iterator that stops calling .next() or how it determines if the value that has been set is actually different from the existing value and is thus a change.
+LiveData is used to build the reactivity in this example.  LiveData objects have a getter and setter called 'value' that is used to set the value of the live-data object.  To use it reactively you can use it's async iterator.  The async iterator on live-data sends updates when its value changes.  If you're curious about the internals you can read the live-data code.  It's pretty short.  That will tell you how it handles an async iterator that stops calling `.next()` or how it determines if the value that has been set is actually different from the existing value and is thus a change.
 
 ```javascript
 import on from 'users/on.mjs';
