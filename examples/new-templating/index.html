@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Templating V3</title>
+	</head>
+	<body>
+		<script type="module">
+			import {template, html} from "../../src/templating-v3/html.mjs";
+			import on from "../../src/templating-v3/on.mjs";
+			import ref from "../../src/templating-v3/ref.mjs";
+
+			function row() {
+				return html`<tr>
+					<td>Some Content</td>
+				</tr>`;
+			}
+			console.log(template`<table>
+				${row()}
+				${row()}
+				${row()}
+			</table>`);
+
+			function counter_widget(value = 5) {
+				let span;
+				return template`
+					<button ${on('click', () => {
+						span.innerText = --value;
+					})}>-</button>
+					<span ${ref(el => {
+						span = el;
+						span.innerText = value;
+					})}></span>
+					<button ${on('click', () => {
+						span.innerText = ++value;
+					})}>+</button>
+				`;
+			}
+
+			document.body.appendChild(counter_widget());
+
+			document.body.appendChild(template`
+				<hr>
+				<input type="range">
+			`);
+		</script>
+		<script type="_module">
+			import TemplateBuilder from "../../src/templating-v3/template-builder.mjs";
+			let test_num = 0;
+			function test(str, finish = false) {
+				console.group(++test_num);
+				const context = new TemplateBuilder();
+				try {
+					context.move(str);
+				} catch(e) {
+					console.warn("Caught: ", e);
+				}
+				console.log(context);
+				if (finish) {
+					console.log(context.finish());
+				}
+				console.groupEnd();
+			}
+			test("<html>Hello World!</html>", true);
+			test("<h1>Hello World!");
+			test("Pre content </h1>");
+			test("Pre content <div ");
+			test("Pre content <div attribute=\"");
+			test("Pre content <div attribute=\"value\">more content");
+		</script>
+	</body>
+</html>

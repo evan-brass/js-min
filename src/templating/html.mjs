@@ -3,6 +3,9 @@ import apply_expression from './apply-expression.mjs';
 import zip from '../lib/zip.mjs';
 import get_or_set from '../lib/get-or-set.mjs';
 
+// So, I assumed that comment nodes would be valid html everywhere that I cared about but that's not the case.  I knew they weren't allowed in style tags, but I just found out that they're also not allowed inside tables: https://developer.mozilla.org/en-US/docs/Web/HTML/Element/table
+// So... Does this mean a redesign?
+
 // Cache: strings -> template element
 const template_cache = new WeakMap();
 // Cache: template element -> template instance
