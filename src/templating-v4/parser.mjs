@@ -15,16 +15,13 @@ const VOID_TAGS = [
 ];
 
 export default function parse_html() {
-	const root = {
-		children: []
-	};
 	let unparsed = "";
-
+	
 	let match = false;
 	function pull(regex) {
-		const match = regex.exec(unparsed);
-		if (match !== null) {
-			const [full_match, ...captures] = match;
+		const res = regex.exec(unparsed);
+		if (res !== null) {
+			const [full_match, ...captures] = res;
 			unparsed = unparsed.substr(full_match.length);
 			match = captures;
 			return true;
@@ -34,15 +31,24 @@ export default function parse_html() {
 		}
 	}
 
-	function* parse_content(cursor) {
+	const stack = [{
+		content: "", child_index: 0
+	}];
+	function top() {
+		return stack[stack.length - 1];
+	}
+
+	function* parse_content() {
 		while (unparsed.length > 0) {
 			// Parse the opening of a tag:
 			if (pull(/^<([a-zA-Z][a-zA-Z0-9\-]*)/)) {
-				const new_tag = { tag: match[0], attributes: {}, children: [] };
-				cursor.children.push(new_tag);
-				yield* parse_attributes(new_tag);
-				if (!VOID_TAGS.includes(tag.toLowerCase())) {
-					yield* parse_content(new_tag);
+				const new_tag = { tag: match[0] };
+				stack.push(new_tag);
+				yield* parse_attributes();
+				if (VOID_TAGS.includes(tag.toLowerCase())) {
+					if (stack.pop() !== new_tag) {
+						throw new Error("Stack Problem?");
+					}
 				}
 			}
 			// Parse a comment node:
@@ -82,5 +88,38 @@ export default function parse_html() {
 		}
 	}
 	
-	return [root.children, unparsed, parse_content];
+	return [root.children, function append(more) { unparsed += more; }, parse_content];
+}
+
+export async function tests() {
+	function run(strings, ..._expressions) {
+		const [result, append, thing] = parse_html();
+		const parser = thing();
+		for (const str of strings) {
+			append(str);
+			parser.next();
+		}
+		parser.return();
+		return "stuff";
+		return result;
+	}
+	[
+		run`<p><b></b><i></i></p><div><span></span></div>`,
+		run`<p>
+			<b>bold content</b>
+		</p>`,
+		run`<a href="https://google.com">Google</a>`,
+		run`<p>
+			The world turns,
+			it turns and it turns.
+			Like a world it turns,
+			<!-- Pause for effect... -->
+			the world turns as a world would turn.
+		</p>`,
+		run`<form>
+			<label>Username: <input type="text"></label>
+			<label>Password: <input type="password"></label>
+			<button>Login</button>
+		</form>`
+	].forEach(console.log);
 }
