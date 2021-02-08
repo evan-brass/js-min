@@ -7,11 +7,9 @@ const template_cache = new WeakMap();
 export function template(strings, ...expressions) {
 	// It's sad that we need two different template tags: template and html
 	// Would be nice if you could instead use: template(html``) but template needs access to the strings so that it can cache it's result.
-	return get_or_set(template_cache, strings, () => {
-		const builder = new TemplateBuilder();
-		html(strings, ...expressions)(builder);
-		return builder.finish();
-	})();
+	const builder = new TemplateBuilder();
+	html(strings, ...expressions)(builder);
+	return builder.finish();
 }
 
 export function html (strings, ...expressions) {

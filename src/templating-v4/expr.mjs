@@ -22,7 +22,7 @@ export default function get_handler(value) {
 		};
 	}
 	if (kind == 'function') {
-		// TODO: Does the function get the builder or does it get an element or something.
+		return value;
 	}
 
 	throw new Error("Not sure how to make this value into an expression handler.");

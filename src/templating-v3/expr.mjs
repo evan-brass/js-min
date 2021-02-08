@@ -1,7 +1,22 @@
-import ref from './ref.mjs';
-import placeholder from './placeholder.mjs';
+import Trait from '../lib/trait.mjs';
 
-export default function apply_expression(expression, builder) {
+export const TemplateExpression = new Trait("A Template Expression");
+
+class Expression {
+	init(root, )
+	apply(builder) {
+
+	}
+	get [TemplateExpression]() {
+		return this;
+	}
+}
+
+export default function get_expression(expression, builder) {
+	let handler;
+	if (expression instanceof TemplateExpression) {
+		TemplateExpression.get(expression);
+	}
 	const expr_type = typeof expression;
 	if (expr_type == 'undefined' || expression === null) {
 		// Do nothing.

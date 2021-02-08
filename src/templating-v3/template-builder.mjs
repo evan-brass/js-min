@@ -94,7 +94,7 @@ export default class TemplateBuilder {
 					const opener = this.#top();
 					// TODO: Use .toLower in all tag_name comparisons
 					if (opener === undefined || opener.tag_name !== tag_name) {
-						throw new Error("Mismatched closing tag");
+						throw new Error(`Mismatched closing tag: ${tag_name} != ${opener.tag_name}`);
 					}
 					// Pop the opener off
 					this.#stack.pop();

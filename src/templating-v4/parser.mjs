@@ -14,6 +14,12 @@ const VOID_TAGS = [
 	'source'
 ];
 
+
+/**
+ * This is an interruptable ~html parser.  Its purpose is to extract information about the resulting DOM from HTML template literals.
+ * Using it, we can get references to individual elements by tracing the "decendent path" or child indexes from the root of the template
+ * to the element that we care about.  Doing it this way doesn't require a full dom traversal for a search or any ids / classes.
+ */
 export default function parse_html() {
 	let unparsed = "";
 	
@@ -31,95 +37,153 @@ export default function parse_html() {
 		}
 	}
 
-	const stack = [{
-		content: "", child_index: 0
-	}];
-	function top() {
+	const stack = [];
+	function get_top() {
 		return stack[stack.length - 1];
 	}
 
-	function* parse_content() {
-		while (unparsed.length > 0) {
-			// Parse the opening of a tag:
-			if (pull(/^<([a-zA-Z][a-zA-Z0-9\-]*)/)) {
-				const new_tag = { tag: match[0] };
-				stack.push(new_tag);
-				yield* parse_attributes();
-				if (VOID_TAGS.includes(tag.toLowerCase())) {
-					if (stack.pop() !== new_tag) {
-						throw new Error("Stack Problem?");
+	function* parse_attributes() {
+		let any_consumed = false;
+		while (true) {
+			// Pull an attribute name
+			if (pull(/^\s+([a-zA-Z][a-zA-Z0-9\-]*)/)) {
+				any_consumed = true;
+				const attribute = {
+					attribute_name: match[0],
+					value: ""
+				};
+				stack.push(attribute);
+				// Try to parse an attribute value
+				if (pull(/^="/)) {
+					while (!pull(/^"/)) {
+						if (pull(/^([^"]+)/)) {
+							attribute.value += match[0];
+						} else {
+							yield;
+						}
 					}
 				}
-			}
-			// Parse a comment node:
-			else if (pull(/^<!--((?:[^-]|-(?!->))*)-->/)) {
-				cursor.children.push({
-					comment: match[0]
-				})
-			}
-			// Parse a closing tag
-			else if (pull(/^<\/([a-zA-Z][a-zA-Z0-9\-]*)>/)) {
-				if (cursor.tag === undefined || cursor.tag.toLowerCase() !== match[0].toLowerCase()) {
-					throw new Error("Closing tag doesn't match");
+				const popped = stack.pop();
+				console.assert(popped === attribute, popped, attribute);
+			} else {
+				break;
+			}	
+		}
+		return any_consumed;
+	}
+
+	function* parse_comment() {
+		if (pull(/^<!--/)) {
+			const prev_content = stack.pop();
+			const comment = {
+				comment_content: "",
+				child_index: prev_content.content == "" ? prev_content.child_index : prev_content.child_index + 1
+			};
+			stack.push(comment);
+			while (true) {
+				// Pull as much text as we can
+				if (pull(/^((?:[^-]|-(?!->))+)/)) {
+					comment.comment_content += match[0];
+				}
+				// Try to pull a comment closing
+				else if (pull(/^-->/)) {
+					const popped = stack.pop();
+					console.assert(comment === popped, comment, popped);
+					stack.push({
+						content: "",
+						child_index: comment.child_index + 1
+					});
+					return true;
+				}
+				// Pause if we did neither:
+				else {
+					yield;
 				}
 			}
-			// Parse a text node
-			else if (pull(/^([^<]+)/)) {
-				cursor.children.push({
-					text: match[0]
+		} else {
+			return false;
+		}
+	}
+
+	function* parser() {
+		stack.push({
+			content: "",
+			child_index: 0
+		});
+		try {
+			yield* parse_content();
+		} finally {
+			if (unparsed.length > 0) {
+				throw new Error("Parsing Error: Unused input");
+			}
+			if (stack.pop().content === undefined) {
+				throw new Error("Parsing Error: Stack problem");
+			}
+		}
+	}
+	function* parse_content() {
+		let any_consumed = false;
+		while(true) {
+			const top = get_top();
+			// Open Tag
+			if (pull(/^\<([a-zA-Z][\-a-zA-Z0-9]*)/)) {
+				any_consumed = true;
+				const tag_name = match[0];
+				// Pop the content frame
+				stack.pop();
+				// Add a new tag frame
+				const new_tag = {
+					tag_name,
+					child_index: (top.content === "") ?
+						top.child_index :
+						top.child_index + 1
+				};
+				stack.push(new_tag);
+				// Parse any attributes until the end of the openning tag
+				while (!pull(/^\s*\>/)) {
+					if (!(yield* parse_attributes())) {
+						yield;
+					}
+				}
+				if (!VOID_TAGS.includes(tag_name)) {
+					stack.push({
+						content: "",
+						child_index: 0
+					});
+					// If we're not a void tag then parse content until we get a close tag
+					while (!pull(/^\<\/([a-zA-Z][a-zA-Z0-9\-]*)\>/)) {
+						if (!(yield* parse_content())) {
+							yield;
+						}
+					}
+					if (match[0] !== tag_name) {
+						throw new Error("Wrong closing tag: ", match[0], " !== ", tag_name);
+					}
+					const popped = stack.pop();
+					console.assert(popped.content !== undefined, "Popped non content frame.");
+				}
+				// Pop the tag off the stack
+				const popped = stack.pop();
+				console.assert(new_tag === popped, new_tag, popped);
+				stack.push({
+					content: "",
+					child_index: new_tag.child_index + 1
 				});
 			}
-			// Not enough input:
+			// Comment Node
+			else if (yield* parse_comment()) {
+				any_consumed = true;
+			}
+			// Normal Text content
+			else if (pull(/^([^\<]+)/)) {
+				any_consumed = true;
+				top.content += match[0];
+			}
+			// Nothing matched
 			else {
-				yield;
+				return any_consumed;
 			}
 		}
 	}
-	function* parse_attributes(cursor) {
-		while (true) {
-			while(pull(/^\s+([a-zA-Z][a-zA-Z0-9\-]+)="([^"]*)"/)) {
-				const [name, value] = match;
-				cursor.attributes[name] = value;
-			}
-			if (pull(/^\s*>/)) {
-				break;
-			}
-			yield;
-		}
-	}
-	
-	return [root.children, function append(more) { unparsed += more; }, parse_content];
-}
-
-export async function tests() {
-	function run(strings, ..._expressions) {
-		const [result, append, thing] = parse_html();
-		const parser = thing();
-		for (const str of strings) {
-			append(str);
-			parser.next();
-		}
-		parser.return();
-		return "stuff";
-		return result;
-	}
-	[
-		run`<p><b></b><i></i></p><div><span></span></div>`,
-		run`<p>
-			<b>bold content</b>
-		</p>`,
-		run`<a href="https://google.com">Google</a>`,
-		run`<p>
-			The world turns,
-			it turns and it turns.
-			Like a world it turns,
-			<!-- Pause for effect... -->
-			the world turns as a world would turn.
-		</p>`,
-		run`<form>
-			<label>Username: <input type="text"></label>
-			<label>Password: <input type="password"></label>
-			<button>Login</button>
-		</form>`
-	].forEach(console.log);
+	return [stack, function append(more) { unparsed += more; return unparsed; }, parser()];
 }
