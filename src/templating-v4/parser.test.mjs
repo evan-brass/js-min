@@ -1,17 +1,15 @@
-import parse_html from './parser.mjs';
+import Parser from './parser.mjs';
 
 export default async function tests() {
 	function run(strings, ...expressions) {
-		const [stack, append, parser] = parse_html();
+		const parser = new Parser();
 		for (const str of strings) {
-			append(str);
-			parser.next();
-			console.assert(append("") == "", "Unparsed text after running the parser.");
+			parser.advance(str);
 			if (expressions.length > 0) {
-				expressions.shift()(stack);
+				expressions.shift()(parser.stack);
 			}
 		}
-		parser.return();
+		parser.finish();
 	}
 	function check_stack(test_stack) {
 		return stack => {

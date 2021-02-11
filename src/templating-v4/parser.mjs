@@ -20,50 +20,76 @@ const VOID_TAGS = [
  * Using it, we can get references to individual elements by tracing the "decendent path" or child indexes from the root of the template
  * to the element that we care about.  Doing it this way doesn't require a full dom traversal for a search or any ids / classes.
  */
-export default function parse_html() {
-	let unparsed = "";
-	
-	let match = false;
-	function pull(regex) {
-		const res = regex.exec(unparsed);
+export default class Parser {
+	#unparsed = ""
+	stack = []
+	#match = false
+	#html = "";
+	#state = this.#parser()
+
+	advance(str) {
+		this.#unparsed += str;
+		this.#html += str;
+		this.#state.next();
+		console.assert(this.#unparsed.trim() == "", "There shouldn't be unparsed text after an advance.  This might indicate a break in an invalid location.");
+	}
+	finish() {
+		this.#state.return();
+		const template = document.createElement('template');
+		template.innerHTML = this.#html;
+		return template;
+	}
+	get_descendant_path() {
+		let body = 'return root';
+		for (const frame of this.stack) {
+			if (frame.child_index === undefined) {
+				throw new Error("Frame in the stack without a child_index.  This likely indicates being in the middle of an attribute-value.  Try moving the expression outside the attribute's value position and into attribute position.");
+			}
+			body += '.childNodes[';
+			body += frame.child_index.toString();
+			body += ']';
+		}
+		body += ';';
+		return new Function('root', body);
+	}
+
+	#pull(regex) {
+		const res = regex.exec(this.#unparsed);
 		if (res !== null) {
 			const [full_match, ...captures] = res;
-			unparsed = unparsed.substr(full_match.length);
-			match = captures;
+			this.#unparsed = this.#unparsed.substr(full_match.length);
+			this.#match = captures;
 			return true;
 		} else {
-			match = false;
+			this.#match = false;
 			return false;
 		}
 	}
-
-	const stack = [];
-	function get_top() {
-		return stack[stack.length - 1];
+	top() {
+		return this.stack[this.stack.length - 1];
 	}
-
-	function* parse_attributes() {
+	*#parse_attributes () {
 		let any_consumed = false;
 		while (true) {
 			// Pull an attribute name
-			if (pull(/^\s+([a-zA-Z][a-zA-Z0-9\-]*)/)) {
+			if (this.#pull(/^\s+([a-zA-Z][a-zA-Z0-9\-]*)/)) {
 				any_consumed = true;
 				const attribute = {
-					attribute_name: match[0],
+					attribute_name: this.#match[0],
 					value: ""
 				};
-				stack.push(attribute);
+				this.stack.push(attribute);
 				// Try to parse an attribute value
-				if (pull(/^="/)) {
-					while (!pull(/^"/)) {
-						if (pull(/^([^"]+)/)) {
-							attribute.value += match[0];
+				if (this.#pull(/^="/)) {
+					while (!this.#pull(/^"/)) {
+						if (this.#pull(/^([^"]+)/)) {
+							attribute.value += this.#match[0];
 						} else {
 							yield;
 						}
 					}
 				}
-				const popped = stack.pop();
+				const popped = this.stack.pop();
 				console.assert(popped === attribute, popped, attribute);
 			} else {
 				break;
@@ -72,24 +98,24 @@ export default function parse_html() {
 		return any_consumed;
 	}
 
-	function* parse_comment() {
-		if (pull(/^<!--/)) {
-			const prev_content = stack.pop();
+	*#parse_comment() {
+		if (this.#pull(/^<!--/)) {
+			const prev_content = this.stack.pop();
 			const comment = {
 				comment_content: "",
 				child_index: prev_content.content == "" ? prev_content.child_index : prev_content.child_index + 1
 			};
-			stack.push(comment);
+			this.stack.push(comment);
 			while (true) {
 				// Pull as much text as we can
-				if (pull(/^((?:[^-]|-(?!->))+)/)) {
-					comment.comment_content += match[0];
+				if (this.#pull(/^((?:[^-]|-(?!->))+)/)) {
+					comment.comment_content += this.#match[0];
 				}
 				// Try to pull a comment closing
-				else if (pull(/^-->/)) {
-					const popped = stack.pop();
+				else if (this.#pull(/^-->/)) {
+					const popped = this.stack.pop();
 					console.assert(comment === popped, comment, popped);
-					stack.push({
+					this.stack.push({
 						content: "",
 						child_index: comment.child_index + 1
 					});
@@ -105,32 +131,36 @@ export default function parse_html() {
 		}
 	}
 
-	function* parser() {
-		stack.push({
+	*#parser() {
+		this.stack.push({
 			content: "",
 			child_index: 0
 		});
 		try {
-			yield* parse_content();
+			while (true) {
+				if (!(yield* this.#parse_content())) {
+					yield;
+				}
+			}
 		} finally {
-			if (unparsed.length > 0) {
+			if (this.#unparsed.length > 0) {
 				throw new Error("Parsing Error: Unused input");
 			}
-			if (stack.pop().content === undefined) {
+			if (this.stack.pop().content === undefined) {
 				throw new Error("Parsing Error: Stack problem");
 			}
 		}
 	}
-	function* parse_content() {
+	*#parse_content() {
 		let any_consumed = false;
 		while(true) {
-			const top = get_top();
+			const top = this.top();
 			// Open Tag
-			if (pull(/^\<([a-zA-Z][\-a-zA-Z0-9]*)/)) {
+			if (this.#pull(/^\<([a-zA-Z][\-a-zA-Z0-9]*)/)) {
 				any_consumed = true;
-				const tag_name = match[0];
+				const tag_name = this.#match[0];
 				// Pop the content frame
-				stack.pop();
+				this.stack.pop();
 				// Add a new tag frame
 				const new_tag = {
 					tag_name,
@@ -138,46 +168,46 @@ export default function parse_html() {
 						top.child_index :
 						top.child_index + 1
 				};
-				stack.push(new_tag);
+				this.stack.push(new_tag);
 				// Parse any attributes until the end of the openning tag
-				while (!pull(/^\s*\>/)) {
-					if (!(yield* parse_attributes())) {
+				while (!this.#pull(/^\s*\>/)) {
+					if (!(yield* this.#parse_attributes())) {
 						yield;
 					}
 				}
 				if (!VOID_TAGS.includes(tag_name)) {
-					stack.push({
+					this.stack.push({
 						content: "",
 						child_index: 0
 					});
 					// If we're not a void tag then parse content until we get a close tag
-					while (!pull(/^\<\/([a-zA-Z][a-zA-Z0-9\-]*)\>/)) {
-						if (!(yield* parse_content())) {
+					while (!this.#pull(/^\<\/([a-zA-Z][a-zA-Z0-9\-]*)\>/)) {
+						if (!(yield* this.#parse_content())) {
 							yield;
 						}
 					}
-					if (match[0] !== tag_name) {
-						throw new Error("Wrong closing tag: ", match[0], " !== ", tag_name);
+					if (this.#match[0] !== tag_name) {
+						throw new Error("Wrong closing tag: ", this.#match[0], " !== ", tag_name);
 					}
-					const popped = stack.pop();
+					const popped = this.stack.pop();
 					console.assert(popped.content !== undefined, "Popped non content frame.");
 				}
 				// Pop the tag off the stack
-				const popped = stack.pop();
+				const popped = this.stack.pop();
 				console.assert(new_tag === popped, new_tag, popped);
-				stack.push({
+				this.stack.push({
 					content: "",
 					child_index: new_tag.child_index + 1
 				});
 			}
 			// Comment Node
-			else if (yield* parse_comment()) {
+			else if (yield* this.#parse_comment()) {
 				any_consumed = true;
 			}
 			// Normal Text content
-			else if (pull(/^([^\<]+)/)) {
+			else if (this.#pull(/^([^\<]+)/)) {
 				any_consumed = true;
-				top.content += match[0];
+				top.content += this.#match[0];
 			}
 			// Nothing matched
 			else {
@@ -185,5 +215,4 @@ export default function parse_html() {
 			}
 		}
 	}
-	return [stack, function append(more) { unparsed += more; return unparsed; }, parser()];
 }

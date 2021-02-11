@@ -5,8 +5,17 @@
 	</head>
 	<body>
 		<script type="module">
-			import tests from './parser.test.mjs';
-			tests();
+			// const srcs = ['./parser.test.mjs', './html.test.mjs'];
+			const srcs = ['./html.test.mjs'];
+			Promise.all(srcs.map(function load_test(src) {
+				return import(src).then(function run_test(mod) { return mod.default(); })
+			})).then(function print_test_end(){ console.log("Tests finished."); });
 		</script>
+		<script>
+			function click_handler() {
+				console.log("This just does a little shit to take up time.");
+			}
+		</script>
+		<button onclick="javascript: click_handler()">Click Me Sucker!</button>
 	</body>
 </html>
