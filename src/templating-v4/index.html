@@ -2,6 +2,7 @@
 <html>
 	<head>
 		<title>Templating V4</title>
+		<meta charset="UTF-8">
 	</head>
 	<body>
 		<script type="module">
@@ -11,11 +12,5 @@
 				return import(src).then(function run_test(mod) { return mod.default(); })
 			})).then(function print_test_end(){ console.log("Tests finished."); });
 		</script>
-		<script>
-			function click_handler() {
-				console.log("This just does a little shit to take up time.");
-			}
-		</script>
-		<button onclick="javascript: click_handler()">Click Me Sucker!</button>
 	</body>
 </html>
