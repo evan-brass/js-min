@@ -1,21 +1,20 @@
-// TODO: this.abortController should be private
+// TODO: this._abortController should be private
 export function base_extend(inherit = HTMLElement) {
-	return class Base extends inherit {		
+	return class Base extends inherit {
+		_abort_controller = new AbortController()
 		constructor() {
 			super();
 
-			this.abortController = new AbortController();
-			
 			// Construct the shadow DOM
-			this.attachShadow({mode: 'open'});
+			this.attachShadow({ mode: 'open' });
 		}
-		async run(_signal) {} // Empty state machine
+		async run(_signal) { } // Empty state machine
 		connectedCallback() {
 			// Setup and run the state machine
-			this.run(this.abortController.signal);
+			this.run(this._abort_controller.signal);
 		}
 		disconnectedCallback() {
-			this.abortController.abort();
+			this._abort_controller.abort();
 		}
 	};
 }

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<title>Templating Version 5</title>
+</head>
+
+<body>
+	<script type="module">
+		import html from './html.mjs';
+		import { on, text, reactive_text } from './expressions.mjs';
+		import single from '../reactivity/single.mjs';
+		import { use_later } from '../reactivity/use.mjs';
+
+		const count = single(10);
+		document.body.appendChild(html`
+			<button ${on('click', () => count.value += 1)}>+</button>
+			${reactive_text(count)}
+			<button ${on('click', () => count.value -= 1)}>-</button>
+			<br>
+		`);
+
+		// const rtf = new Intl.RelativeTimeFormat("en", {
+		// 	style: "long", // other values: "short" or "narrow"
+		// });
+
+		// const openned = new Date();
+		// document.body.appendChild(html`You opened this page ~${text(set_text => {
+		// 	let i = 0;
+		// 	setInterval(() => set_text(rtf.format(--i, 'seconds')), 1000);
+		// })}.`);
+	</script>
+</body>
+
+</html>
