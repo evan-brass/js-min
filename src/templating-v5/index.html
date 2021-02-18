@@ -8,7 +8,7 @@
 <body>
 	<script type="module">
 		import html from './html.mjs';
-		import { on, text, reactive_text } from './expressions.mjs';
+		import { on, reactive_text } from './expressions.mjs';
 		import single from '../reactivity/single.mjs';
 		import { use_later } from '../reactivity/use.mjs';
 
@@ -19,17 +19,61 @@
 			<button ${on('click', () => count.value -= 1)}>-</button>
 			<br>
 		`);
-
-		// const rtf = new Intl.RelativeTimeFormat("en", {
-		// 	style: "long", // other values: "short" or "narrow"
-		// });
-
-		// const openned = new Date();
-		// document.body.appendChild(html`You opened this page ~${text(set_text => {
-		// 	let i = 0;
-		// 	setInterval(() => set_text(rtf.format(--i, 'seconds')), 1000);
-		// })}.`);
 	</script>
+	<script type="_module">
+		import html from './html.mjs';
+		import { on, text } from './expressions.mjs';
+
+		const rtf = new Intl.RelativeTimeFormat("en", {
+			style: "long", // other values: "short" or "narrow"
+		});
+
+		const openned = new Date();
+		document.body.appendChild(html`You opened this page ~${text(set_text => {
+			let i = 0;
+			setInterval(() => set_text(rtf.format(--i, 'seconds')), 1000);
+		})}.`);
+	</script>
+	<script type="module">
+		import html from './html.mjs';
+		import Base from '../custom-elements/base.mjs';
+		import reactive from '../custom-elements/reactive.mjs';
+		import { text } from './expressions.mjs';
+		import { use_later } from '../reactivity/use.mjs';
+
+		const props = {
+			first_name: "John",
+			last_name: "Doe",
+			age: "46"
+		};
+
+		class TestElement extends reactive(props, Base) {
+			async run(_signal) {
+				this.shadowRoot.appendChild(html`
+					<h2>Person:</h2>
+					<table>
+						<tbody>
+							<tr>
+								<td>First Name</td>
+								<td>${text(use_later(st => st(this.first_name)))}</td>
+							</tr>
+							<tr>
+								<td>Last Name</td>
+								<td>${text(use_later(st => st(this.last_name)))}</td>
+							</tr>
+							<tr>
+								<td>Age</td>
+								<td>${text(use_later(st => st(this.age)))}</td>
+							</tr>
+						</tbody>
+					</table>
+				`);
+			}
+		}
+		window.customElements.define('test-element', TestElement);
+
+	</script>
+	<test-element first-name="Tony" last-name="Stark"></test-element>
 </body>
 
 </html>

@@ -17,8 +17,8 @@ function attr_to_value(attr_val) {
 	}
 }
 
-export function props(map, inherit) {
-	const ret = class Props extends inherit {
+export default function reactive(map, inherit) {
+	const ret = class Reactive extends inherit {
 		_waiters = {}
 		_did_change = {}
 		_values = {}
@@ -26,11 +26,11 @@ export function props(map, inherit) {
 			super(...args);
 
 			// Create the wakers:
-			for (key in map) {
+			for (const key in map) {
 				this._waiters[key] = new Set();
 			}
 			// Assign the did_change functions:
-			for (key in map) {
+			for (const key in map) {
 				const entry = map[key];
 				if (typeof entry === 'object' && typeof entry.did_change === 'function') {
 					this._did_change[key] = entry.did_change;
@@ -42,7 +42,7 @@ export function props(map, inherit) {
 			//   2. Attributes on the element
 			//   3. The initial value from the map
 			// TODO: Reflect to attribute?
-			for (key in map) {
+			for (const key in map) {
 				const attr_val = this.getAttribute(prop_to_attr(key));
 				if (this.hasOwnProperty(key)) {
 					this._values[key] = this[key];
@@ -75,7 +75,7 @@ export function props(map, inherit) {
 	};
 
 	// Add the getters / setters for all the properties:
-	for (key in map) {
+	for (const key in map) {
 		Object.defineProperty(ret.prototype, key, {
 			get() {
 				aquire_waiters(this._waiters[key]);
@@ -85,8 +85,8 @@ export function props(map, inherit) {
 			set(value) {
 				const old = this._values[key];
 				const did_change = (key in this._did_change ?
-					this._default_did_change :
-					this._did_change[key]
+					this._did_change[key] :
+					this._default_did_change
 				)(old, value);
 
 				this._values[key] = value;
