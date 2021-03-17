@@ -23,3 +23,63 @@ I'm quite pleased with the ergonomics of the existing templating library so I wa
 6. Use abortSignals instead of bind/unbind
 7. Run eagerly instead of lazily
 8. Use descendant paths instead of comment node based instantiation.
+
+# Invariants
+This templating library most likely doesn't operate correctly if the following are broken.  If you have a better idea for how to do things that doesn't rely on these constraints, let me know.
+## Valid Node Part Positions
+There are two kinds of parts.  Atribute parts and Node parts.  And attribute is placed like an HTML attribute.  Node parts can be placed anywhere that both a Comment node and a Text node are permitted content.  Because the template literal is concatonated with a marker string (eg `a315e9b5cd42acee8-0`) text nodes must be permitted content.  These markers in the template element are then replaced with comment nodes which are further replaced with the actual content when the template is instantiated.  An important case that illustrates this problem is tables.  This is invalid:
+```javascript
+function row(index) {
+	return html`<tr><td>${index}</td></tr>`;
+}
+mount(html`
+	<h1>Heading</h1>
+	<table>${[row(1), row(2)]}</table>
+`);
+```
+The two template literals will be 
+```html
+<template>
+	<tr>
+		<td><!----></td>
+	</tr>
+</template>
+<template>
+	<h1>Heading</h1>
+	<!---->
+	<table></table>
+</template>
+```
+The reason for this is that text nodes are not [permitted content](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/table) as direct children of a table.  Thus the HTML is invalid and the browser's failure recovery kicks in.  In the case of Chrome, the comment gets moved before table instead of inside it.  That behavior is undefined (I believe) and cannot be relied upon.  It may vary between browsers and between versions of browsers.
+
+You also can't put a node part within a style tag.
+
+TODO: Offer an alternative.
+* Concatonate the strings and call html manually instead of on the template literal?
+* Write a children handler?
+
+## Stable Identity: 
+html returns a handler that replaces the temporary comment node with a DocumentFragment.  In order for it to remove the nodes that it's added from this fragment, it saves the firstChild and lastChild of the fragment before inserting it into the document.  These first and last elements can't be removed from the DOM or "moved".  The nodes are removed from the dom, and put back into a document fragment which is cached for use instead of recloning the template in the future.
+
+This is invalid:
+```javascript
+mount(html`<header>
+		<h1>Title</h1>
+	</header>
+	<p>...</p>
+	<footer ${el => el.replaceWith(document.createElement('footer'))}></footer>`);
+```
+To fix this, we can add a new lastChild like so:
+```javascript
+mount(html`
+	<header>
+		<h1>Title</h1>
+	</header>
+	<p>...</p>
+	<footer ${el => el.replaceWith(document.createElement('footer'))}></footer>
+	<!---->
+`);
+```
+While using a text node like a newline after the footer would also make the example valid, I don't recommend doing that because then you couldn't safely minify your templates.
+
+To learn more, read the `abort` event listener that is added to the signal inside the html function.  That is where this constraint is relied upon.

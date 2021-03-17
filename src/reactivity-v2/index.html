@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<title>Reactivity</title>
+</head>
+
+<body>
+	<script type="module">
+		import { single, multi } from './state.mjs';
+		import { computed } from './computed.mjs';
+		import { context } from './context.mjs';
+		import html from '../templating-v5/html.mjs';
+		import { text, on } from '../templating-v5/expressions.mjs';
+
+		const a = single(5);
+		const b = single(3);
+
+		document.body.appendChild(html`
+		<label>
+			A:
+			<input type="number"
+				${el => context(() => el.value = a.value)}
+				${on('change', ({ target }) => a.value = target.valueAsNumber)}
+			>
+		</label><br>
+		<label>
+			B:
+			<input type="number"
+				${el => context(() => el.value = b.value)}
+				${on('change', ({ target }) => b.value = target.valueAsNumber)}
+			>
+		</label><br>
+		C (A - B + 5): ${text(set_text => context(() => set_text(a.value - b.value + 5)))}
+		`);
+	</script>
+	<script type="module">
+		import { single, multi } from './state.mjs';
+		import { live_list } from './list.mjs';
+		import { computed } from './computed.mjs';
+		import { context } from './context.mjs';
+		import html from '../templating-v5/html.mjs';
+		import { text, on } from '../templating-v5/expressions.mjs';
+
+		const arr = live_list(['a', 'b', 'c', 1, 2, 3]);
+		arr.push(4, 5, 6, 7);
+		arr.shift();
+		arr.sort();
+		arr.pop();
+
+		// document.body.appendChild(html``);
+	</script>
+	<script>
+		const state = {
+			_count: 5,
+			get count() {
+				return this._count;
+			},
+			set count(newValue) {
+				this._count = newValue;
+				return true;
+			},
+		};
+		with (state) {
+			console.log(count++);
+			console.log(count);
+		}
+	</script>
+</body>
+
+</html>

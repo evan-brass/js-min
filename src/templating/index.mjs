@@ -1,8 +1,5 @@
-import html from './html.mjs';
-import mount from './mount.mjs';
-import on from './on.mjs';
-import ref from './ref.mjs';
-import apply_expression from './apply-expression.mjs';
-
-
-export { html, mount, on, ref, apply_expression };
+export { default as html } from './html.mjs';
+export { default as mount } from './mount.mjs';
+export { default as on } from './on.mjs';
+export { default as ref } from './ref.mjs';
+export { default as apply_expression } from './apply-expression.mjs';

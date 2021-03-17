@@ -1,6 +1,7 @@
-import {get_path, compile_paths} from './descendant-path.mjs';
+import { get_path, compile_paths } from './descendant-path.mjs';
 
 // We can remove the asyncronous sha-1 hash with a 17-character random string that's only generated once.
+// It's important for the marker to start with a character (an 'a' in this case) so that it is a valid attribute name.
 const marker_base = crypto.getRandomValues(new Uint8Array(8)).reduce((str, n) => str + n.toString(16).padStart(2, '0'), 'a');
 const marker_finder = new RegExp(`${marker_base}-([0-9]+)`);
 
@@ -35,8 +36,7 @@ export default function create_template(strings) {
 		root,
 		NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT
 	);
-	let next_node = walker.nextNode();
-	while (next_node) {
+	for (let next_node = walker.nextNode(); next_node; next_node = walker.nextNode()) {
 		const node = walker.currentNode;
 		if (node.nodeType == Node.ELEMENT_NODE) {
 			for (const attribute_name of node.getAttributeNames()) {
@@ -50,7 +50,7 @@ export default function create_template(strings) {
 			const [before, i, after] = find_marker(node.data);
 			if (i != -1) {
 				if (node.parentNode.nodeName == 'STYLE') {
-					throw new Error("Node parts aren't allowed within style tags because during parsing they don't allow DOM comments inside which means they couldn't be sent in a precompiled template.");
+					throw new Error("Node parts aren't allowed within style tags because during parsing comment nodes are not permitted content of style tags.  This would mean that the template could not be precompiled.");
 				}
 				const placeholder = new Comment();
 				if (after != '') {
@@ -65,14 +65,11 @@ export default function create_template(strings) {
 
 				// Get the content:
 				paths[i] = get_path(placeholder, template.content);
-				
+
 				continue;
 			}
 		}
-		next_node = walker.nextNode();
 	}
-
-	// TODO: Verify that part_getter returns the same nodes before and after a final template.content.normalize().  This is because the tree should be in normal form when it is loaded by the browser and if part_getter returns something different then that's a big big problem.
 
 	return {
 		template,
