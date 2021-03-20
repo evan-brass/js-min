@@ -1,3 +1,5 @@
+import get_or_set from '../lib/get-or-set.mjs';
+
 const stack = [];
 
 export function context(func, signal = false) {
@@ -11,6 +13,15 @@ export function context(func, signal = false) {
 		}
 	};
 	waiter();
+}
+
+export function context_later(func, signalOrStealLast = false) {
+	return (...args) => {
+		if (signalOrStealLast === true) {
+			signalOrStealLast = args.pop();
+		}
+		context(func.bind(undefined, ...args), signalOrStealLast);
+	};
 }
 
 let to_update = false;
@@ -39,6 +50,19 @@ export class WaitSet extends Set {
 			to_update.add(waiter);
 		}
 		this.clear();
+	}
+}
+
+export class WaitMap extends Map {
+	aquire(key) {
+		const set = get_or_set(this, key, () => new WaitSet());
+		set.aquire();
+	}
+	queue(key) {
+		const set = this.get(key);
+		if (set instanceof WaitSet) {
+			set.queue();
+		}
 	}
 }
 

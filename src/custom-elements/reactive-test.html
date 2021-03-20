@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+
+<body>
+	<element-name prop-2="10"></element-name>
+	<script type="module">
+		import { define, env_access_src } from './functional.mjs';
+		import { html, reactive_text } from '../templating/index.mjs';
+		import { context, computed } from '../reactivity-v2/index.mjs';
+
+		define(function element_name(prop_1 = "Default 1", prop_2 = 5, checked = false) {
+			return html`
+				<h1>Heading</h1>
+				<p>${reactive_text(prop_1)}</p>
+				<p>${reactive_text(computed(() => Math.pow(prop_2(), 2)))}</p>
+			`;
+		});
+	</script>
+</body>
+
+</html>

@@ -18,9 +18,8 @@ export class Single {
 		return this._value;
 	}
 	set value(new_value) {
-		const old = this._value;
-		this._value = new_value;
-		if (this._did_change(old, this._value)) {
+		if (this._did_change(this._value, new_value)) {
+			this._value = new_value;
 			this._waiters = queue_waiters(this._waiters);
 		}
 
