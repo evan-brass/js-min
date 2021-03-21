@@ -16,6 +16,82 @@
 			`;
 		});
 	</script>
+	<script type="_module">
+		import { anadv, env_access_src } from '../lib/anadv.mjs';
+
+		const a = "Hello World!";
+
+		const access = eval(env_access_src);
+		console.log(anadv(function (a = 5, b = 7) { }, access));
+
+		{
+			const some_value = "Hello World";
+			class Date {
+				/* Not like the normal Date */
+			}
+			const access = eval(env_access_src);
+			console.log(anadv(
+				function (a = some_value, b = 5, c = undefined, d = new Date()) { },
+				access
+			));
+		}
+	</script>
+	<script type="_">
+		const arg_names = [], defaults = {};
+		with (new Proxy({}, {
+			get(target, prop_key) {
+				if (prop_key == Symbol.unscopables) return {};
+				console.log(arg_names.pop());
+				return eval(prop_key);
+			},
+			has(target, prop_key) {
+				arg_names.push(prop_key);
+				return true;
+			},
+			set(target, prop_key, value) {
+				defaults[prop_key] = value;
+				return Reflect.set(...arguments);
+			}
+		})) {
+			a = "Hello World", b = 5, c = new Date();
+		};
+
+		console.log(arg_names, defaults);
+	</script>
+	<script type="">
+function collect_names(code) {
+  const arg_names = [], defaults = {};
+  with (new Proxy({}, {
+    has(target, key) {
+	  if (key !== 'code') {
+		arg_names.push(key);
+	    return true;
+	  } else {
+	    return false;
+	  }
+    },
+    get(target, key) {
+      if (key == Symbol.unscopables) return {};
+      arg_names.pop();
+      return eval(key);
+    },
+    set(target, key, value) {
+      defaults[key] = value;
+      return true;
+    }
+  })) {
+    eval(code);
+  }
+  return [arg_names, defaults];
+}
+(function() {
+  const some_value = "Hello World";
+  class Date {
+    /* Not like the normal Date */
+  }
+  console.log(collect_names("a = some_value, b = 5, d = new Date()"));
+})()
+	</script>
 </body>
 
 </html>

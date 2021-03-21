@@ -1,5 +1,6 @@
 // Argument Names And Default Values (ANADV.mjs)
 // The goal of this function is to get the argument names and evaluate their  default values.
+// It doesn't work on functions with a rest parameter and all arguments must have a default.
 // You call it with the function whose arguments you want, and a function that grants it access to the scope where that function was defined.
 
 // This code RELIES on eval and `with` - both of which are considered bad practice.  Run while you still can.
@@ -8,11 +9,7 @@
 // You should eval this variable to get the env_access function that you then pass to anadv
 export const env_access_src = `(function(){ return ${function env_access() {
 	// By using `arguments`, we save introducing a named local variable that would mask the environment we're trying to grant access to.
-	if (eval(`typeof ${arguments[0]}`) === 'undefined') {
-		return Symbol.for('ITEM_IS_NOT_DEFINED');
-	} else {
-		return eval(`${arguments[0]}`);
-	}
+	return eval(`${arguments[0]}`);
 }.toString()}; })()`;
 
 // The default env_access function can only access global stuff.
@@ -65,38 +62,44 @@ export function anadv(func, env_access = different_eval(env_access_src)) {
 	const args_source = source.substr(0, source.length - rem.length - 1);
 
 
-	const argument_names = [];
-	const target = collect_names(args_source, key => {
-		let ret = env_access(key);
-		if (ret == Symbol.for("ITEM_IS_NOT_DEFINED")) {
-			argument_names.push(key);
-			ret = undefined;
-		}
-		return ret;
-	});
-	// const defaults = argument_names.map(key => target[key]);
+	const [argument_names, target] = collect_names(args_source, env_access);
+	const defaults = {};
+	for (const key of argument_names) {
+		defaults[key] = target[key];
+	}
 
-	return [argument_names, target];
+	return [argument_names, defaults];
 }
 
 // In order to use the `with` keyword, we need to be in sloppy mode.  Modules are always executed in "use strict"; so we need to create a regular script.
 // collect_names places a proxy into the scope chain before evaling the arguments code.  The proxy will be consulted for all identifiers.  We use the env_getter to get the value that the identifier would have in the source environment.  Back in anadv, we can check if the identifier is defined (typeof id !== 'undefined').  All unidentified identifiers will be our argument names.  collect_names then returns the target.  We can index the target by our argument names to get their default values.
 const collect_names_src = URL.createObjectURL(new Blob([`
 const resolve = window[Symbol.for('COLLECT_NAMES_FROM_CONTEXT')];
-window[Symbol.for('COLLECT_NAMES_FROM_CONTEXT')] = function collect_names(code, env_getter) {
-	const target = { obscure_name_that_no_one_would_use: code };
-	with (new Proxy(target, {
-		has: (target, prop_key) => {
-			if (prop_key !== 'obscure_name_that_no_one_would_use') {
-				target[prop_key] = env_getter(prop_key);
+window[Symbol.for('COLLECT_NAMES_FROM_CONTEXT')] = function collect_names(obscure_name_that_no_one_would_use, env_getter) {
+	const arg_names = [], defaults = {};
+	with (new Proxy({}, {
+		get(target, prop_key) {
+			if (prop_key == Symbol.unscopables) return {};
+			arg_names.pop();
+			return env_getter(prop_key);
+		},
+		has(target, prop_key) {
+			if (!['obscure_name_that_no_one_would_use', 'eval'].includes(prop_key)) {
+				arg_names.push(prop_key);
+				return true;
+			} else {
+				return false;
 			}
-			return true;
+		},
+		set(target, prop_key, value) {
+			defaults[prop_key] = value;
+			return Reflect.set(...arguments);
 		}
 	})) {
 		eval(obscure_name_that_no_one_would_use);
 	};
 
-	return target;
+	return [arg_names, defaults];
 };
 
 resolve();
