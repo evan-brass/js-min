@@ -7,10 +7,10 @@
 // While we're using eval, we are using it for it's true purpose: to execute outside code in a local scope.
 
 // You should eval this variable to get the env_access function that you then pass to anadv
-export const env_access_src = `(function(){ return ${function env_access() {
-	// By using `arguments`, we save introducing a named local variable that would mask the environment we're trying to grant access to.
-	return eval(`${arguments[0]}`);
-}.toString()}; })()`;
+// By using `arguments`, we save introducing a named local variable that would mask the environment we're trying to grant access to.
+export const env_access_src = `(function(){ return function env_access() {
+	return eval(arguments[0]);
+}; })()`;
 
 // The default env_access function can only access global stuff.
 // This function only works with non-anonymous functions, so no arrow functions.
