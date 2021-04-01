@@ -7,3 +7,12 @@ export default function get_or_set(map, key, create_func) {
 	}
 	return ret;
 }
+
+export function get_or_set_cons(map, key, Cons, ...args) {
+	let ret = map.get(key);
+	if (ret === undefined) {
+		ret = new Cons(...args);
+		map.set(key, ret);
+	}
+	return ret;
+}

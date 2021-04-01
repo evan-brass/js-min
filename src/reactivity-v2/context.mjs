@@ -1,4 +1,4 @@
-import get_or_set from '../lib/get-or-set.mjs';
+import { get_or_set_cons } from '../lib/get-or-set.mjs';
 
 const stack = [];
 
@@ -55,7 +55,7 @@ export class WaitSet extends Set {
 
 export class WaitMap extends Map {
 	aquire(key) {
-		const set = get_or_set(this, key, () => new WaitSet());
+		const set = get_or_set_cons(this, key, WaitSet);
 		set.aquire();
 	}
 	queue(key) {
