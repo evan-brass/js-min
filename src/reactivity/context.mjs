@@ -1,34 +1,71 @@
-const context = [];
-let to_update = false
+import { get_or_set_cons } from '../lib/get-or-set.mjs';
 
-export function push_context(new_context) {
-	context.push(new_context);
-}
-export function pop_context(old_context) {
-	if (context.pop() !== old_context) {
-		throw new Error("Detected context corruption.")
-	}
-}
+const stack = [];
 
-export function aquire_waiters(waiter_set) {
-	if (context.length > 0) {
-		waiter_set.add(context[context.length - 1]);
-	}
-}
-
-export function queue_waiters(waiter_set, ...args) {
-	if (!to_update) {
-		to_update = new Set();
-		queueMicrotask(function propagate_changes() {
-			const temp = to_update;
-			to_update = false;
-			for (const waiter of temp.values()) {
-				waiter(...args);
+export function context(func, signal = false) {
+	const waiter = () => {
+		if (!signal || !signal.aborted) {
+			stack.push(waiter);
+			func();
+			if (stack.pop() !== waiter) {
+				throw new Error("Detected context stack corruption.");
 			}
-		});
+		}
+	};
+	waiter();
+}
+
+export function context_later(func, signalOrStealLast = false) {
+	return (...args) => {
+		if (signalOrStealLast === true) {
+			signalOrStealLast = args.pop();
+		}
+		context(func.bind(undefined, ...args), signalOrStealLast);
+	};
+}
+
+let to_update = false;
+
+// This solution may do multiple updates.  But I accept that.
+function propagate_changes() {
+	for (const waiter of to_update.values()) {
+		waiter();
 	}
-	for (const waiter of waiter_set.values()) {
-		to_update.add(waiter);
+	to_update = false;
+}
+
+export class WaitSet extends Set {
+	aquire() {
+		const current = stack[stack.length - 1];
+		if (current !== undefined) {
+			this.add(current);
+		}
 	}
-	return new Set();
+	queue() {
+		if (to_update === false) {
+			to_update = new Set();
+			queueMicrotask(propagate_changes);
+		}
+		for (const waiter of this.values()) {
+			to_update.add(waiter);
+		}
+		this.clear();
+	}
+}
+
+export class WaitMap extends Map {
+	aquire(key) {
+		const set = get_or_set_cons(this, key, WaitSet);
+		set.aquire();
+	}
+	queue(key) {
+		const set = this.get(key);
+		if (set instanceof WaitSet) {
+			set.queue();
+		}
+	}
+}
+
+export function basic_change_detect(a, b) {
+	return a !== b;
 }

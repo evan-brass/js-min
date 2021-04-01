@@ -1,46 +1,39 @@
-import { aquire_waiters, queue_waiters } from "./context.mjs";
-import use_now from './use.mjs';
+import { basic_change_detect, context, WaitSet } from './context.mjs';
 
-const UnInit = Symbol("This computed's calc function needs to be run before producing a value.");
+const UnInit = Symbol("This symbol means that a computed's value hasn't been computed yet.");
 
-export class Computed {
-	_value = UnInit
-	_waiters = new Set()
-	constructor(calc_func, did_change) {
-		this.calc_func = calc_func;
-		if (typeof did_change === 'function') {
-			this.did_change = _did_change;
-		}
-	}
-	_did_change(a, b) {
-		return a !== b;
-	}
-	get value() {
-		if (this._value === UnInit) {
-			use_now(() => {
-				// Only recompute if there's people waiting for our value.
-				if (this._value === UnInit || this._waiters.size > 0) {
-					// If value === UnInit then we know we're being called from the getter.  This is because we only set value to UnInit when we don't run the calc_func which means we won't be collected as a waiter for anything.
-					const old = this._value;
+export function computed(calc, did_change = basic_change_detect) {
+	const set = new WaitSet();
+	let value = UnInit;
 
-					this._value = calc_func();
-
-					// Only update our waiters if our value has changed.
-					if (did_change(old, this._value)) {
-						this._waiters = queue_waiters(this._waiters);
+	return () => {
+		if (value === UnInit) {
+			context(() => {
+				if (value === UnInit || set.size > 0) {
+					const newValue = calc();
+					if (did_change(value, newValue)) {
+						value = newValue;
+						set.queue();
 					}
 				} else {
-					this._value = UnInit;
+					value = UnInit;
 				}
 			});
 		}
-
-		aquire_waiters(this._waiters);
-
-		return this._value;
-	}
+		set.aquire();
+		return value;
+	};
 }
 
-export default function computed(calc_func, did_change) {
-	return new Computed(calc_func, did_change);
+export function attach_computed(target, key, ...args) {
+	const getter = computed(...args);
+	Object.defineProperty(target, key, {
+		get() {
+			getter();
+		},
+		set() {
+			throw new Error("A computed cannot be assigned too.");
+		}
+	});
+	return target;
 }
