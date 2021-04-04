@@ -1,4 +1,4 @@
-import { context_later } from '../reactivity-v2/context.mjs';
+import { context_later } from '../reactivity/context.mjs';
 
 // Helpers to specify what kind of part we expect
 function ec(func) {

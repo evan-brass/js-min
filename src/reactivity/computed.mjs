@@ -37,3 +37,8 @@ export function attach_computed(target, key, ...args) {
 	});
 	return target;
 }
+
+// A shortcut for computeds that only depend on one signal
+export function map(source, calc, did_change) {
+	return computed(() => calc(source()), did_change);
+}

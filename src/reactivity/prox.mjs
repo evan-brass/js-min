@@ -3,6 +3,8 @@ import { get_or_set_cons } from '../lib/get-or-set.mjs';
 
 const waiters = new WeakMap();
 
+
+// I don't think that did_change works with this.
 const handler = {
 	get(target, key) {
 		const key_map = get_or_set_cons(waiters, target, WaitMap);

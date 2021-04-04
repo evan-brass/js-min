@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<title>Testing Templating</title>
+	<meta charse="utf-8">
+</head>
+
+<body>
+	<script type="module">
+		import * as r from '../reactivity/index.mjs';
+		import * as t from './index.mjs';
+		import PartList from './part-list.mjs';
+		import { arr_diff } from '../reactivity/diff.mjs';
+
+		const [todos, set_todos] = r.signal([
+			"Wash dishes",
+			"Clean bathroom"
+		]);
+
+		const [task, set_task] = r.signal('Enter a task...');
+
+		t.mount(t.html`
+			<div>
+				<input type="text" ${[
+				t.on('input', ({ target }) => set_task(target.value)),
+				el => el.value = task()
+			]}>
+				<button ${t.on('click', () => set_todos([task(), ...todos()]))}>Add</button>
+				</div >
+				${(el, signal) => {
+				const pl = new PartList();
+				pl.first = el;
+
+				const slice = arr_diff(todos);
+				r.context(() => console.log(slice()));
+
+				r.context(() => {
+					const [index, rc, ...new_items] = slice();
+					pl.splice(index, rc, ...new_items.map(task => {
+						const d = document.createElement('div');
+						d.innerText = task;
+						return d;
+					}));
+				}, signal);
+			}}
+		`);
+	</script>
+</body>
+
+</html>
