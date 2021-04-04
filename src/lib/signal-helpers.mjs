@@ -6,7 +6,7 @@ export function wrap_signal(signal) {
 			reject(new DOMException('Signal was aborted', 'AbortError'));
 		});
 	});
-	signalPromise.catch(_ => {}); // Stop the browser from thinking that not catching a signalPromise is a problem.
+	signalPromise.catch(_ => { }); // Stop the browser from thinking that not catching a signalPromise is a problem.
 	return function wrap(promise) {
 		if (signal.aborted) {
 			return signalPromise;
@@ -14,4 +14,12 @@ export function wrap_signal(signal) {
 			return Promise.race([signalPromise, promise]);
 		}
 	};
+}
+
+export function derive_signal(signal) {
+	const cont = new AbortController();
+	const abort = () => cont.abort();
+	signal.addEventListener('abort', abort);
+
+	return [cont.signal, abort];
 }

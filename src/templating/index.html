@@ -22,22 +22,17 @@
 
 		t.mount(t.html`
 			<div>
-				<input type="text" ${[
-				t.on('input', ({ target }) => set_task(target.value)),
-				el => el.value = task()
-			]}>
+				<input type="text" ${[t.on('input', ({ target }) => set_task(target.value)), el => el.value = task()]}>
 				<button ${t.on('click', () => set_todos([task(), ...todos()]))}>Add</button>
-				</div >
-				${(el, signal) => {
-				const pl = new PartList();
-				pl.first = el;
+			</div >
+			${(part_list, _index, signal) => {
+				console.assert(_index === 0);
 
 				const slice = arr_diff(todos);
-				r.context(() => console.log(slice()));
 
 				r.context(() => {
 					const [index, rc, ...new_items] = slice();
-					pl.splice(index, rc, ...new_items.map(task => {
+					part_list.splice(index, rc, ...new_items.map(task => {
 						const d = document.createElement('div');
 						d.innerText = task;
 						return d;
