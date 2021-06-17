@@ -24,6 +24,7 @@ export function context_later(func, signalOrStealLast = false) {
 	};
 }
 
+let update_roots = new Set();
 let to_update = false;
 
 // This solution may do multiple updates.  But I accept that.
@@ -32,9 +33,11 @@ function propagate_changes() {
 		waiter();
 	}
 	to_update = false;
+	update_roots = new Set();
 }
 
 export class WaitSet extends Set {
+	last_gen = -1;
 	aquire() {
 		const current = stack[stack.length - 1];
 		if (current !== undefined) {
@@ -46,6 +49,12 @@ export class WaitSet extends Set {
 			to_update = new Set();
 			queueMicrotask(propagate_changes);
 		}
+		if (update_roots.has(this)) {
+			console.log("Detected update cycle.");
+			debugger;
+			throw new Error("Update cycle.");
+		}
+		update_roots.add(this);
 		for (const waiter of this.values()) {
 			to_update.add(waiter);
 		}
@@ -59,6 +68,7 @@ export class WaitMap extends Map {
 		set.aquire();
 	}
 	queue(key) {
+		// TODO: Detect cycles
 		const set = this.get(key);
 		if (set instanceof WaitSet) {
 			set.queue();

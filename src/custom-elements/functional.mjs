@@ -1,6 +1,7 @@
 import Base from './base.mjs';
-import { attach_state, setup_state } from '../reactivity-v2/signal.mjs';
-import apply_expression from '../templating/apply-expression.mjs';
+import { attach_state, setup_state } from '../reactivity/signal.mjs';
+import { apply_expression_part } from '../templating/apply-expression.mjs';
+import PartList from '../templating/part-list.mjs';
 import { anadv, env_access_src } from '../lib/anadv.mjs';
 export { env_access_src };
 
@@ -49,11 +50,10 @@ export function define(func, env_access) {
 			}
 		}
 		async run(signal) {
-			const comment = new Comment();
-			this.shadowRoot.appendChild(comment);
+			const part_list = new PartList(this.shadowRoot);
 
-			const expr = func(...arg_names.map(key => () => this[key]));
-			apply_expression(expr, comment, signal);
+			const expr = func.apply(this, arg_names.map(key => () => this[key]));
+			apply_expression_part(expr, part_list, 0, signal);
 		}
 		attributeChangedCallback(name, _old_value, new_value) {
 			const prop = attr_to_prop(name);

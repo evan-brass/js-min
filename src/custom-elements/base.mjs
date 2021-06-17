@@ -11,7 +11,10 @@ export function base_extend(inherit = HTMLElement) {
 		async run(_signal) { } // Empty state machine
 		connectedCallback() {
 			// Setup and run the state machine
-			this.run(this._abort_controller.signal);
+			this.run(this.signal);
+		}
+		get signal() {
+			return this._abort_controller.signal;
 		}
 		disconnectedCallback() {
 			this._abort_controller.abort();
